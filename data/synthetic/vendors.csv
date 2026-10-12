@@ -1,0 +1,9 @@
+vendor_id,name,description
+V01,NimbusCloud Hosting,Cloud hosting and managed infrastructure.
+V02,Vertex Messaging Networks,Interbank messaging and connectivity.
+V03,Orbital Identity Services,Identity federation and authentication platform.
+V04,Keystone Payment Rails,Payment network access and settlement connectivity.
+V05,Meridian Market Data,Market and reference data feeds.
+V06,Sentinel Screening Data,Sanctions and watchlist data provider.
+V07,Cobalt Core Systems,Core ledger software support and maintenance.
+V08,Lumen Document Services,Document capture and storage services.

@@ -1,0 +1,23 @@
+# Keep the image build context small and make sure no secrets or local state are baked into images.
+.git
+.venv
+venv
+.env
+.env.*
+!.env.example
+__pycache__
+**/__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ipynb_checkpoints
+tests
+notebooks
+docs
+data
+*.db
+*.sqlite
+*.sqlite3
+.vscode
+.idea
+deploy

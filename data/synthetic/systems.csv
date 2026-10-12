@@ -1,0 +1,21 @@
+system_id,name,description,criticality,primary_process_id
+PAYMENT_ENGINE_01,Payment Engine 01,Processes outbound international payments.,critical,P01
+PAYMENT_ENGINE_02,Payment Engine 02,Processes domestic payments.,critical,P02
+PAYMENT_GATEWAY_01,Payment Gateway 01,Entry point for payment requests from channels.,high,P02
+MESSAGING_HUB_01,Messaging Hub 01,Sends and receives interbank payment messages.,high,P01
+FRAUD_SCREENING_01,Fraud Screening 01,Scores payments for fraud indicators.,high,P06
+SANCTIONS_SCREENING_01,Sanctions Screening 01,Screens parties against watchlists.,high,P10
+TRADE_SETTLEMENT_01,Trade Settlement 01,Settles confirmed securities trades.,critical,P03
+TRADE_CAPTURE_01,Trade Capture 01,Records trades from front-office desks.,high,P03
+CLEARING_INTERFACE_01,Clearing Interface 01,Connects to external clearing houses.,high,P03
+ONBOARDING_PORTAL_01,Onboarding Portal 01,Web portal for new client applications.,medium,P04
+KYC_DOCUMENT_STORE_01,KYC Document Store 01,Stores client identity documents.,medium,P04
+IAM_DIRECTORY_01,IAM Directory 01,Central directory of identities and roles.,critical,P05
+SSO_GATEWAY_01,SSO Gateway 01,Single sign-on for internal applications.,high,P05
+PRIVILEGED_ACCESS_01,Privileged Access 01,Controls and records administrator access.,high,P05
+CORE_LEDGER_01,Core Ledger 01,Book of record for customer balances.,critical,P08
+CUSTOMER_PORTAL_01,Customer Portal 01,Online banking for customers.,medium,P08
+REG_REPORTING_ENGINE_01,Regulatory Reporting Engine 01,Builds regulatory report files.,medium,P07
+DATA_WAREHOUSE_01,Data Warehouse 01,Central analytical data store.,medium,P07
+LIQUIDITY_MONITOR_01,Liquidity Monitor 01,Tracks intraday cash positions.,high,P09
+CASH_FORECAST_01,Cash Forecast 01,Produces cash flow projections.,low,P09

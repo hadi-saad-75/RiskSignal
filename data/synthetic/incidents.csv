@@ -1,0 +1,313 @@
+incident_id,date,system_id,category,description,financial_loss,severity
+INC0001,2021-10-05,DATA_WAREHOUSE_01,technology_failure,Message queue backlog on Data Warehouse 01 delayed processing.,73204.0,medium
+INC0002,2021-10-20,ONBOARDING_PORTAL_01,process_failure,Manual reconciliation step missed for Onboarding Portal 01.,956.0,low
+INC0003,2021-10-23,CUSTOMER_PORTAL_01,technology_failure,Message queue backlog on Customer Portal 01 delayed processing.,26268.0,medium
+INC0004,2021-11-13,TRADE_CAPTURE_01,third_party_failure,Meridian Market Data delivered a faulty data update used by Trade Capture 01.,98704.0,medium
+INC0005,2021-11-15,MESSAGING_HUB_01,process_failure,Month-end processing for Messaging Hub 01 ran late.,75604.0,medium
+INC0006,2021-12-04,CUSTOMER_PORTAL_01,process_failure,Incomplete handover between operations teams affected Customer Portal 01.,10059.0,low
+INC0007,2021-12-08,PAYMENT_GATEWAY_01,technology_failure,Performance degradation on Payment Gateway 01 during peak processing.,34697.0,medium
+INC0008,2021-12-18,TRADE_CAPTURE_01,third_party_failure,Service degradation at Meridian Market Data affected Trade Capture 01.,49576.0,medium
+INC0009,2021-12-20,TRADE_CAPTURE_01,third_party_failure,Service degradation at Meridian Market Data affected Trade Capture 01.,26028.0,medium
+INC0010,2022-01-20,SANCTIONS_SCREENING_01,process_failure,Change request for Sanctions Screening 01 implemented without full approval.,3463.0,low
+INC0011,2022-01-22,DATA_WAREHOUSE_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Data Warehouse 01.,37962.0,medium
+INC0012,2022-01-30,FRAUD_SCREENING_01,cyber_event,Malware detected on a host supporting Fraud Screening 01; contained.,536837.0,high
+INC0013,2022-02-20,PAYMENT_ENGINE_01,third_party_failure,Service degradation at Vertex Messaging Networks affected Payment Engine 01.,25730.0,medium
+INC0014,2022-02-23,CORE_LEDGER_01,third_party_failure,Service degradation at Cobalt Core Systems affected Core Ledger 01.,111568.0,medium
+INC0015,2022-02-27,REG_REPORTING_ENGINE_01,technology_failure,Database failover on Regulatory Reporting Engine 01 did not complete as expected.,172.0,low
+INC0016,2022-03-04,MESSAGING_HUB_01,technology_failure,Performance degradation on Messaging Hub 01 during peak processing.,52857.0,medium
+INC0017,2022-03-10,PAYMENT_ENGINE_02,technology_failure,Deployment to Payment Engine 02 introduced a defect found after release.,18210.0,low
+INC0018,2022-03-15,TRADE_CAPTURE_01,cyber_event,Denial-of-service traffic spike affected Trade Capture 01.,4380.0,low
+INC0019,2022-03-20,CLEARING_INTERFACE_01,technology_failure,Deployment to Clearing Interface 01 introduced a defect found after release.,171705.0,medium
+INC0020,2022-03-21,CUSTOMER_PORTAL_01,technology_failure,Database failover on Customer Portal 01 did not complete as expected.,7512.0,low
+INC0021,2022-03-27,REG_REPORTING_ENGINE_01,process_failure,Month-end processing for Regulatory Reporting Engine 01 ran late.,92763.0,medium
+INC0022,2022-04-11,FRAUD_SCREENING_01,technology_failure,Message queue backlog on Fraud Screening 01 delayed processing.,5282.0,low
+INC0023,2022-04-13,REG_REPORTING_ENGINE_01,human_error,Operator submitted an erroneous batch to Regulatory Reporting Engine 01.,7975.0,low
+INC0024,2022-04-13,TRADE_CAPTURE_01,human_error,Operator submitted an erroneous batch to Trade Capture 01.,1048.0,low
+INC0025,2022-04-14,KYC_DOCUMENT_STORE_01,third_party_failure,Planned maintenance at Lumen Document Services overran and impacted KYC Document Store 01.,9538.0,low
+INC0026,2022-04-15,PAYMENT_GATEWAY_01,human_error,Incorrect manual configuration change applied to Payment Gateway 01.,90515.0,medium
+INC0027,2022-04-21,PRIVILEGED_ACCESS_01,third_party_failure,Service degradation at Orbital Identity Services affected Privileged Access 01.,1477.0,low
+INC0028,2022-05-04,PAYMENT_ENGINE_02,process_failure,Incomplete handover between operations teams affected Payment Engine 02.,265263.0,high
+INC0029,2022-05-06,CLEARING_INTERFACE_01,process_failure,Incomplete handover between operations teams affected Clearing Interface 01.,144200.0,medium
+INC0030,2022-05-14,MESSAGING_HUB_01,technology_failure,Message queue backlog on Messaging Hub 01 delayed processing.,11511.0,low
+INC0031,2022-05-24,DATA_WAREHOUSE_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Data Warehouse 01.,3250.0,low
+INC0032,2022-05-25,CLEARING_INTERFACE_01,process_failure,Incomplete handover between operations teams affected Clearing Interface 01.,827070.0,high
+INC0033,2022-05-28,MESSAGING_HUB_01,cyber_event,Malware detected on a host supporting Messaging Hub 01; contained.,47278.0,medium
+INC0034,2022-06-02,CLEARING_INTERFACE_01,process_failure,Month-end processing for Clearing Interface 01 ran late.,5218.0,low
+INC0035,2022-06-07,TRADE_CAPTURE_01,technology_failure,Configuration drift after deployment on Trade Capture 01 caused errors.,5679.0,low
+INC0036,2022-06-09,REG_REPORTING_ENGINE_01,technology_failure,Database failover on Regulatory Reporting Engine 01 did not complete as expected.,29762.0,medium
+INC0037,2022-06-12,TRADE_SETTLEMENT_01,technology_failure,Database failover on Trade Settlement 01 did not complete as expected.,5955.0,low
+INC0038,2022-06-13,SANCTIONS_SCREENING_01,technology_failure,Database failover on Sanctions Screening 01 did not complete as expected.,665326.0,high
+INC0039,2022-06-15,PAYMENT_GATEWAY_01,technology_failure,Configuration drift after deployment on Payment Gateway 01 caused errors.,383012.0,high
+INC0040,2022-06-24,FRAUD_SCREENING_01,process_failure,Change request for Fraud Screening 01 implemented without full approval.,152722.0,medium
+INC0041,2022-06-30,CUSTOMER_PORTAL_01,technology_failure,Failed deployment on Customer Portal 01; release rolled back.,85640.0,medium
+INC0042,2022-07-06,DATA_WAREHOUSE_01,technology_failure,Application outage on Data Warehouse 01 caused by an infrastructure fault.,15695.0,low
+INC0043,2022-07-07,DATA_WAREHOUSE_01,technology_failure,Performance degradation on Data Warehouse 01 during peak processing.,35290.0,medium
+INC0044,2022-07-08,PRIVILEGED_ACCESS_01,third_party_failure,Orbital Identity Services delivered a faulty data update used by Privileged Access 01.,356229.0,high
+INC0045,2022-07-09,KYC_DOCUMENT_STORE_01,process_failure,Month-end processing for KYC Document Store 01 ran late.,26895.0,medium
+INC0046,2022-07-20,CUSTOMER_PORTAL_01,technology_failure,Deployment to Customer Portal 01 introduced a defect found after release.,22637.0,low
+INC0047,2022-07-20,REG_REPORTING_ENGINE_01,technology_failure,Failed deployment on Regulatory Reporting Engine 01; release rolled back.,256928.0,high
+INC0048,2022-07-27,ONBOARDING_PORTAL_01,third_party_failure,Planned maintenance at NimbusCloud Hosting overran and impacted Onboarding Portal 01.,3194.0,low
+INC0049,2022-07-29,REG_REPORTING_ENGINE_01,technology_failure,Application outage on Regulatory Reporting Engine 01 caused by an infrastructure fault.,192365.0,medium
+INC0050,2022-07-29,SANCTIONS_SCREENING_01,third_party_failure,Planned maintenance at Sentinel Screening Data overran and impacted Sanctions Screening 01.,11969.0,low
+INC0051,2022-07-30,ONBOARDING_PORTAL_01,process_failure,Month-end processing for Onboarding Portal 01 ran late.,12957.0,low
+INC0052,2022-09-15,PAYMENT_ENGINE_01,technology_failure,Database failover on Payment Engine 01 did not complete as expected.,22512.0,low
+INC0053,2022-09-17,FRAUD_SCREENING_01,process_failure,Incomplete handover between operations teams affected Fraud Screening 01.,11776.0,low
+INC0054,2022-10-17,ONBOARDING_PORTAL_01,third_party_failure,Planned maintenance at Lumen Document Services overran and impacted Onboarding Portal 01.,43263.0,medium
+INC0055,2022-11-11,REG_REPORTING_ENGINE_01,technology_failure,Database failover on Regulatory Reporting Engine 01 did not complete as expected.,49099.0,medium
+INC0056,2022-11-25,PAYMENT_GATEWAY_01,technology_failure,Message queue backlog on Payment Gateway 01 delayed processing.,18246.0,low
+INC0057,2022-11-26,PAYMENT_ENGINE_01,human_error,Incorrect manual configuration change applied to Payment Engine 01.,8950.0,low
+INC0058,2022-11-29,SANCTIONS_SCREENING_01,third_party_failure,Sentinel Screening Data delivered a faulty data update used by Sanctions Screening 01.,1113020.0,high
+INC0059,2022-12-05,TRADE_SETTLEMENT_01,technology_failure,Message queue backlog on Trade Settlement 01 delayed processing.,1659.0,low
+INC0060,2022-12-06,PAYMENT_GATEWAY_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Payment Gateway 01.,5726.0,low
+INC0061,2022-12-07,FRAUD_SCREENING_01,technology_failure,Deployment to Fraud Screening 01 introduced a defect found after release.,3381.0,low
+INC0062,2022-12-08,IAM_DIRECTORY_01,technology_failure,Failed deployment on IAM Directory 01; release rolled back.,67599.0,medium
+INC0063,2022-12-20,LIQUIDITY_MONITOR_01,technology_failure,Failed deployment on Liquidity Monitor 01; release rolled back.,4150593.0,critical
+INC0064,2022-12-28,CORE_LEDGER_01,process_failure,Incomplete handover between operations teams affected Core Ledger 01.,3401.0,low
+INC0065,2022-12-31,PAYMENT_ENGINE_01,third_party_failure,Service degradation at Vertex Messaging Networks affected Payment Engine 01.,884691.0,high
+INC0066,2023-01-06,REG_REPORTING_ENGINE_01,human_error,Incorrect manual configuration change applied to Regulatory Reporting Engine 01.,23.0,low
+INC0067,2023-01-08,CORE_LEDGER_01,technology_failure,Configuration drift after deployment on Core Ledger 01 caused errors.,98190.0,medium
+INC0068,2023-01-08,IAM_DIRECTORY_01,technology_failure,Message queue backlog on IAM Directory 01 delayed processing.,7657.0,low
+INC0069,2023-01-10,SSO_GATEWAY_01,technology_failure,Database failover on SSO Gateway 01 did not complete as expected.,6156.0,low
+INC0070,2023-01-28,CUSTOMER_PORTAL_01,human_error,Incorrect manual configuration change applied to Customer Portal 01.,11477.0,low
+INC0071,2023-01-29,PAYMENT_ENGINE_02,technology_failure,Performance degradation on Payment Engine 02 during peak processing.,39357.0,medium
+INC0072,2023-01-31,SSO_GATEWAY_01,process_failure,Month-end processing for SSO Gateway 01 ran late.,18335.0,low
+INC0073,2023-02-03,FRAUD_SCREENING_01,technology_failure,Configuration drift after deployment on Fraud Screening 01 caused errors.,131213.0,medium
+INC0074,2023-02-20,CLEARING_INTERFACE_01,technology_failure,Performance degradation on Clearing Interface 01 during peak processing.,65265.0,medium
+INC0075,2023-02-25,DATA_WAREHOUSE_01,cyber_event,Malware detected on a host supporting Data Warehouse 01; contained.,832106.0,high
+INC0076,2023-02-25,DATA_WAREHOUSE_01,third_party_failure,Planned maintenance at NimbusCloud Hosting overran and impacted Data Warehouse 01.,143768.0,medium
+INC0077,2023-03-03,TRADE_CAPTURE_01,human_error,Wrong environment targeted during a support task on Trade Capture 01.,15369.0,low
+INC0078,2023-03-09,DATA_WAREHOUSE_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Data Warehouse 01.,219120.0,medium
+INC0079,2023-03-11,KYC_DOCUMENT_STORE_01,technology_failure,Message queue backlog on KYC Document Store 01 delayed processing.,53390.0,medium
+INC0080,2023-03-16,CORE_LEDGER_01,technology_failure,Database failover on Core Ledger 01 did not complete as expected.,496749.0,high
+INC0081,2023-04-09,REG_REPORTING_ENGINE_01,technology_failure,Application outage on Regulatory Reporting Engine 01 caused by an infrastructure fault.,2852.0,low
+INC0082,2023-04-10,CLEARING_INTERFACE_01,third_party_failure,Service degradation at Vertex Messaging Networks affected Clearing Interface 01.,22956.0,low
+INC0083,2023-04-20,PAYMENT_ENGINE_01,technology_failure,Deployment to Payment Engine 01 introduced a defect found after release.,24184.0,low
+INC0084,2023-05-01,LIQUIDITY_MONITOR_01,third_party_failure,Service degradation at Meridian Market Data affected Liquidity Monitor 01.,42648.0,medium
+INC0085,2023-05-09,PAYMENT_GATEWAY_01,third_party_failure,Planned maintenance at NimbusCloud Hosting overran and impacted Payment Gateway 01.,56017.0,medium
+INC0086,2023-05-15,CASH_FORECAST_01,technology_failure,Application outage on Cash Forecast 01 caused by an infrastructure fault.,10046.0,low
+INC0087,2023-06-02,ONBOARDING_PORTAL_01,technology_failure,Deployment to Onboarding Portal 01 introduced a defect found after release.,175943.0,medium
+INC0088,2023-06-03,LIQUIDITY_MONITOR_01,human_error,Incorrect manual configuration change applied to Liquidity Monitor 01.,8173.0,low
+INC0089,2023-06-10,SANCTIONS_SCREENING_01,technology_failure,Application outage on Sanctions Screening 01 caused by an infrastructure fault.,31235.0,medium
+INC0090,2023-06-11,PAYMENT_ENGINE_02,third_party_failure,Service degradation at NimbusCloud Hosting affected Payment Engine 02.,82851.0,medium
+INC0091,2023-06-18,PAYMENT_ENGINE_02,human_error,Wrong environment targeted during a support task on Payment Engine 02.,6858.0,low
+INC0092,2023-06-28,IAM_DIRECTORY_01,technology_failure,Performance degradation on IAM Directory 01 during peak processing.,639.0,low
+INC0093,2023-06-28,PAYMENT_ENGINE_01,third_party_failure,Planned maintenance at Vertex Messaging Networks overran and impacted Payment Engine 01.,32029.0,medium
+INC0094,2023-07-01,PAYMENT_ENGINE_01,technology_failure,Configuration drift after deployment on Payment Engine 01 caused errors.,146235.0,medium
+INC0095,2023-07-08,CASH_FORECAST_01,technology_failure,Performance degradation on Cash Forecast 01 during peak processing.,32252.0,medium
+INC0096,2023-07-16,FRAUD_SCREENING_01,human_error,Wrong environment targeted during a support task on Fraud Screening 01.,9491.0,low
+INC0097,2023-07-17,CUSTOMER_PORTAL_01,third_party_failure,Planned maintenance at NimbusCloud Hosting overran and impacted Customer Portal 01.,3940.0,low
+INC0098,2023-07-19,CUSTOMER_PORTAL_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Customer Portal 01.,996.0,low
+INC0099,2023-07-23,CORE_LEDGER_01,third_party_failure,Cobalt Core Systems delivered a faulty data update used by Core Ledger 01.,434549.0,high
+INC0100,2023-07-31,PAYMENT_ENGINE_02,technology_failure,Application outage on Payment Engine 02 caused by an infrastructure fault.,10349.0,low
+INC0101,2023-08-01,SANCTIONS_SCREENING_01,cyber_event,Phishing-related credential compromise attempt involving Sanctions Screening 01.,7372.0,low
+INC0102,2023-08-03,SANCTIONS_SCREENING_01,cyber_event,Phishing-related credential compromise attempt involving Sanctions Screening 01.,1725503.0,high
+INC0103,2023-08-05,CASH_FORECAST_01,technology_failure,Performance degradation on Cash Forecast 01 during peak processing.,9452.0,low
+INC0104,2023-08-27,PAYMENT_ENGINE_02,human_error,Wrong environment targeted during a support task on Payment Engine 02.,3592.0,low
+INC0105,2023-09-09,ONBOARDING_PORTAL_01,process_failure,Change request for Onboarding Portal 01 implemented without full approval.,106429.0,medium
+INC0106,2023-09-14,TRADE_CAPTURE_01,technology_failure,Configuration drift after deployment on Trade Capture 01 caused errors.,25791.0,medium
+INC0107,2023-09-18,DATA_WAREHOUSE_01,third_party_failure,Planned maintenance at NimbusCloud Hosting overran and impacted Data Warehouse 01.,29751.0,medium
+INC0108,2023-09-22,CUSTOMER_PORTAL_01,technology_failure,Application outage on Customer Portal 01 caused by an infrastructure fault.,77637.0,medium
+INC0109,2023-09-26,DATA_WAREHOUSE_01,process_failure,Incomplete handover between operations teams affected Data Warehouse 01.,10979.0,low
+INC0110,2023-10-03,IAM_DIRECTORY_01,technology_failure,Message queue backlog on IAM Directory 01 delayed processing.,133925.0,medium
+INC0111,2023-10-06,LIQUIDITY_MONITOR_01,cyber_event,Denial-of-service traffic spike affected Liquidity Monitor 01.,1482399.0,high
+INC0112,2023-10-06,REG_REPORTING_ENGINE_01,cyber_event,Phishing-related credential compromise attempt involving Regulatory Reporting Engine 01.,1618302.0,high
+INC0113,2023-10-08,CLEARING_INTERFACE_01,third_party_failure,Vertex Messaging Networks delivered a faulty data update used by Clearing Interface 01.,78535.0,medium
+INC0114,2023-10-15,CUSTOMER_PORTAL_01,technology_failure,Message queue backlog on Customer Portal 01 delayed processing.,492823.0,high
+INC0115,2023-10-19,REG_REPORTING_ENGINE_01,process_failure,Incomplete handover between operations teams affected Regulatory Reporting Engine 01.,24612.0,low
+INC0116,2023-10-28,IAM_DIRECTORY_01,technology_failure,Performance degradation on IAM Directory 01 during peak processing.,2817.0,low
+INC0117,2023-11-01,KYC_DOCUMENT_STORE_01,process_failure,Change request for KYC Document Store 01 implemented without full approval.,837.0,low
+INC0118,2023-11-01,SANCTIONS_SCREENING_01,third_party_failure,Service degradation at Sentinel Screening Data affected Sanctions Screening 01.,171726.0,medium
+INC0119,2023-11-02,ONBOARDING_PORTAL_01,technology_failure,Failed deployment on Onboarding Portal 01; release rolled back.,19058.0,low
+INC0120,2023-11-16,REG_REPORTING_ENGINE_01,human_error,Incorrect manual configuration change applied to Regulatory Reporting Engine 01.,79641.0,medium
+INC0121,2023-11-21,CLEARING_INTERFACE_01,technology_failure,Message queue backlog on Clearing Interface 01 delayed processing.,2721.0,low
+INC0122,2023-11-21,CUSTOMER_PORTAL_01,technology_failure,Configuration drift after deployment on Customer Portal 01 caused errors.,568177.0,high
+INC0123,2023-12-01,SANCTIONS_SCREENING_01,technology_failure,Message queue backlog on Sanctions Screening 01 delayed processing.,678603.0,high
+INC0124,2023-12-02,DATA_WAREHOUSE_01,technology_failure,Application outage on Data Warehouse 01 caused by an infrastructure fault.,1500.0,low
+INC0125,2023-12-02,MESSAGING_HUB_01,process_failure,Incomplete handover between operations teams affected Messaging Hub 01.,26972.0,medium
+INC0126,2023-12-10,SSO_GATEWAY_01,technology_failure,Failed deployment on SSO Gateway 01; release rolled back.,678.0,low
+INC0127,2023-12-18,LIQUIDITY_MONITOR_01,third_party_failure,Service degradation at Meridian Market Data affected Liquidity Monitor 01.,31850.0,medium
+INC0128,2024-01-08,CORE_LEDGER_01,process_failure,Manual reconciliation step missed for Core Ledger 01.,19134.0,low
+INC0129,2024-01-08,REG_REPORTING_ENGINE_01,process_failure,Month-end processing for Regulatory Reporting Engine 01 ran late.,24562.0,low
+INC0130,2024-01-14,PAYMENT_ENGINE_02,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Payment Engine 02.,97147.0,medium
+INC0131,2024-01-15,DATA_WAREHOUSE_01,technology_failure,Performance degradation on Data Warehouse 01 during peak processing.,25128.0,medium
+INC0132,2024-01-21,CLEARING_INTERFACE_01,third_party_failure,Planned maintenance at Vertex Messaging Networks overran and impacted Clearing Interface 01.,9371.0,low
+INC0133,2024-01-29,TRADE_SETTLEMENT_01,process_failure,Manual reconciliation step missed for Trade Settlement 01.,10192.0,low
+INC0134,2024-01-31,ONBOARDING_PORTAL_01,human_error,Operator submitted an erroneous batch to Onboarding Portal 01.,4894.0,low
+INC0135,2024-02-04,CUSTOMER_PORTAL_01,technology_failure,Performance degradation on Customer Portal 01 during peak processing.,9250.0,low
+INC0136,2024-02-13,CLEARING_INTERFACE_01,technology_failure,Database failover on Clearing Interface 01 did not complete as expected.,213555.0,medium
+INC0137,2024-02-16,FRAUD_SCREENING_01,cyber_event,Phishing-related credential compromise attempt involving Fraud Screening 01.,9115.0,low
+INC0138,2024-02-17,SSO_GATEWAY_01,technology_failure,Deployment to SSO Gateway 01 introduced a defect found after release.,31770.0,medium
+INC0139,2024-02-17,TRADE_SETTLEMENT_01,technology_failure,Configuration drift after deployment on Trade Settlement 01 caused errors.,93525.0,medium
+INC0140,2024-02-20,SANCTIONS_SCREENING_01,third_party_failure,Service degradation at Sentinel Screening Data affected Sanctions Screening 01.,24627.0,low
+INC0141,2024-03-13,LIQUIDITY_MONITOR_01,third_party_failure,Meridian Market Data delivered a faulty data update used by Liquidity Monitor 01.,51972.0,medium
+INC0142,2024-03-17,TRADE_SETTLEMENT_01,third_party_failure,Meridian Market Data delivered a faulty data update used by Trade Settlement 01.,273041.0,high
+INC0143,2024-03-22,PAYMENT_ENGINE_02,technology_failure,Performance degradation on Payment Engine 02 during peak processing.,85200.0,medium
+INC0144,2024-03-26,DATA_WAREHOUSE_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Data Warehouse 01.,15568.0,low
+INC0145,2024-04-10,SANCTIONS_SCREENING_01,human_error,Wrong environment targeted during a support task on Sanctions Screening 01.,3661.0,low
+INC0146,2024-04-16,CLEARING_INTERFACE_01,technology_failure,Performance degradation on Clearing Interface 01 during peak processing.,5237.0,low
+INC0147,2024-04-18,PAYMENT_ENGINE_01,process_failure,Manual reconciliation step missed for Payment Engine 01.,12719.0,low
+INC0148,2024-05-03,TRADE_SETTLEMENT_01,process_failure,Manual reconciliation step missed for Trade Settlement 01.,176178.0,medium
+INC0149,2024-05-07,CUSTOMER_PORTAL_01,cyber_event,Malware detected on a host supporting Customer Portal 01; contained.,10031.0,low
+INC0150,2024-05-09,REG_REPORTING_ENGINE_01,technology_failure,Deployment to Regulatory Reporting Engine 01 introduced a defect found after release.,35824.0,medium
+INC0151,2024-05-12,TRADE_SETTLEMENT_01,human_error,Operator submitted an erroneous batch to Trade Settlement 01.,24659.0,low
+INC0152,2024-05-15,IAM_DIRECTORY_01,human_error,Operator submitted an erroneous batch to IAM Directory 01.,1045.0,low
+INC0153,2024-05-16,ONBOARDING_PORTAL_01,human_error,Operator submitted an erroneous batch to Onboarding Portal 01.,12855.0,low
+INC0154,2024-06-17,REG_REPORTING_ENGINE_01,technology_failure,Performance degradation on Regulatory Reporting Engine 01 during peak processing.,3534.0,low
+INC0155,2024-06-21,LIQUIDITY_MONITOR_01,human_error,Incorrect manual configuration change applied to Liquidity Monitor 01.,560104.0,high
+INC0156,2024-06-24,PAYMENT_ENGINE_01,process_failure,Month-end processing for Payment Engine 01 ran late.,46892.0,medium
+INC0157,2024-06-25,PAYMENT_GATEWAY_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Payment Gateway 01.,4682.0,low
+INC0158,2024-07-06,DATA_WAREHOUSE_01,process_failure,Month-end processing for Data Warehouse 01 ran late.,19717.0,low
+INC0159,2024-07-06,REG_REPORTING_ENGINE_01,process_failure,Manual reconciliation step missed for Regulatory Reporting Engine 01.,4719.0,low
+INC0160,2024-07-10,PAYMENT_GATEWAY_01,technology_failure,Message queue backlog on Payment Gateway 01 delayed processing.,32218.0,medium
+INC0161,2024-07-12,ONBOARDING_PORTAL_01,cyber_event,Malware detected on a host supporting Onboarding Portal 01; contained.,5940.0,low
+INC0162,2024-07-13,CORE_LEDGER_01,technology_failure,Message queue backlog on Core Ledger 01 delayed processing.,53903.0,medium
+INC0163,2024-08-01,MESSAGING_HUB_01,technology_failure,Message queue backlog on Messaging Hub 01 delayed processing.,14229.0,low
+INC0164,2024-09-03,SSO_GATEWAY_01,technology_failure,Performance degradation on SSO Gateway 01 during peak processing.,16044.0,low
+INC0165,2024-09-10,SSO_GATEWAY_01,technology_failure,Deployment to SSO Gateway 01 introduced a defect found after release.,34288.0,medium
+INC0166,2024-09-20,FRAUD_SCREENING_01,human_error,Operator submitted an erroneous batch to Fraud Screening 01.,12181.0,low
+INC0167,2024-09-29,TRADE_SETTLEMENT_01,third_party_failure,Meridian Market Data delivered a faulty data update used by Trade Settlement 01.,26324.0,medium
+INC0168,2024-10-06,CORE_LEDGER_01,third_party_failure,Planned maintenance at Cobalt Core Systems overran and impacted Core Ledger 01.,48111.0,medium
+INC0169,2024-10-08,SANCTIONS_SCREENING_01,human_error,Incorrect manual configuration change applied to Sanctions Screening 01.,12535.0,low
+INC0170,2024-10-19,IAM_DIRECTORY_01,technology_failure,Performance degradation on IAM Directory 01 during peak processing.,2638.0,low
+INC0171,2024-10-20,CLEARING_INTERFACE_01,human_error,Wrong environment targeted during a support task on Clearing Interface 01.,4575.0,low
+INC0172,2024-10-26,PAYMENT_ENGINE_01,third_party_failure,Keystone Payment Rails delivered a faulty data update used by Payment Engine 01.,2901.0,low
+INC0173,2024-10-27,CLEARING_INTERFACE_01,human_error,Wrong environment targeted during a support task on Clearing Interface 01.,99295.0,medium
+INC0174,2024-10-27,PAYMENT_GATEWAY_01,human_error,Operator submitted an erroneous batch to Payment Gateway 01.,5803.0,low
+INC0175,2024-10-31,REG_REPORTING_ENGINE_01,technology_failure,Deployment to Regulatory Reporting Engine 01 introduced a defect found after release.,25257.0,medium
+INC0176,2024-11-12,TRADE_CAPTURE_01,third_party_failure,Planned maintenance at Meridian Market Data overran and impacted Trade Capture 01.,80570.0,medium
+INC0177,2024-11-28,DATA_WAREHOUSE_01,cyber_event,Malware detected on a host supporting Data Warehouse 01; contained.,205740.0,medium
+INC0178,2024-11-28,LIQUIDITY_MONITOR_01,technology_failure,Performance degradation on Liquidity Monitor 01 during peak processing.,11704.0,low
+INC0179,2024-12-03,SSO_GATEWAY_01,process_failure,Manual reconciliation step missed for SSO Gateway 01.,573.0,low
+INC0180,2024-12-10,DATA_WAREHOUSE_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Data Warehouse 01.,66690.0,medium
+INC0181,2024-12-14,ONBOARDING_PORTAL_01,technology_failure,Configuration drift after deployment on Onboarding Portal 01 caused errors.,53938.0,medium
+INC0182,2024-12-19,PAYMENT_ENGINE_01,process_failure,Month-end processing for Payment Engine 01 ran late.,18013.0,low
+INC0183,2024-12-26,DATA_WAREHOUSE_01,human_error,Incorrect manual configuration change applied to Data Warehouse 01.,38755.0,medium
+INC0184,2024-12-31,TRADE_CAPTURE_01,process_failure,Incomplete handover between operations teams affected Trade Capture 01.,12648.0,low
+INC0185,2025-01-07,KYC_DOCUMENT_STORE_01,human_error,Wrong environment targeted during a support task on KYC Document Store 01.,29359.0,medium
+INC0186,2025-01-13,CUSTOMER_PORTAL_01,process_failure,Manual reconciliation step missed for Customer Portal 01.,12254.0,low
+INC0187,2025-01-28,PAYMENT_ENGINE_01,human_error,Operator submitted an erroneous batch to Payment Engine 01.,40876.0,medium
+INC0188,2025-01-28,TRADE_CAPTURE_01,technology_failure,Failed deployment on Trade Capture 01; release rolled back.,137200.0,medium
+INC0189,2025-01-28,TRADE_CAPTURE_01,human_error,Operator submitted an erroneous batch to Trade Capture 01.,49461.0,medium
+INC0190,2025-02-08,IAM_DIRECTORY_01,process_failure,Change request for IAM Directory 01 implemented without full approval.,383673.0,high
+INC0191,2025-02-08,SSO_GATEWAY_01,process_failure,Month-end processing for SSO Gateway 01 ran late.,150377.0,medium
+INC0192,2025-02-09,CASH_FORECAST_01,process_failure,Manual reconciliation step missed for Cash Forecast 01.,8391.0,low
+INC0193,2025-02-11,PAYMENT_ENGINE_01,human_error,Incorrect manual configuration change applied to Payment Engine 01.,3675.0,low
+INC0194,2025-02-13,SSO_GATEWAY_01,process_failure,Month-end processing for SSO Gateway 01 ran late.,2712.0,low
+INC0195,2025-02-14,ONBOARDING_PORTAL_01,human_error,Operator submitted an erroneous batch to Onboarding Portal 01.,6006.0,low
+INC0196,2025-02-22,TRADE_SETTLEMENT_01,third_party_failure,Planned maintenance at Meridian Market Data overran and impacted Trade Settlement 01.,91243.0,medium
+INC0197,2025-02-25,CASH_FORECAST_01,technology_failure,Message queue backlog on Cash Forecast 01 delayed processing.,3280.0,low
+INC0198,2025-02-25,TRADE_CAPTURE_01,third_party_failure,Service degradation at Meridian Market Data affected Trade Capture 01.,23127.0,low
+INC0199,2025-02-28,CUSTOMER_PORTAL_01,human_error,Operator submitted an erroneous batch to Customer Portal 01.,30238.0,medium
+INC0200,2025-03-03,TRADE_CAPTURE_01,technology_failure,Database failover on Trade Capture 01 did not complete as expected.,11049.0,low
+INC0201,2025-03-15,CLEARING_INTERFACE_01,technology_failure,Performance degradation on Clearing Interface 01 during peak processing.,229416.0,medium
+INC0202,2025-03-31,IAM_DIRECTORY_01,technology_failure,Application outage on IAM Directory 01 caused by an infrastructure fault.,164130.0,medium
+INC0203,2025-03-31,PAYMENT_ENGINE_02,technology_failure,Performance degradation on Payment Engine 02 during peak processing.,101141.0,medium
+INC0204,2025-04-09,LIQUIDITY_MONITOR_01,process_failure,Month-end processing for Liquidity Monitor 01 ran late.,152841.0,medium
+INC0205,2025-04-22,ONBOARDING_PORTAL_01,process_failure,Incomplete handover between operations teams affected Onboarding Portal 01.,3164.0,low
+INC0206,2025-04-29,MESSAGING_HUB_01,third_party_failure,Service degradation at Vertex Messaging Networks affected Messaging Hub 01.,466373.0,high
+INC0207,2025-05-05,PAYMENT_ENGINE_01,human_error,Wrong environment targeted during a support task on Payment Engine 01.,9754.0,low
+INC0208,2025-05-20,PAYMENT_GATEWAY_01,technology_failure,Database failover on Payment Gateway 01 did not complete as expected.,26818.0,medium
+INC0209,2025-05-21,TRADE_SETTLEMENT_01,process_failure,Incomplete handover between operations teams affected Trade Settlement 01.,19092.0,low
+INC0210,2025-05-26,PAYMENT_GATEWAY_01,human_error,Operator submitted an erroneous batch to Payment Gateway 01.,42841.0,medium
+INC0211,2025-06-01,KYC_DOCUMENT_STORE_01,human_error,Operator submitted an erroneous batch to KYC Document Store 01.,2995.0,low
+INC0212,2025-06-02,CORE_LEDGER_01,human_error,Wrong environment targeted during a support task on Core Ledger 01.,2186.0,low
+INC0213,2025-06-07,SANCTIONS_SCREENING_01,technology_failure,Performance degradation on Sanctions Screening 01 during peak processing.,11547.0,low
+INC0214,2025-06-11,MESSAGING_HUB_01,third_party_failure,Service degradation at Vertex Messaging Networks affected Messaging Hub 01.,5964.0,low
+INC0215,2025-06-18,REG_REPORTING_ENGINE_01,process_failure,Change request for Regulatory Reporting Engine 01 implemented without full approval.,22322.0,low
+INC0216,2025-06-24,FRAUD_SCREENING_01,technology_failure,Database failover on Fraud Screening 01 did not complete as expected.,45585.0,medium
+INC0217,2025-07-07,ONBOARDING_PORTAL_01,human_error,Wrong environment targeted during a support task on Onboarding Portal 01.,5890.0,low
+INC0218,2025-07-08,DATA_WAREHOUSE_01,cyber_event,Denial-of-service traffic spike affected Data Warehouse 01.,2809.0,low
+INC0219,2025-07-13,ONBOARDING_PORTAL_01,process_failure,Incomplete handover between operations teams affected Onboarding Portal 01.,32424.0,medium
+INC0220,2025-07-19,IAM_DIRECTORY_01,third_party_failure,Service degradation at Orbital Identity Services affected IAM Directory 01.,34311.0,medium
+INC0221,2025-07-25,CASH_FORECAST_01,cyber_event,Malware detected on a host supporting Cash Forecast 01; contained.,347540.0,high
+INC0222,2025-07-26,TRADE_SETTLEMENT_01,technology_failure,Performance degradation on Trade Settlement 01 during peak processing.,8269.0,low
+INC0223,2025-07-27,PAYMENT_ENGINE_02,human_error,Wrong environment targeted during a support task on Payment Engine 02.,12413.0,low
+INC0224,2025-08-04,PAYMENT_GATEWAY_01,technology_failure,Message queue backlog on Payment Gateway 01 delayed processing.,46934.0,medium
+INC0225,2025-08-11,CUSTOMER_PORTAL_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Customer Portal 01.,15641.0,low
+INC0226,2025-08-12,CORE_LEDGER_01,technology_failure,Database failover on Core Ledger 01 did not complete as expected.,147638.0,medium
+INC0227,2025-08-21,TRADE_CAPTURE_01,third_party_failure,Planned maintenance at Meridian Market Data overran and impacted Trade Capture 01.,458291.0,high
+INC0228,2025-08-24,IAM_DIRECTORY_01,third_party_failure,Orbital Identity Services delivered a faulty data update used by IAM Directory 01.,97965.0,medium
+INC0229,2025-09-01,SSO_GATEWAY_01,cyber_event,Phishing-related credential compromise attempt involving SSO Gateway 01.,157428.0,medium
+INC0230,2025-09-04,CLEARING_INTERFACE_01,process_failure,Incomplete handover between operations teams affected Clearing Interface 01.,633970.0,high
+INC0231,2025-09-07,CASH_FORECAST_01,technology_failure,Database failover on Cash Forecast 01 did not complete as expected.,12688.0,low
+INC0232,2025-09-08,DATA_WAREHOUSE_01,technology_failure,Failed deployment on Data Warehouse 01; release rolled back.,44552.0,medium
+INC0233,2025-09-08,SSO_GATEWAY_01,technology_failure,Configuration drift after deployment on SSO Gateway 01 caused errors.,56159.0,medium
+INC0234,2025-09-23,CUSTOMER_PORTAL_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Customer Portal 01.,61184.0,medium
+INC0235,2025-09-26,DATA_WAREHOUSE_01,technology_failure,Performance degradation on Data Warehouse 01 during peak processing.,13219.0,low
+INC0236,2025-09-29,TRADE_SETTLEMENT_01,cyber_event,Malware detected on a host supporting Trade Settlement 01; contained.,179847.0,medium
+INC0237,2025-10-17,LIQUIDITY_MONITOR_01,technology_failure,Application outage on Liquidity Monitor 01 caused by an infrastructure fault.,2334.0,low
+INC0238,2025-10-24,LIQUIDITY_MONITOR_01,technology_failure,Configuration drift after deployment on Liquidity Monitor 01 caused errors.,75860.0,medium
+INC0239,2025-10-27,SSO_GATEWAY_01,technology_failure,Configuration drift after deployment on SSO Gateway 01 caused errors.,725.0,low
+INC0240,2025-10-30,REG_REPORTING_ENGINE_01,technology_failure,Failed deployment on Regulatory Reporting Engine 01; release rolled back.,30617.0,medium
+INC0241,2025-10-31,FRAUD_SCREENING_01,human_error,Operator submitted an erroneous batch to Fraud Screening 01.,9586.0,low
+INC0242,2025-11-08,CASH_FORECAST_01,human_error,Incorrect manual configuration change applied to Cash Forecast 01.,4829.0,low
+INC0243,2025-11-09,KYC_DOCUMENT_STORE_01,human_error,Wrong environment targeted during a support task on KYC Document Store 01.,1028.0,low
+INC0244,2025-11-17,MESSAGING_HUB_01,technology_failure,Application outage on Messaging Hub 01 caused by an infrastructure fault.,850636.0,high
+INC0245,2025-11-24,PAYMENT_ENGINE_01,third_party_failure,Service degradation at Keystone Payment Rails affected outbound payments on Payment Engine 01.,1635.0,low
+INC0246,2025-11-24,PAYMENT_ENGINE_02,third_party_failure,Service degradation at Keystone Payment Rails affected payments on Payment Engine 02.,30045.0,medium
+INC0247,2025-11-28,CASH_FORECAST_01,process_failure,Change request for Cash Forecast 01 implemented without full approval.,57205.0,medium
+INC0248,2025-12-06,ONBOARDING_PORTAL_01,cyber_event,Denial-of-service traffic spike affected Onboarding Portal 01.,87382.0,medium
+INC0249,2025-12-07,TRADE_CAPTURE_01,technology_failure,Failed deployment on Trade Capture 01; release rolled back.,29625.0,medium
+INC0250,2025-12-14,FRAUD_SCREENING_01,technology_failure,Database failover on Fraud Screening 01 did not complete as expected.,35005.0,medium
+INC0251,2025-12-23,REG_REPORTING_ENGINE_01,human_error,Wrong environment targeted during a support task on Regulatory Reporting Engine 01.,6132.0,low
+INC0252,2026-01-03,REG_REPORTING_ENGINE_01,human_error,Operator submitted an erroneous batch to Regulatory Reporting Engine 01.,106319.0,medium
+INC0253,2026-01-05,IAM_DIRECTORY_01,human_error,Operator submitted an erroneous batch to IAM Directory 01.,9252.0,low
+INC0254,2026-01-06,IAM_DIRECTORY_01,technology_failure,Failed deployment on IAM Directory 01; release rolled back.,90552.0,medium
+INC0255,2026-01-10,CORE_LEDGER_01,technology_failure,Message queue backlog on Core Ledger 01 delayed processing.,945123.0,high
+INC0256,2026-01-12,LIQUIDITY_MONITOR_01,cyber_event,Malware detected on a host supporting Liquidity Monitor 01; contained.,7010.0,low
+INC0257,2026-01-20,SSO_GATEWAY_01,technology_failure,Performance degradation on SSO Gateway 01 during peak processing.,232151.0,medium
+INC0258,2026-02-16,PAYMENT_ENGINE_01,technology_failure,Failed deployment on Payment Engine 01; release rolled back after batch errors.,19859.0,low
+INC0259,2026-02-20,DATA_WAREHOUSE_01,process_failure,Change request for Data Warehouse 01 implemented without full approval.,20368.0,low
+INC0260,2026-02-22,TRADE_CAPTURE_01,technology_failure,Configuration drift after deployment on Trade Capture 01 caused errors.,3863.0,low
+INC0261,2026-02-26,FRAUD_SCREENING_01,human_error,Operator submitted an erroneous batch to Fraud Screening 01.,17053.0,low
+INC0262,2026-03-13,CUSTOMER_PORTAL_01,process_failure,Manual reconciliation step missed for Customer Portal 01.,12573.0,low
+INC0263,2026-03-24,IAM_DIRECTORY_01,cyber_event,Denial-of-service traffic spike affected IAM Directory 01.,61120.0,medium
+INC0264,2026-03-26,CORE_LEDGER_01,technology_failure,Message queue backlog on Core Ledger 01 delayed processing.,106097.0,medium
+INC0265,2026-04-06,IAM_DIRECTORY_01,human_error,Incorrect manual configuration change applied to IAM Directory 01.,29629.0,medium
+INC0266,2026-04-06,SSO_GATEWAY_01,technology_failure,Database failover on SSO Gateway 01 did not complete as expected.,5038.0,low
+INC0267,2026-04-12,CASH_FORECAST_01,technology_failure,Message queue backlog on Cash Forecast 01 delayed processing.,16659.0,low
+INC0268,2026-04-17,PAYMENT_ENGINE_02,third_party_failure,Keystone Payment Rails delivered a faulty data update used by Payment Engine 02.,188221.0,medium
+INC0269,2026-04-18,CORE_LEDGER_01,third_party_failure,Planned maintenance at Cobalt Core Systems overran and impacted Core Ledger 01.,403811.0,high
+INC0270,2026-04-24,LIQUIDITY_MONITOR_01,technology_failure,Deployment to Liquidity Monitor 01 introduced a defect found after release.,38885.0,medium
+INC0271,2026-04-26,CLEARING_INTERFACE_01,third_party_failure,Vertex Messaging Networks delivered a faulty data update used by Clearing Interface 01.,58631.0,medium
+INC0272,2026-04-30,PAYMENT_GATEWAY_01,process_failure,Month-end processing for Payment Gateway 01 ran late.,168176.0,medium
+INC0273,2026-05-05,CORE_LEDGER_01,technology_failure,Deployment to Core Ledger 01 introduced a defect found after release.,228648.0,medium
+INC0274,2026-05-08,ONBOARDING_PORTAL_01,third_party_failure,Service degradation at Lumen Document Services affected Onboarding Portal 01.,48080.0,medium
+INC0275,2026-05-08,TRADE_SETTLEMENT_01,process_failure,Manual reconciliation step missed for Trade Settlement 01.,7867.0,low
+INC0276,2026-05-11,DATA_WAREHOUSE_01,third_party_failure,NimbusCloud Hosting delivered a faulty data update used by Data Warehouse 01.,11599.0,low
+INC0277,2026-05-12,PAYMENT_ENGINE_01,human_error,Incorrect manual configuration change applied to routing rules on Payment Engine 01.,16376.0,low
+INC0278,2026-05-14,LIQUIDITY_MONITOR_01,technology_failure,Database failover on Liquidity Monitor 01 did not complete as expected.,21867.0,low
+INC0279,2026-05-18,ONBOARDING_PORTAL_01,human_error,Operator submitted an erroneous batch to Onboarding Portal 01.,97806.0,medium
+INC0280,2026-05-21,MESSAGING_HUB_01,process_failure,Incomplete handover between operations teams affected Messaging Hub 01.,90665.0,medium
+INC0281,2026-05-28,TRADE_SETTLEMENT_01,process_failure,Month-end processing for Trade Settlement 01 ran late.,7293.0,low
+INC0282,2026-06-07,CASH_FORECAST_01,process_failure,Incomplete handover between operations teams affected Cash Forecast 01.,222.0,low
+INC0283,2026-06-11,PAYMENT_GATEWAY_01,technology_failure,Performance degradation on Payment Gateway 01 during peak processing.,74714.0,medium
+INC0284,2026-06-12,CUSTOMER_PORTAL_01,human_error,Operator submitted an erroneous batch to Customer Portal 01.,9866.0,low
+INC0285,2026-06-15,REG_REPORTING_ENGINE_01,human_error,Incorrect manual configuration change applied to Regulatory Reporting Engine 01.,2956.0,low
+INC0286,2026-06-18,CUSTOMER_PORTAL_01,technology_failure,Application outage on Customer Portal 01 caused by an infrastructure fault.,42940.0,medium
+INC0287,2026-06-27,CLEARING_INTERFACE_01,technology_failure,Performance degradation on Clearing Interface 01 during peak processing.,99144.0,medium
+INC0288,2026-07-01,SSO_GATEWAY_01,technology_failure,Performance degradation on SSO Gateway 01 during peak processing.,90458.0,medium
+INC0289,2026-07-09,LIQUIDITY_MONITOR_01,human_error,Wrong environment targeted during a support task on Liquidity Monitor 01.,5827.0,low
+INC0290,2026-07-16,ONBOARDING_PORTAL_01,third_party_failure,Lumen Document Services delivered a faulty data update used by Onboarding Portal 01.,19042.0,low
+INC0291,2026-07-18,FRAUD_SCREENING_01,technology_failure,Application outage on Fraud Screening 01 caused by an infrastructure fault.,67443.0,medium
+INC0292,2026-07-19,PAYMENT_ENGINE_01,technology_failure,Deployment to Payment Engine 01 introduced a defect in message mapping; hotfix required.,161612.0,medium
+INC0293,2026-07-19,PAYMENT_ENGINE_02,technology_failure,Configuration drift after deployment on Payment Engine 02 caused errors.,208627.0,medium
+INC0294,2026-07-22,CUSTOMER_PORTAL_01,technology_failure,Failed deployment on Customer Portal 01; release rolled back.,20969.0,low
+INC0295,2026-07-22,KYC_DOCUMENT_STORE_01,technology_failure,Configuration drift after deployment on KYC Document Store 01 caused errors.,2832.0,low
+INC0296,2026-07-23,PAYMENT_ENGINE_02,technology_failure,Performance degradation on Payment Engine 02 during peak processing.,91717.0,medium
+INC0297,2026-08-04,CORE_LEDGER_01,technology_failure,Database failover on Core Ledger 01 did not complete as expected.,119235.0,medium
+INC0298,2026-08-05,PAYMENT_ENGINE_02,third_party_failure,Service degradation at Keystone Payment Rails affected Payment Engine 02.,25003.0,medium
+INC0299,2026-08-06,KYC_DOCUMENT_STORE_01,process_failure,Manual reconciliation step missed for KYC Document Store 01.,81173.0,medium
+INC0300,2026-08-07,KYC_DOCUMENT_STORE_01,third_party_failure,Service degradation at Lumen Document Services affected KYC Document Store 01.,13572.0,low
+INC0301,2026-08-13,CLEARING_INTERFACE_01,human_error,Incorrect manual configuration change applied to Clearing Interface 01.,10227.0,low
+INC0302,2026-08-16,PAYMENT_GATEWAY_01,technology_failure,Application outage on Payment Gateway 01 caused by an infrastructure fault.,3419.0,low
+INC0303,2026-09-02,CORE_LEDGER_01,human_error,Wrong environment targeted during a support task on Core Ledger 01.,4139.0,low
+INC0304,2026-09-02,KYC_DOCUMENT_STORE_01,cyber_event,Denial-of-service traffic spike affected KYC Document Store 01.,147016.0,medium
+INC0305,2026-09-11,ONBOARDING_PORTAL_01,third_party_failure,Lumen Document Services delivered a faulty data update used by Onboarding Portal 01.,2187.0,low
+INC0306,2026-09-11,PAYMENT_ENGINE_01,third_party_failure,Keystone Payment Rails API latency spike delayed payment submissions from Payment Engine 01.,140598.0,medium
+INC0307,2026-09-18,DATA_WAREHOUSE_01,third_party_failure,Service degradation at NimbusCloud Hosting affected Data Warehouse 01.,17400.0,low
+INC0308,2026-09-21,FRAUD_SCREENING_01,technology_failure,Failed deployment on Fraud Screening 01; release rolled back.,51937.0,medium
+INC0309,2026-09-21,SSO_GATEWAY_01,process_failure,Manual reconciliation step missed for SSO Gateway 01.,44372.0,medium
+INC0310,2026-09-22,CORE_LEDGER_01,technology_failure,Failed deployment on Core Ledger 01; release rolled back.,57638.0,medium
+INC0311,2026-09-25,TRADE_CAPTURE_01,human_error,Wrong environment targeted during a support task on Trade Capture 01.,5965.0,low
+INC0312,2026-09-29,TRADE_CAPTURE_01,cyber_event,Malware detected on a host supporting Trade Capture 01; contained.,184283.0,medium

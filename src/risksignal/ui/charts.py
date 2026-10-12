@@ -1,0 +1,128 @@
+"""Plotly figure builders for the UI. They only draw values the API returned."""
+
+from typing import Any
+
+import plotly.graph_objects as go
+
+from risksignal.ui.formatting import label_for
+
+NODE_COLORS = {"focus": "#1f77b4", "vendor": "#ff7f0e", "process": "#2ca02c", "related": "#7f7f7f"}
+BASELINE_COLOR = "#1f77b4"
+STRESS_COLOR = "#d62728"
+
+
+def kri_figure(series: dict[str, Any]) -> go.Figure:
+    """Line chart of one KRI over the window, with the window mean as a dashed line."""
+    points = series["observations"]
+    figure = go.Figure(go.Scatter(
+        x=[p["date"] for p in points], y=[p["value"] for p in points],
+        mode="lines+markers", name=label_for(series["kri_name"]), line={"color": BASELINE_COLOR},
+    ))
+    figure.add_hline(y=series["window_mean"], line_dash="dash", line_color="grey",
+                     annotation_text="window mean", annotation_position="top left")
+    figure.update_layout(title=label_for(series["kri_name"]), height=280, margin={"l": 10, "r": 10, "t": 40, "b": 10},
+                         showlegend=False, yaxis={"rangemode": "tozero"})
+    return figure
+
+
+def _density(histogram: dict[str, Any]) -> tuple[list[float], list[float]]:
+    """Bin edges and a step-plot height per bin: share of simulated years per unit of loss."""
+    edges, counts = histogram["bin_edges"], histogram["counts"]
+    total = sum(counts) + histogram["overflow_count"]
+    heights = [c / (total * (edges[i + 1] - edges[i])) for i, c in enumerate(counts)]
+    return edges, heights + [heights[-1]]
+
+
+def distribution_figure(
+    baseline_histogram: dict[str, Any], baseline_p95: float,
+    stress_histogram: dict[str, Any] | None = None, stress_p95: float | None = None,
+) -> go.Figure:
+    """Annual loss distribution of the baseline (and the stress run, if given).
+
+    Each histogram covers 0 to its own 99th percentile, and years above that are not drawn.
+    Heights are densities (share of simulated years per unit of loss), so runs with different
+    ranges can be compared. Dashed lines mark each P95.
+    """
+    figure = go.Figure()
+    runs = [("Baseline", baseline_histogram, baseline_p95, BASELINE_COLOR)]
+    if stress_histogram is not None and stress_p95 is not None:
+        runs.append(("Stress", stress_histogram, stress_p95, STRESS_COLOR))
+    for name, histogram, p95, color in runs:
+        edges, heights = _density(histogram)
+        figure.add_trace(go.Scatter(x=edges, y=heights, name=name, mode="lines", line={"color": color, "shape": "hv"},
+                                    fill="tozeroy", opacity=0.55))
+        figure.add_vline(x=p95, line_dash="dash", line_color=color, annotation_text=f"{name} P95",
+                         annotation_position="top")
+    figure.update_layout(
+        title="Simulated annual aggregate loss (illustrative model, synthetic data)",
+        xaxis={"title": "Annual loss (plotted up to each run's 99th percentile)", "tickformat": "~s", "rangemode": "tozero"},
+        yaxis={"title": "Density (share of simulated years)", "showticklabels": False},
+        height=420, margin={"l": 10, "r": 10, "t": 60, "b": 10}, legend={"orientation": "h", "y": -0.2},
+    )
+    return figure
+
+
+def _spread(count: int, height: float) -> list[float]:
+    """Evenly spaced y positions, centred on zero, top to bottom."""
+    if count == 1:
+        return [0.0]
+    return [height / 2 - i * height / (count - 1) for i in range(count)]
+
+
+def dependency_layout(system_id: str, dependencies: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Node and edge data for the shared-exposure map around one system.
+
+    Left: the system. Middle: its vendors and business processes. Right: related systems that
+    share one of those vendors or processes, each linked to what it shares.
+    """
+    middle = ([("vendor", v["vendor_id"], f"{v['name']} ({v['vendor_id']})") for v in dependencies["vendors"]]
+              + [("process", p["process_id"], f"{p['name']} ({p['process_id']})") for p in dependencies["supported_processes"]])
+    related = dependencies["related_systems"]
+    height = float(max(len(middle), len(related), 2))
+
+    nodes: list[dict[str, Any]] = [{"key": f"system:{system_id}", "label": system_id, "kind": "focus", "x": 0.0, "y": 0.0,
+                                    "hover": f"{system_id} (selected system)"}]
+    for (kind, entity_id, label), y in zip(middle, _spread(len(middle), height)):
+        nodes.append({"key": f"{kind}:{entity_id}", "label": label, "kind": kind, "x": 1.0, "y": y,
+                      "hover": f"{kind.capitalize()}: {label}"})
+    edges = [{"source": f"system:{system_id}", "target": f"{kind}:{entity_id}", "kind": kind} for kind, entity_id, _ in middle]
+    for item, y in zip(related, _spread(len(related), height)):
+        sys_id = item["system"]["system_id"]
+        nodes.append({"key": f"related:{sys_id}", "label": sys_id, "kind": "related", "x": 2.0, "y": y,
+                      "hover": "<br>".join(r["explanation"] for r in item["relationships"])})
+        edges += [{"source": f"{r['kind'].replace('shared_', '')}:{r['entity_id']}", "target": f"related:{sys_id}",
+                   "kind": r["kind"].replace("shared_", "")} for r in item["relationships"]]
+    return {"nodes": nodes, "edges": edges}
+
+
+def dependency_figure(system_id: str, dependencies: dict[str, Any]) -> go.Figure:
+    """Readable shared-exposure map: system, its vendors and processes, and related systems."""
+    layout = dependency_layout(system_id, dependencies)
+    position = {n["key"]: (n["x"], n["y"]) for n in layout["nodes"]}
+    figure = go.Figure()
+    for kind, color in (("vendor", NODE_COLORS["vendor"]), ("process", NODE_COLORS["process"])):
+        xs: list[float | None] = []
+        ys: list[float | None] = []
+        for edge in (e for e in layout["edges"] if e["kind"] == kind):
+            (x0, y0), (x1, y1) = position[edge["source"]], position[edge["target"]]
+            xs += [x0, x1, None]
+            ys += [y0, y1, None]
+        if xs:
+            figure.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line={"color": color, "width": 1.5},
+                                        hoverinfo="skip", showlegend=False))
+    names = {"focus": "Selected system", "vendor": "Vendor", "process": "Business process", "related": "Related system"}
+    for kind in ("focus", "vendor", "process", "related"):
+        group = [n for n in layout["nodes"] if n["kind"] == kind]
+        if group:
+            figure.add_trace(go.Scatter(
+                x=[n["x"] for n in group], y=[n["y"] for n in group], mode="markers+text", name=names[kind],
+                text=[n["label"] for n in group], textposition="middle right" if kind == "related" else "top center",
+                hovertext=[n["hover"] for n in group], hoverinfo="text",
+                marker={"size": 16, "color": NODE_COLORS[kind]},
+            ))
+    figure.update_layout(
+        title="Shared exposure map (synthetic data)", height=max(360, 60 * len({n["y"] for n in layout["nodes"]}) + 120),
+        xaxis={"visible": False, "range": [-0.4, 3.4]}, yaxis={"visible": False},
+        margin={"l": 10, "r": 10, "t": 50, "b": 10}, legend={"orientation": "h", "y": -0.05},
+    )
+    return figure

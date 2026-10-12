@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "risksignal"
+version = "0.1.0"
+description = "Research prototype: agentic Operational Risk investigation and stochastic scenario analysis on synthetic data."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=3.0,<4",
+    "numpy>=2.2,<3",
+    "scipy>=1.15,<2",
+    "pydantic>=2.10,<3",
+    "networkx>=3.4,<4",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+    "streamlit>=1.40,<2",
+    "plotly>=6.0,<8",
+    "httpx>=0.27,<1",
+    "anthropic>=0.40,<2",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<10", "pyyaml>=6.0,<7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

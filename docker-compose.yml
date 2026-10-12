@@ -1,0 +1,44 @@
+# Run the whole demo with:   docker compose up --build
+#   dashboard: http://localhost:8501      API docs: http://localhost:8000/docs
+#
+# Optional settings come from your shell or from a local .env file (copy .env.example):
+#   ANTHROPIC_API_KEY          enables the live AI investigator
+#   RISKSIGNAL_LLM_PROVIDER    "anthropic" (default) or "mock" (offline demo, no key needed)
+#   ANTHROPIC_MODEL            override the default Anthropic model
+#
+# All data are synthetic. Ports are published on localhost only because there is no authentication.
+name: risksignal
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+      RISKSIGNAL_LLM_PROVIDER: ${RISKSIGNAL_LLM_PROVIDER:-anthropic}
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,sys,urllib.request; sys.exit(0 if json.load(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3))['status'] == 'ok' else 1)"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    environment:
+      RISKSIGNAL_API_URL: ${RISKSIGNAL_API_URL:-http://api:8000}
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy

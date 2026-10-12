@@ -1,0 +1,41 @@
+control_id,name,description,control_type,system_id,last_review_date,review_status
+C001,Change Approval Review,Releases require independent approval before deployment. Applies to Payment Engine 01.,preventive,PAYMENT_ENGINE_01,2026-06-02,current
+C002,Pre-Release Regression Testing,Regression tests must pass before a release goes live. Applies to Payment Engine 01.,preventive,PAYMENT_ENGINE_01,2025-08-06,overdue
+C003,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Payment Engine 01.,detective,PAYMENT_ENGINE_01,2026-08-16,current
+C004,Vendor Performance Review,Vendor service levels and incidents are reviewed with the vendor. Applies to Payment Engine 01.,detective,PAYMENT_ENGINE_01,2025-11-14,due
+C005,Change Approval Review,Releases require independent approval before deployment. Applies to Payment Engine 02.,preventive,PAYMENT_ENGINE_02,2026-03-14,current
+C006,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to Payment Engine 02.,detective,PAYMENT_ENGINE_02,2026-08-31,current
+C007,Vendor Performance Review,Vendor service levels and incidents are reviewed with the vendor. Applies to Payment Engine 02.,detective,PAYMENT_ENGINE_02,2025-10-15,due
+C008,Change Approval Review,Releases require independent approval before deployment. Applies to Payment Gateway 01.,preventive,PAYMENT_GATEWAY_01,2026-03-15,current
+C009,Segregation of Duties Check,No single person can both request and approve a change. Applies to Payment Gateway 01.,preventive,PAYMENT_GATEWAY_01,2026-03-18,current
+C010,Segregation of Duties Check,No single person can both request and approve a change. Applies to Messaging Hub 01.,preventive,MESSAGING_HUB_01,2026-06-26,current
+C011,Pre-Release Regression Testing,Regression tests must pass before a release goes live. Applies to Messaging Hub 01.,preventive,MESSAGING_HUB_01,2026-08-11,current
+C012,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Fraud Screening 01.,detective,FRAUD_SCREENING_01,2025-10-27,due
+C013,Capacity Threshold Alerting,Alerts warn when load approaches capacity limits. Applies to Fraud Screening 01.,detective,FRAUD_SCREENING_01,2025-11-15,due
+C014,Backup and Restore Test,Backups are restored in a test environment to prove they work. Applies to Sanctions Screening 01.,corrective,SANCTIONS_SCREENING_01,2025-09-24,overdue
+C015,Patch Management Review,Security patches are tracked and applied within target times. Applies to Sanctions Screening 01.,preventive,SANCTIONS_SCREENING_01,2026-03-10,current
+C016,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to Trade Settlement 01.,detective,TRADE_SETTLEMENT_01,2025-08-17,overdue
+C017,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Trade Settlement 01.,detective,TRADE_SETTLEMENT_01,2025-10-19,due
+C018,Vendor Performance Review,Vendor service levels and incidents are reviewed with the vendor. Applies to Trade Capture 01.,detective,TRADE_CAPTURE_01,2026-03-31,current
+C019,Backup and Restore Test,Backups are restored in a test environment to prove they work. Applies to Clearing Interface 01.,corrective,CLEARING_INTERFACE_01,2026-03-10,current
+C020,Segregation of Duties Check,No single person can both request and approve a change. Applies to Clearing Interface 01.,preventive,CLEARING_INTERFACE_01,2026-06-15,current
+C021,Pre-Release Regression Testing,Regression tests must pass before a release goes live. Applies to Onboarding Portal 01.,preventive,ONBOARDING_PORTAL_01,2026-08-24,current
+C022,Backup and Restore Test,Backups are restored in a test environment to prove they work. Applies to Onboarding Portal 01.,corrective,ONBOARDING_PORTAL_01,2025-09-16,overdue
+C023,Segregation of Duties Check,No single person can both request and approve a change. Applies to KYC Document Store 01.,preventive,KYC_DOCUMENT_STORE_01,2026-07-11,current
+C024,Privileged Access Recertification,Administrator access rights are periodically recertified. Applies to KYC Document Store 01.,preventive,KYC_DOCUMENT_STORE_01,2025-10-29,due
+C025,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to IAM Directory 01.,detective,IAM_DIRECTORY_01,2025-07-29,overdue
+C026,Vendor Performance Review,Vendor service levels and incidents are reviewed with the vendor. Applies to IAM Directory 01.,detective,IAM_DIRECTORY_01,2026-03-12,current
+C027,Segregation of Duties Check,No single person can both request and approve a change. Applies to SSO Gateway 01.,preventive,SSO_GATEWAY_01,2025-10-28,due
+C028,Patch Management Review,Security patches are tracked and applied within target times. Applies to SSO Gateway 01.,preventive,SSO_GATEWAY_01,2026-06-29,current
+C029,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Privileged Access 01.,detective,PRIVILEGED_ACCESS_01,2026-09-02,current
+C030,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to Privileged Access 01.,detective,PRIVILEGED_ACCESS_01,2026-01-28,current
+C031,Pre-Release Regression Testing,Regression tests must pass before a release goes live. Applies to Core Ledger 01.,preventive,CORE_LEDGER_01,2025-08-19,overdue
+C032,Patch Management Review,Security patches are tracked and applied within target times. Applies to Core Ledger 01.,preventive,CORE_LEDGER_01,2025-11-04,due
+C033,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to Customer Portal 01.,detective,CUSTOMER_PORTAL_01,2025-07-31,overdue
+C034,Real-Time Availability Monitoring,Automated alerts fire when the service is unavailable. Applies to Regulatory Reporting Engine 01.,detective,REG_REPORTING_ENGINE_01,2026-04-14,current
+C035,Privileged Access Recertification,Administrator access rights are periodically recertified. Applies to Regulatory Reporting Engine 01.,preventive,REG_REPORTING_ENGINE_01,2026-08-19,current
+C036,Segregation of Duties Check,No single person can both request and approve a change. Applies to Data Warehouse 01.,preventive,DATA_WAREHOUSE_01,2026-03-05,current
+C037,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Data Warehouse 01.,detective,DATA_WAREHOUSE_01,2026-07-27,current
+C038,Daily Reconciliation Check,Totals are reconciled against upstream and downstream records. Applies to Liquidity Monitor 01.,detective,LIQUIDITY_MONITOR_01,2026-06-15,current
+C039,Vendor Performance Review,Vendor service levels and incidents are reviewed with the vendor. Applies to Liquidity Monitor 01.,detective,LIQUIDITY_MONITOR_01,2026-01-20,current
+C040,Patch Management Review,Security patches are tracked and applied within target times. Applies to Cash Forecast 01.,preventive,CASH_FORECAST_01,2025-08-11,overdue

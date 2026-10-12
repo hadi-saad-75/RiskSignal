@@ -1,0 +1,11 @@
+process_id,name,description
+P01,International Payments,"Cross-border payment initiation, messaging and settlement."
+P02,Domestic Payments,"Local payment initiation, clearing and settlement."
+P03,Trade Settlement,Confirmation and settlement of securities trades.
+P04,Client Onboarding,Identity checks and account opening for new clients.
+P05,Identity and Access Management,Staff and customer authentication and access rights.
+P06,Fraud Monitoring,Detection and review of suspicious transactions.
+P07,Regulatory Reporting,Preparation and submission of regulatory reports.
+P08,Customer Account Servicing,"Account balances, statements and customer self-service."
+P09,Liquidity Management,Monitoring and forecasting of cash positions.
+P10,Financial Crime Screening,Sanctions and watchlist screening.

@@ -1,0 +1,34 @@
+"""RiskSignal Streamlit app. Entry point:
+
+    streamlit run src/risksignal/ui/app.py
+
+The UI talks only to the FastAPI backend (default http://127.0.0.1:8000, override with the
+RISKSIGNAL_API_URL environment variable). Start the backend first:
+
+    uvicorn risksignal.api.main:app --reload
+
+All data are synthetic and the model is illustrative.
+"""
+
+import streamlit as st
+
+from risksignal.ui.components import sidebar_status
+from risksignal.ui.views.ai_investigator import render_ai_investigator
+from risksignal.ui.views.overview import render_overview
+from risksignal.ui.views.scenario_lab import render_scenario_lab
+from risksignal.ui.views.system_explorer import render_system_explorer
+
+
+def main() -> None:
+    st.set_page_config(page_title="RiskSignal", page_icon="📊", layout="wide")
+    sidebar_status()
+    navigation = st.navigation([
+        st.Page(render_overview, title="Overview", icon="🏠", url_path="overview", default=True),
+        st.Page(render_system_explorer, title="System Explorer", icon="🔎", url_path="system-explorer"),
+        st.Page(render_scenario_lab, title="Scenario Lab", icon="🧪", url_path="scenario-lab"),
+        st.Page(render_ai_investigator, title="AI Investigator", icon="🤖", url_path="ai-investigator"),
+    ])
+    navigation.run()
+
+
+main()
