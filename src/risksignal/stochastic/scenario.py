@@ -5,7 +5,7 @@ Plain English
 A *scenario* is a "what if" written as explicit numbers. "What if incidents happen 1.8 times
 as often, and each one is somewhat more costly?" The scenario engine takes the baseline
 model (estimated from synthetic history), applies those numbers, simulates both versions
-with the same seed, and shows the two side by side with the differences.
+from common random numbers, and shows the two side by side with the differences.
 
 The numbers are assumptions made by a person. They are NOT derived from data, NOT
 calibrated, and NOT produced by an LLM. Nothing here works out causes: a scenario does not
@@ -20,10 +20,14 @@ Given baseline parameters (lambda, mu, sigma) and a scenario (m_lambda, delta_mu
     mu_stress     = mu + delta_mu
     sigma_stress  = m_sigma * sigma
 
-The stress run uses the same model (compound Poisson-Lognormal), the same seed and the same
-number of simulations as the baseline. Because the same seed is used, a scenario that
-changes nothing gives results identical to the baseline. Small differences between two
-different scenarios still contain some Monte Carlo noise.
+The stress run uses the same model (compound Poisson-Lognormal) and the same number of
+simulations as the baseline, and is simulated with COMMON RANDOM NUMBERS: simulated year j
+of the stress run is built from the same random events as year j of the baseline (see
+``simulate_paired_annual_losses``). Using the same seed alone would not do this, because
+different lambdas consume the random stream differently. Coupling removes most of the sampling
+noise from the comparison; a scenario that changes nothing gives results identical to the
+baseline, and a scenario that can only add loss (more incidents, higher mu, same sigma) gives a
+stressed loss that is at least the baseline loss in every simulated year.
 """
 
 import math
@@ -48,7 +52,8 @@ from risksignal.stochastic.simulation import (
     DEFAULT_SEED,
     analytic_mean_annual_loss,
     build_baseline_model,
-    simulate_parameters,
+    simulate_paired_annual_losses,
+    summarise_losses,
 )
 
 METRIC_NAMES = ("mean", "median", "p95", "p99", "expected_shortfall_95", "expected_shortfall_99")
@@ -174,11 +179,12 @@ def compare_scenario(
     seed: int = DEFAULT_SEED,
     histogram_bins: int | None = 50,
 ) -> ScenarioComparison:
-    """Simulate the baseline and the stressed model (same seed) and compare them."""
+    """Simulate the baseline and the stressed model from common random numbers and compare them."""
     baseline = baseline_model.parameters
     stress = apply_scenario(baseline, scenario)
-    baseline_metrics, baseline_histogram = simulate_parameters(baseline, n_simulations, seed, histogram_bins)
-    stress_metrics, stress_histogram = simulate_parameters(stress, n_simulations, seed, histogram_bins)
+    baseline_losses, stress_losses = simulate_paired_annual_losses(baseline, stress, n_simulations, seed)
+    baseline_metrics, baseline_histogram = summarise_losses(baseline_losses, histogram_bins)
+    stress_metrics, stress_histogram = summarise_losses(stress_losses, histogram_bins)
     absolute, percent = compare_metrics(baseline_metrics, stress_metrics)
 
     return ScenarioComparison(

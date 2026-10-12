@@ -146,7 +146,7 @@ def _results(result: dict[str, Any]) -> None:
     ])
     st.caption(
         f"{result['baseline_assumptions']['number_of_simulations']:,} simulated years, seed {base_assumptions['random_seed']}, "
-        "same seed for baseline and stress. Closed-form mean as a check: "
+        "same seed and common random numbers for baseline and stress. Closed-form mean as a check: "
         f"baseline {format_amount(out['baseline_analytic_mean_annual_loss'])}, "
         f"stress {format_amount(out['stress_analytic_mean_annual_loss'])}."
     )

@@ -10,7 +10,7 @@ Code: [`src/risksignal/agent/`](../src/risksignal/agent).
 
 ## 1. What makes this agent different from a chatbot
 
-A general chatbot answers from what its language model "knows" and from the conversation. This agent is built on the opposite principle: **the model knows nothing about the institution and calculates nothing.**
+A general chatbot answers from what its language model "knows" and from the conversation. This agent is built on the opposite principle: **the model is given no knowledge of the institution and is instructed to calculate nothing**; every fact and number is supposed to come from a tool. Instructions are not guarantees, so the code also checks what the model writes (section 3).
 
 | A general chatbot | The RiskSignal agent |
 |---|---|
@@ -44,7 +44,7 @@ analyst question
 3. This repeats until the model writes its final answer, or a step limit (10 model turns) stops it.
 4. The result contains the answer, a tool activity log, warnings, and the structured output of every tool.
 
-The agent is a plain loop of about fifty lines. No agent framework is used.
+The agent is a short, plain loop. No agent framework is used.
 
 ## 3. Why calculations stay outside the language model
 

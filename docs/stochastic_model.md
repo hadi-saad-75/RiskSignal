@@ -34,7 +34,7 @@ N ~ Poisson(lambda),   P(N = k) = exp(-lambda) * lambda^k / k!,   E[N] = Var[N] 
 lambda_hat = n / T          n = incidents observed, T = years observed = days / 365.25
 ```
 
-`lambda_hat = n / T` is the maximum likelihood estimate for a Poisson rate. The window `T` counts both end dates, so a window from 1 Oct 2021 to 30 Sep 2026 is 5.00 years.
+`lambda_hat = n / T` is the maximum likelihood estimate for a Poisson rate. The window `T` counts both end dates, so a window from 1 Oct 2021 to 30 Sep 2026 is 5.00 years. The estimate is only a rate if every counted incident happened inside that window, so the code raises an error if the incident table contains dates outside it, instead of silently inflating `lambda`.
 
 Method labels in the output:
 
@@ -124,7 +124,7 @@ Estimators used on `M` sorted simulated losses:
 - `VaR_alpha` is the empirical inverse CDF (`numpy.quantile(..., method="inverted_cdf")`), which matches the definition above exactly.
 - `ES_alpha` averages the largest `M * (1 - alpha)` losses, giving a fractional weight to the boundary year if that number is not whole (Acerbi-Tasche form). This stays correct when many years have identical losses, such as zero, and guarantees `ES >= VaR`.
 
-**Monte Carlo noise.** The 99% level rests on only 1% of the simulated years (1,000 of 100,000), so P99 and ES99 are noisier than the mean. Re-running with another seed shows how much they move. This noise is separate from, and much smaller than, the uncertainty from having only a few dozen synthetic incidents to estimate parameters.
+**Monte Carlo noise.** The 99% level rests on only 1% of the simulated years (1,000 of 100,000), so P99 and ES99 are noisier than the mean. Re-running with another seed shows how much they move. Measured in the technical review for focal-like parameters over 40 seeds, the relative standard deviation across seeds was about 0.5% for the mean, 0.6% for P95, 1.3% for P99, 1.1% for ES95 and 2.0% for ES99 at 100,000 simulations, and roughly 2.4 to 3.7 times larger at 10,000 (about the square root of 10 is expected). This noise is separate from, and much smaller than, the uncertainty from having only a few dozen synthetic incidents to estimate parameters.
 
 ## 6. How outputs are labelled
 

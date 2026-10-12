@@ -20,8 +20,10 @@ def investigate(
 ) -> InvestigationResponse:
     """Ask the investigation agent a question, for example "Investigate PAYMENT_ENGINE_01."
 
-    The agent decides which deterministic tools to call. It calculates nothing itself and makes
-    no risk decisions. The response contains the answer, a log of the tool calls and warnings.
+    The agent decides which deterministic tools to call. Risk numbers are computed by those tools, not by
+    the language model, and numbers in the answer that match no tool output are flagged (best effort, not
+    proof of correctness). It makes no risk decisions. The response contains the answer, a log of the tool
+    calls and warnings.
     A live request can take a while because the language model is called several times.
     """
     try:

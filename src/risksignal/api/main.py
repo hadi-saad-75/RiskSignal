@@ -27,6 +27,8 @@ from risksignal.api.dependencies import (
 )
 from risksignal.api.schemas import HealthResponse
 from risksignal.tools.context import ToolContext
+from risksignal.tools.schemas import ToolError
+from risksignal.tools.system_tools import list_systems
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ Backend for **RiskSignal**, an agentic Operational Risk investigation and stocha
 
 * **All data are synthetic** (a fictional institution, "Atlas Bank") and all model parameters are illustrative.
 * Simulation results are outputs under stated modelling assumptions, **not forecasts**, and not regulatory capital figures.
-* The agent endpoint supports a human analyst. It calculates nothing itself and makes no risk decisions.
+* The agent endpoint supports a human analyst. Risk numbers are computed by deterministic tools, not by the language model, and any number the agent writes is checked against the tool outputs (best effort). It makes no risk decisions.
 * Not calibrated to, and not related to, any real institution.
 """
 
@@ -57,8 +59,13 @@ def create_app() -> FastAPI:
 
     @app.get("/health", response_model=HealthResponse, tags=["system"], summary="Service status")
     def health(ctx: ToolContext = Depends(get_tool_context), settings: Settings = Depends(get_settings)) -> HealthResponse:
-        """Reports whether the service, the database and the language model are available."""
-        database_available = ctx.db_path.is_file()
+        """Reports whether the service, the database and the language model are available.
+
+        The database counts as available only if it can actually be read and contains systems, so an
+        empty or corrupt file is reported as degraded (Docker Compose gates the dashboard on this).
+        """
+        systems = list_systems(ctx)
+        database_available = not isinstance(systems, ToolError) and len(systems.systems) > 0
         return HealthResponse(
             status="ok" if database_available else "degraded",
             version=__version__,

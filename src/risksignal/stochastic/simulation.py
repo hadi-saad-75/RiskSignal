@@ -52,6 +52,14 @@ DEFAULT_SEED = 42
 MAX_EXPECTED_SEVERITY_DRAWS = 50_000_000
 
 
+def _check_draw_budget(lam: float, n_simulations: int) -> None:
+    if lam * n_simulations > MAX_EXPECTED_SEVERITY_DRAWS:
+        raise ValueError(
+            f"lambda * n_simulations = {lam * n_simulations:,.0f} severity draws exceeds the "
+            f"limit of {MAX_EXPECTED_SEVERITY_DRAWS:,}; reduce n_simulations or lambda"
+        )
+
+
 def aggregate_by_year(counts: np.ndarray, severities: np.ndarray) -> np.ndarray:
     """Sum severities within each simulated year.
 
@@ -73,15 +81,64 @@ def simulate_annual_losses(
     ``rng`` may be a seed (int) or a ``numpy.random.Generator``. Counts are drawn first,
     then all severities in one vectorised call, so 100,000 years take well under a second.
     """
-    if lam * n_simulations > MAX_EXPECTED_SEVERITY_DRAWS:
-        raise ValueError(
-            f"lambda * n_simulations = {lam * n_simulations:,.0f} severity draws exceeds the "
-            f"limit of {MAX_EXPECTED_SEVERITY_DRAWS:,}; reduce n_simulations or lambda"
-        )
+    _check_draw_budget(lam, n_simulations)
     generator = np.random.default_rng(rng)
     counts = simulate_incident_counts(lam, n_simulations, generator)
     severities = sample_severities(mu, sigma, int(counts.sum()), generator)
     return aggregate_by_year(counts, severities)
+
+
+def simulate_paired_annual_losses(
+    baseline: ModelParameters, stress: ModelParameters, n_simulations: int,
+    rng: np.random.Generator | int | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Simulate baseline and stressed annual losses from COMMON random numbers.
+
+    Plain English: both versions of year ``j`` are built from the same underlying random
+    events, so simulated year ``j`` of the stress run is "the same year, under stress".
+    Differences between the two runs then come from the assumptions and not from sampling
+    luck, which matters most for mild scenarios (a 1% change in lambda would otherwise be
+    drowned by Monte Carlo noise and could even show the wrong sign). Merely using the same
+    seed does NOT achieve this: different lambdas consume the random stream differently and
+    the two runs end up uncorrelated.
+
+    Construction (exact, not an approximation). Draw baseline counts N ~ Poisson(lambda) and
+    standard normal draws Z for every baseline incident. Severity is exp(mu + sigma * Z).
+    The baseline losses are bit-identical to ``simulate_annual_losses`` with the same seed.
+
+    * lambda_stress > lambda: keep all baseline incidents and ADD independent incidents,
+      N_extra ~ Poisson(lambda_stress - lambda). A sum of independent Poissons is Poisson, so
+      the stressed count is Poisson(lambda_stress).
+    * lambda_stress < lambda: keep each baseline incident with probability
+      lambda_stress / lambda (thinning). A thinned Poisson is Poisson(lambda_stress).
+    * lambda_stress == lambda: same incidents.
+
+    Kept incidents re-use their Z with the stress mu and sigma. Z is independent of the
+    counts, so the stressed severities are i.i.d. Lognormal(mu_stress, sigma_stress).
+    """
+    _check_draw_budget(max(baseline.lambda_value, stress.lambda_value), n_simulations)
+    generator = np.random.default_rng(rng)
+    counts = simulate_incident_counts(baseline.lambda_value, n_simulations, generator)
+    z = generator.standard_normal(int(counts.sum()))
+    year = np.repeat(np.arange(n_simulations), counts)
+    baseline_losses = np.bincount(year, weights=np.exp(baseline.mu + baseline.sigma * z), minlength=n_simulations)
+
+    stress_severity = np.exp(stress.mu + stress.sigma * z)
+    if stress.lambda_value > baseline.lambda_value:
+        extra_counts = simulate_incident_counts(stress.lambda_value - baseline.lambda_value, n_simulations, generator)
+        extra_z = generator.standard_normal(int(extra_counts.sum()))
+        extra_year = np.repeat(np.arange(n_simulations), extra_counts)
+        stress_losses = np.bincount(
+            np.concatenate([year, extra_year]),
+            weights=np.concatenate([stress_severity, np.exp(stress.mu + stress.sigma * extra_z)]),
+            minlength=n_simulations,
+        )
+    elif stress.lambda_value < baseline.lambda_value:
+        kept = generator.random(len(z)) < stress.lambda_value / baseline.lambda_value
+        stress_losses = np.bincount(year, weights=stress_severity * kept, minlength=n_simulations)
+    else:
+        stress_losses = np.bincount(year, weights=stress_severity, minlength=n_simulations)
+    return baseline_losses, stress_losses
 
 
 def _observation_window(
@@ -143,6 +200,14 @@ def analytic_mean_annual_loss(parameters: ModelParameters) -> float:
     return parameters.lambda_value * lognormal_mean(parameters.mu, parameters.sigma)
 
 
+def summarise_losses(
+    losses: np.ndarray, histogram_bins: int | None = 50
+) -> tuple[LossMetrics, LossHistogram | None]:
+    """Metrics (and an optional compact histogram) of simulated annual losses."""
+    histogram = None if histogram_bins is None else make_histogram(losses, histogram_bins)
+    return compute_metrics(losses), histogram
+
+
 def simulate_parameters(
     parameters: ModelParameters,
     n_simulations: int = DEFAULT_N_SIMULATIONS,
@@ -153,8 +218,7 @@ def simulate_parameters(
     losses = simulate_annual_losses(
         parameters.lambda_value, parameters.mu, parameters.sigma, n_simulations, seed
     )
-    histogram = None if histogram_bins is None else make_histogram(losses, histogram_bins)
-    return compute_metrics(losses), histogram
+    return summarise_losses(losses, histogram_bins)
 
 
 def run_system_simulation(

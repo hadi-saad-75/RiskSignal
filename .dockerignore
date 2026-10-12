@@ -20,4 +20,3 @@ data
 *.sqlite3
 .vscode
 .idea
-deploy

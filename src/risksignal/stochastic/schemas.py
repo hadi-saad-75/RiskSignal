@@ -240,7 +240,10 @@ class ScenarioComparison(_Model):
     stress_analytic_mean_annual_loss: float = Field(ge=0)
 
     number_of_simulations: int = Field(gt=0)
-    random_seed: int = Field(description="The same seed is used for the baseline and the stress run.")
+    random_seed: int = Field(
+        description="Seed of the run. Baseline and stress are simulated from common random numbers "
+        "(coupled year by year), not merely from the same seed."
+    )
     baseline_histogram: LossHistogram | None = None
     stress_histogram: LossHistogram | None = None
 

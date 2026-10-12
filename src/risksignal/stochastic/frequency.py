@@ -38,6 +38,18 @@ def observation_years(start: date, end: date) -> float:
     return ((end - start).days + 1) / DAYS_PER_YEAR
 
 
+def _check_inside_window(incidents: pd.DataFrame, start: date, end: date) -> None:
+    if "date" not in incidents.columns or incidents.empty:
+        return
+    dates = pd.to_datetime(incidents["date"]).dt.date
+    outside = int(((dates < start) | (dates > end)).sum())
+    if outside:
+        raise ValueError(
+            f"{outside} incident(s) are dated outside the observation window {start} to {end}; "
+            "lambda = count / years would be overstated. Filter the incidents to the window first."
+        )
+
+
 def estimate_lambda_from_incidents(
     incidents: pd.DataFrame,
     system_id: str,
@@ -50,7 +62,11 @@ def estimate_lambda_from_incidents(
 ) -> FrequencyEstimate:
     """Estimate the annual Poisson rate lambda for one system.
 
-    ``incidents`` needs a ``system_id`` column (one row per incident).
+    ``incidents`` needs a ``system_id`` column (one row per incident). If it also has a ``date``
+    column, every incident must lie inside the observation window: ``count / years`` is only
+    a rate if the counted incidents all happened during those years, so a table that reaches
+    outside the window raises ``ValueError`` instead of silently inflating lambda. Filter the
+    table to the window first if you want a shorter window.
 
     Order of preference, always reported in ``method``:
 
@@ -67,6 +83,7 @@ def estimate_lambda_from_incidents(
     if lambda_override is not None and not lambda_override > 0:
         raise ValueError("lambda_override must be a positive number")
     years = observation_years(observation_start, observation_end)
+    _check_inside_window(incidents, observation_start, observation_end)
     count = int((incidents["system_id"] == system_id).sum())
     historical = count / years
 

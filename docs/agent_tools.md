@@ -12,7 +12,7 @@ Code: [`src/risksignal/tools/`](../src/risksignal/tools).
 
 A language model is good at deciding what to look at next and at writing clear prose. It is not a database, not a calculator and not a simulator, and it can state wrong things fluently. The design therefore gives the model **no way to touch data or numbers except through ordinary Python functions**:
 
-- **No invented numbers.** Counts, dates, losses, percentiles and Expected Shortfall come from tool results. The agent may quote them. It never computes them. A percentile from a Monte Carlo simulation cannot be produced by a language model anyway.
+- **No invented numbers.** Counts, dates, losses, percentiles and Expected Shortfall come from tool results. The agent may quote them and is instructed never to compute them; the investigator additionally flags any number in the answer that matches no tool output (best effort). A percentile from a Monte Carlo simulation cannot be produced by a language model anyway.
 - **No direct database access.** The agent has no SQL tool. Tools use fixed `SELECT` statements and pass user input only as bound parameters, so arbitrary SQL cannot be run, and nothing can be written.
 - **Auditability.** Each statement in an answer can be traced to a specific tool call with specific arguments and a structured result. A reviewer can replay the calls and get identical results.
 - **Reproducibility.** Tools are deterministic. Simulations take an explicit seed, and "recent" is measured from the dataset's end date (not today's date), so the same call always returns the same answer.
@@ -38,6 +38,17 @@ All tools take a `ToolContext` as first argument (the database path, the "as of"
 | `compare_baseline_and_stress(ctx, system_id, scenario_id, number_of_simulations=100000, random_seed=42)` | Baseline versus a **predefined** illustrative scenario (currently `SHARED_VENDOR_OUTAGE`), with absolute and percentage differences. Delegates to the scenario engine. | Modelled output |
 
 Tools delegate rather than reimplement: simulation tools call `run_system_simulation` and `run_scenario_analysis` from the stochastic package, and the dependency tool calls the graph query functions. Tests check these calls with spies and compare results with direct calls.
+
+### Tool-layer functions that are deliberately NOT offered to the agent
+
+The API and dashboard use four further functions of the same layer. They are not registered with the agent (a test checks the registry), because the agent has no need for them or must not use them:
+
+| Function | Used by | Why the agent does not get it |
+|---|---|---|
+| `list_systems` | API, dashboard system selector | A person picks the system; the agent investigates the one it is asked about. |
+| `get_bank_overview` | API, dashboard Overview | Bank-wide counts are a display feature. |
+| `list_scenarios` | API, dashboard Scenario Lab | The agent already sees the available scenario IDs in its tool schema. |
+| `compare_baseline_and_custom_scenario` | API, dashboard "Advanced assumptions" | It accepts free numeric stress assumptions. Only a person may set those; the agent may only select predefined scenarios. |
 
 ### What the simulation results contain
 

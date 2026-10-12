@@ -4,7 +4,6 @@ No Docker engine is needed: the files are parsed and their commands exercised di
 """
 
 import io
-import os
 import re
 import tomllib
 import urllib.request
@@ -97,7 +96,7 @@ def test_api_image(compose: dict) -> None:
     assert "RUN python -m risksignal.data.generator" in text  # the explicit data-setup step
     assert text.index("COPY src") > text.index("pip install") and text.index("generator") > text.index("COPY src")
     assert re.search(r"^USER app$", text, re.MULTILINE)  # not root
-    assert ('CMD ["sh", "-c", "exec uvicorn risksignal.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]') in text
+    assert 'CMD ["uvicorn", "risksignal.api.main:app", "--host", "0.0.0.0", "--port", "8000"]' in text
     assert "EXPOSE 8000" in text
 
 
@@ -243,78 +242,3 @@ def test_readme_documents_every_setting_and_the_docker_caveat() -> None:
         assert variable in text
     assert "no Docker engine was available" in text  # honest about what was verified
     assert "Planned architecture" not in text and "Planned demo" not in text
-
-
-# ----------------------------------------------------------------- Streamlit Community Cloud launcher
-
-
-LAUNCHER = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
-
-
-def test_cloud_requirements_are_minimal_and_match_pyproject() -> None:
-    lines = [l.strip() for l in (LAUNCHER.parent / "requirements.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
-    declared = tomllib.loads(read("pyproject.toml"))["project"]["dependencies"]
-    wanted = sorted(d for d in declared if d.split(">")[0] in ("streamlit", "plotly", "httpx"))
-    assert sorted(lines) == wanted  # nothing from the engine stack
-    assert not [l for l in lines if l.startswith(("-e", "."))]
-
-
-def test_the_launcher_sits_in_its_own_folder_so_its_requirements_take_precedence() -> None:
-    # Streamlit Cloud prefers a dependency file next to the main file over the one in the repository root.
-    assert (LAUNCHER.parent / "requirements.txt").is_file() and (ROOT / "requirements.txt").is_file()
-    assert LAUNCHER.parent != ROOT
-
-
-def test_the_launcher_runs_the_dashboard(healthy_app: TestClient) -> None:
-    from streamlit.testing.v1 import AppTest
-
-    from risksignal.ui.api_client import ApiClient
-
-    at = AppTest.from_file(str(LAUNCHER), default_timeout=60)
-    at.session_state["api_client"] = ApiClient(base_url="http://testserver", client=healthy_app)
-    at.run()
-    assert not at.exception
-    assert at.title[0].value == "RiskSignal"
-    assert "Not a calibrated risk model" in " ".join(str(w.value) for w in at.warning)
-    assert "API ok" in " ".join(str(s.value) for s in at.sidebar.success)
-
-
-def test_the_launcher_takes_the_api_address_from_streamlit_secrets(
-    healthy_app: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from streamlit.testing.v1 import AppTest
-
-    from risksignal.ui.api_client import ApiClient
-
-    monkeypatch.setenv("RISKSIGNAL_API_URL", "http://wrong.invalid")  # restored after the test
-    at = AppTest.from_file(str(LAUNCHER), default_timeout=60)
-    at.secrets["RISKSIGNAL_API_URL"] = "https://my-api.example.org"
-    at.session_state["api_client"] = ApiClient(base_url="http://testserver", client=healthy_app)
-    at.run()
-    assert not at.exception
-    assert os.environ["RISKSIGNAL_API_URL"] == "https://my-api.example.org"
-    assert ApiClient().base_url == "https://my-api.example.org"  # what a fresh dashboard session would use
-
-
-def test_the_launcher_works_without_any_secrets(healthy_app: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    from streamlit.testing.v1 import AppTest
-
-    from risksignal.ui.api_client import ApiClient
-
-    monkeypatch.setenv("RISKSIGNAL_API_URL", "http://kept.example")
-    at = AppTest.from_file(str(LAUNCHER), default_timeout=60)
-    at.session_state["api_client"] = ApiClient(base_url="http://testserver", client=healthy_app)
-    at.run()
-    assert not at.exception and os.environ["RISKSIGNAL_API_URL"] == "http://kept.example"
-
-
-def test_the_deployment_guide_covers_the_whole_path() -> None:
-    text = read("docs/deployment.md")
-    for fragment in (
-        "git push -u origin main", "Dockerfile.api", "/health", "deploy/streamlit_cloud/streamlit_app.py",
-        'RISKSIGNAL_API_URL = "https://<your-api-url>"', "Cannot reach the RiskSignal API",
-        "RISKSIGNAL_LLM_PROVIDER=mock", "no authentication",
-    ):
-        assert fragment in text, fragment
-    assert "docs/deployment.md" in read("README.md")
-    assert "deploy" in read(".dockerignore").splitlines()

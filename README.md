@@ -16,7 +16,7 @@ RiskSignal explores how technology-related Operational Risk (outages, failed dep
 - a classical **frequency-severity** loss model with Monte Carlo simulation,
 - an **AI investigation agent** that gathers evidence by calling deterministic Python tools.
 
-The agent never produces quantitative risk numbers itself. Every number comes from Python code.
+The agent calls only deterministic, read-only Python tools and is instructed to calculate or invent nothing itself: every risk number is computed by a tool, and any number the agent writes is checked against the tool outputs (a best-effort check, not a guarantee; see [docs/agent_design.md](docs/agent_design.md)).
 
 ## Quick start
 
@@ -39,7 +39,6 @@ Then open the dashboard at <http://localhost:8501>. The API documentation is at 
   - Windows PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"; docker compose up --build`
 - **With an API key**: copy `.env.example` to `.env` (macOS/Linux `cp .env.example .env`, Windows `Copy-Item .env.example .env`), set `ANTHROPIC_API_KEY=` to your key, then run `docker compose up --build`. `.env` is git-ignored and excluded from the Docker images.
 - Ports are published on `localhost` only, because the application has no authentication.
-- To put the dashboard online (for example on Streamlit Community Cloud) you must host the API separately; see [docs/deployment.md](docs/deployment.md). That guide also explains the "Cannot reach the RiskSignal API" error.
 
 ### Option B: run locally with Python
 
@@ -190,7 +189,7 @@ All parameters are illustrative and the synthetic losses were generated from Log
 
 ## Stress scenarios
 
-A scenario is a "what if" written as explicit numbers: a multiplier on the incident rate `lambda`, a shift of the log-severity mean `mu`, and a multiplier on the log-severity spread `sigma`. The engine applies it to the baseline, simulates both with the same seed, and returns baseline and stress parameters, metrics, absolute differences and percentage differences. One predefined demonstration scenario, `SHARED_VENDOR_OUTAGE`, is included; users can also supply their own numbers.
+A scenario is a "what if" written as explicit numbers: a multiplier on the incident rate `lambda`, a shift of the log-severity mean `mu`, and a multiplier on the log-severity spread `sigma`. The engine applies it to the baseline, simulates both from common random numbers (year by year, so differences reflect the assumptions rather than sampling luck), and returns baseline and stress parameters, metrics, absolute differences and percentage differences. One predefined demonstration scenario, `SHARED_VENDOR_OUTAGE`, is included; users can also supply their own numbers.
 
 ```python
 from risksignal.stochastic.scenario import SHARED_VENDOR_OUTAGE, make_user_scenario, run_scenario_analysis
@@ -240,7 +239,7 @@ See [docs/agent_tools.md](docs/agent_tools.md) for why this makes the agent safe
 
 ## Investigation agent
 
-The agent investigates a selected technology system by deciding which of the deterministic tools to call, then writes an evidence-based summary with sections for observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations. It **calculates nothing itself and makes no risk decisions**: every number comes from a tool, simulation results are described as outputs under stated assumptions (not forecasts), and each investigation returns an auditable tool activity log. Numbers in the answer that cannot be matched to any tool output are flagged. The LLM sits behind a small provider interface (Anthropic live, deterministic mock for tests).
+The agent investigates a selected technology system by deciding which of the deterministic tools to call, then writes an evidence-based summary with sections for observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations. It is **instructed to calculate nothing itself and makes no risk decisions**: every risk number is computed by a tool, simulation results are described as outputs under stated assumptions (not forecasts), and each investigation returns an auditable tool activity log. Numbers in the answer that cannot be matched to any tool output are flagged (a best-effort check: it cannot prove an answer is right). The LLM sits behind a small provider interface (Anthropic live, deterministic mock for tests).
 
 ```bash
 # Offline demo, no API key needed (deterministic mock provider)
@@ -326,4 +325,7 @@ The UI computes no risk figures: every number shown was returned by the API. See
 - [docs/scenario_analysis.md](docs/scenario_analysis.md): stress scenarios and why their numbers need expert judgement.
 - [docs/architecture.md](docs/architecture.md): layers and design rationale.
 - [docs/limitations.md](docs/limitations.md): what this prototype is not.
-- [docs/deployment.md](docs/deployment.md): hosting the API and the dashboard online.
+- [docs/technical_review.md](docs/technical_review.md): internal technical review of the mathematics, architecture and agent (not an independent model validation), with remaining technical debt.
+- [docs/institutional_validation.md](docs/institutional_validation.md): roadmap of what a real Operational Risk team would need to do to evaluate this prototype seriously (data, domain, modelling, validation, agent, security). Contains no results.
+- [docs/research_extensions.md](docs/research_extensions.md): five research questions the prototype is built to make precise but does not answer (λ(t) from KRIs, tabular foundation models, dependency information, NLP signals, evidence-grounded agent). Contains no results.
+- [docs/demo_script.md](docs/demo_script.md): a 13-minute live demonstration script built around `PAYMENT_ENGINE_01`, with reference values (checked by a test), caveats, likely technical questions with honest answers, and a troubleshooting table.

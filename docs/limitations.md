@@ -19,11 +19,12 @@ RiskSignal is a **research prototype**. This document states plainly what it is 
 - **Severity is drawn from a Lognormal by construction.** The synthetic generator itself samples incident losses from Lognormal distributions, so a Lognormal fit to this data is circular. A good fit is not evidence that real losses are Lognormal.
 - **Lognormal severity** may understate extreme losses. No dedicated tail modelling is performed.
 - **Independence.** Severities are assumed independent of each other and of the number of incidents. No dependence between systems or vendors is modelled in the baseline.
-- **Parameter uncertainty is ignored.** Estimated parameters are treated as known, although small samples make them uncertain.
+- **Parameter uncertainty is ignored.** Estimated parameters are treated as known, although small samples make them uncertain. This uncertainty is much larger than the Monte Carlo error (tens of percent against 1% to 2% for P99 and ES99 at 100,000 simulations; see [technical_review.md](technical_review.md)), and simulating more years does not reduce it.
 - **Small samples.** A few hundred synthetic incidents spread over about twenty systems give unstable estimates. P99 and Expected Shortfall at 99% are especially noisy.
 - **Controls** are recorded as evidence. Their effect on frequency or severity is not modelled.
 - **KRIs** are displayed as evidence. They are not used to predict incidents.
-- **Stress scenarios** are simple predefined assumption changes, not scenarios designed with subject matter experts.
+- **Stress scenarios** are simple predefined assumption changes, not scenarios designed with subject matter experts. Baseline and stress are simulated from common random numbers, which reduces but does not remove sampling noise in the reported differences.
+- **No part of the prototype has been validated.** Passing tests show the code implements the stated mathematics, not that the model describes any real institution. See [technical_review.md](technical_review.md), section 7.
 
 ## AI limitations
 
@@ -46,9 +47,11 @@ These items are intentionally absent. They are the work that could only be done 
 - **model risk governance** (documentation, independent validation, change control),
 - **security and integration** with existing systems, including approved use of LLMs.
 
+These are organised into phases in [institutional_validation.md](institutional_validation.md).
+
 ## Possible research directions (not implemented)
 
-These need better data and domain expertise before they are meaningful:
+These need better data and domain expertise before they are meaningful. They are formulated as research questions, with data requirements and evaluation designs but no results, in [research_extensions.md](research_extensions.md):
 
 - Negative Binomial frequency models,
 - time-varying intensity `lambda(t)`,

@@ -30,7 +30,9 @@ A scenario is three numbers applied to those parameters:
 
 Each scenario also has an ID, name, description and a list of `assumption_notes` that say in words what was assumed and what was *not*. The defaults (1, 0, 1) change nothing.
 
-Everything else is unchanged: the same model, the same number of simulations, and the **same random seed** for baseline and stress. Using the same seed means a scenario that changes nothing reproduces the baseline exactly, and differences between runs come from the assumptions, not from different random numbers.
+Everything else is unchanged: the same model and the same number of simulations. Baseline and stress are simulated from **common random numbers**, so simulated year *j* of the stress run is built from the same random events as year *j* of the baseline (extra incidents are added when the incident rate rises, and incidents are randomly removed when it falls; each kept incident keeps its underlying random draw for severity). A scenario that changes nothing therefore reproduces the baseline exactly, and a scenario that can only add loss (a higher `lambda` multiplier or a positive `mu` shift, with `sigma` unchanged) can never produce a lower loss than the baseline in any simulated year.
+
+Using the same seed is **not** enough to achieve this. Different `lambda` values consume the random stream differently, so two independent runs with the same seed are uncorrelated. In the technical review, independent runs with a 1% higher `lambda` showed a *lower* P99 than the baseline for 9 of 40 seeds, purely from sampling noise (see [technical_review.md](technical_review.md)). Coupling removes that artefact. It does not remove sampling noise from the comparison altogether: if `sigma` also changes, the years are only partly coupled, and every simulated percentage still has a Monte Carlo error (section 2).
 
 ## 2. What the engine returns
 
@@ -45,7 +47,9 @@ For one system and one scenario, a `ScenarioComparison` holds:
 
 Percentages are given only where they are mathematically meaningful. If a baseline metric is zero the percentage is `None`, since a change from zero has no percentage. `mu` has no percentage change because it lives in log space and can be zero or negative; its effect is multiplicative on losses (`exp(delta)`), which is reported through the absolute shift.
 
-The baseline fields are never modified by the scenario. A baseline run through the scenario engine has the same parameters and metrics as a plain baseline simulation with the same seed.
+The baseline fields are never modified by the scenario. A baseline run through the scenario engine is bit-identical to a plain baseline simulation with the same seed.
+
+**Monte Carlo error of the comparison.** Each reported percentage change is itself estimated from a simulation. Measured in the technical review (40 seeds, 100,000 simulated years, parameters like the focal system's), the P99 change for the predefined-like scenario varied by about 2.8 percentage points from seed to seed (standard deviation), and about 0.5 points for a 5% frequency increase. Read the percentages with that precision in mind; the headline numbers are not exact.
 
 ### How the three levers interact
 

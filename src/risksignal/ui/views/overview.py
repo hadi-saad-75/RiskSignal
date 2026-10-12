@@ -13,8 +13,8 @@ def render_overview() -> None:
         "An **agentic Operational Risk investigation and stochastic scenario prototype** for technology "
         "risk. It combines a small synthetic dataset for a fictional bank, a dependency graph, a classical "
         "frequency-severity loss model with Monte Carlo simulation, and an AI investigator that gathers "
-        "evidence only through deterministic tools. The AI never calculates risk numbers itself and makes "
-        "no risk decisions."
+        "evidence only through deterministic tools. Risk numbers are computed by those tools, not by the AI, "
+        "which makes no risk decisions; numbers it quotes are checked against the tool outputs."
     )
 
     overview = call_api(get_api_client().overview, 10)

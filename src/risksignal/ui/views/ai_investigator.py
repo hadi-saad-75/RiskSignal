@@ -25,8 +25,10 @@ def render_ai_investigator() -> None:
     st.title("AI Investigator")
     st.markdown(
         "The agent decides which **deterministic tools** to call (system profile, incidents, KRIs, controls, "
-        "dependencies, loss simulation, stress comparison) and then summarises what they returned. It calculates "
-        "nothing itself, cannot change any records, and makes no risk decisions: it suggests questions for a human analyst."
+        "dependencies, loss simulation, stress comparison) and then summarises what they returned. Risk numbers "
+        "come from the tools, not from the model; the agent cannot change any records and makes no risk "
+        "decisions: it suggests questions for a human analyst. Numbers in its answer are checked against the "
+        "tool outputs, and any that match none are flagged."
     )
     client = get_api_client()
     health = call_api(client.health)
