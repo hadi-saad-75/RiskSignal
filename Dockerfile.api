@@ -24,5 +24,7 @@ RUN useradd --create-home --uid 1000 app && chown -R app:app /app
 USER app
 
 EXPOSE 8000
-# The API listens on all interfaces inside the container; docker-compose publishes it on localhost only.
-CMD ["uvicorn", "risksignal.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Bind to all interfaces on $PORT. Render sets PORT (default 10000) and requires 0.0.0.0; locally and in
+# docker-compose PORT is unset, so it falls back to 8000. `exec` makes uvicorn the main process so it
+# receives stop signals. Shell form is needed for the ${PORT:-8000} expansion.
+CMD ["sh", "-c", "exec uvicorn risksignal.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

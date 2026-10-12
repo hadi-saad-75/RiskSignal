@@ -1,0 +1,10 @@
+# Dependencies for the RiskSignal dashboard on Streamlit Community Cloud.
+#
+# Community Cloud uses the requirements file in the entrypoint's directory in preference to any file
+# in the repository root, so this file is used instead of the root requirements.txt / pyproject.toml.
+# The dashboard talks to the API over HTTP only and imports no backend code, so it needs only these
+# three packages (pandas and numpy come with Streamlit). Versions are exactly those the dashboard was
+# tested with, on Python 3.12.
+streamlit==1.65.0
+plotly==7.1.0
+httpx==0.28.1

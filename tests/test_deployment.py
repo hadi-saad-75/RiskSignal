@@ -96,7 +96,7 @@ def test_api_image(compose: dict) -> None:
     assert "RUN python -m risksignal.data.generator" in text  # the explicit data-setup step
     assert text.index("COPY src") > text.index("pip install") and text.index("generator") > text.index("COPY src")
     assert re.search(r"^USER app$", text, re.MULTILINE)  # not root
-    assert 'CMD ["uvicorn", "risksignal.api.main:app", "--host", "0.0.0.0", "--port", "8000"]' in text
+    assert 'CMD ["sh", "-c", "exec uvicorn risksignal.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]' in text
     assert "EXPOSE 8000" in text
 
 
@@ -135,7 +135,7 @@ def test_the_package_root_is_light_enough_for_the_ui_image() -> None:
 
 def test_dockerignore_keeps_secrets_and_local_state_out_of_images() -> None:
     lines = set(read(".dockerignore").splitlines())
-    assert {".env", ".venv", ".git", "__pycache__", "*.db"} <= lines
+    assert {".env", ".venv", ".git", "__pycache__", "*.db", ".streamlit"} <= lines
     assert "!.env.example" in lines
 
 

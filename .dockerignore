@@ -5,6 +5,7 @@ venv
 .env
 .env.*
 !.env.example
+.streamlit
 __pycache__
 **/__pycache__
 *.py[cod]

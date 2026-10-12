@@ -15,6 +15,7 @@ htmlcov/
 
 # Secrets
 .env
+.streamlit/secrets.toml
 
 # Generated data (reproducible from the seeded generator)
 *.db
