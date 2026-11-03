@@ -129,6 +129,8 @@ class OverviewCounts(_Model):
     controls: int
     incidents: int
     kri_observations: int
+    overdue_controls: int
+    total_recorded_loss: float
     data_window_start: dt.date
     data_window_end: dt.date
 

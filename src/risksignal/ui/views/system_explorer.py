@@ -4,13 +4,13 @@ import streamlit as st
 
 from risksignal.ui.charts import dependency_figure, kri_figure
 from risksignal.ui.components import banner, call_api, get_api_client, system_selector
-from risksignal.ui.formatting import STATUS_ICONS, format_amount, format_decimal, format_percent, label_for
+from risksignal.ui.formatting import format_amount, format_decimal, format_percent, label_for
 
 
 def render_system_explorer() -> None:
     banner()
     st.title("System Explorer")
-    st.caption("Observed synthetic data: nothing on this page is modelled or predicted.")
+    st.caption("This page reports synthetic observations; no values on this page are forecasts.")
     client = get_api_client()
     system_id = system_selector(client, "explorer")
     if system_id is None:
@@ -90,11 +90,11 @@ def _kri_tab(kri: dict) -> None:
 
 def _controls_tab(controls: dict) -> None:
     counts = controls["counts_by_review_status"]
-    st.markdown("**Review status:** " + (", ".join(f"{STATUS_ICONS.get(k, '')} {k}: {v}" for k, v in counts.items()) or "none"))
+    st.markdown("**Review status:** " + (", ".join(f"{k.capitalize()}: {v}" for k, v in counts.items()) or "None"))
     st.caption("An overdue review is a reason to ask questions, not proof that the control has failed.")
     st.dataframe(
         [{"Control": c["control_id"], "Name": c["name"], "Type": c["control_type"],
-          "Status": f"{STATUS_ICONS.get(c['review_status'], '')} {c['review_status']}",
+          "Status": c["review_status"].capitalize(),
           "Last review": c["last_review_date"], "Days since review": c["days_since_last_review"],
           "Description": c["description"]}
          for c in controls["controls"]],

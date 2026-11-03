@@ -8,42 +8,51 @@ from risksignal.ui.formatting import format_amount, label_for
 
 def render_overview() -> None:
     banner()
-    st.title("RiskSignal")
+    st.title("Management overview")
     st.markdown(
-        "An **agentic Operational Risk investigation and stochastic scenario prototype** for technology "
-        "risk. It combines a small synthetic dataset for a fictional bank, a dependency graph, a classical "
-        "frequency-severity loss model with Monte Carlo simulation, and an AI investigator that gathers "
-        "evidence only through deterministic tools. Risk numbers are computed by those tools, not by the AI, "
-        "which makes no risk decisions; numbers it quotes are checked against the tool outputs."
+        "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
+        "fictional Atlas Bank data—not JPMorgan data—and is not a production or decision-making tool."
     )
 
-    overview = call_api(get_api_client().overview, 10)
+    overview = call_api(get_api_client().overview, 5)
     if overview is None:
         return
     counts = overview["counts"]
 
-    columns = st.columns(5)
-    for column, (label, key) in zip(columns, [("Systems", "systems"), ("Business processes", "processes"),
-                                              ("Vendors", "vendors"), ("Controls", "controls"),
-                                              ("Incidents", "incidents")]):
+    columns = st.columns(4)
+    for column, (label, key) in zip(
+        columns,
+        [
+            ("Incident records", "incidents"),
+            ("Recorded loss", "total_recorded_loss"),
+            ("Overdue controls", "overdue_controls"),
+            ("Systems in scope", "systems"),
+        ],
+    ):
         column.metric(label, format_amount(counts[key]))
     st.caption(
-        f"Synthetic Atlas Bank (fictional). Incidents recorded {counts['data_window_start']} to "
-        f"{counts['data_window_end']}; {format_amount(counts['kri_observations'])} monthly KRI observations."
+        f"Synthetic observation window: {counts['data_window_start']} to {counts['data_window_end']}. "
+        "Recorded loss is historical and synthetic, not a forecast."
     )
 
-    st.subheader("Recent synthetic incidents")
+    st.subheader("Latest incidents")
     st.dataframe(
-        [{"Date": i["date"], "Incident": i["incident_id"], "System": i["system_id"], "Category": label_for(i["category"]),
-          "Severity": i["severity"], "Loss": i["financial_loss"], "Description": i["description"]}
+        [{"Date": i["date"], "System": i["system_id"], "Category": label_for(i["category"]),
+          "Severity": i["severity"], "Loss": i["financial_loss"]}
          for i in overview["recent_incidents"]],
         hide_index=True, width="stretch",
         column_config={"Loss": st.column_config.NumberColumn("Loss", format="%d")},
     )
 
-    st.subheader("Where to go next")
-    st.markdown(
-        "- **System Explorer**: profile, incidents, KRIs, controls and dependencies of one system.\n"
-        "- **Scenario Lab**: baseline and stress loss simulations with explicit, illustrative assumptions.\n"
-        "- **AI Investigator**: ask the agent to investigate a system; see its answer and every tool it used."
+    st.caption(
+        "Overdue reviews are follow-up items, not evidence that a control has failed. "
+        "Use System Explorer, Scenario Analysis, and Investigation for supporting detail."
     )
+
+    with st.expander("Dataset coverage"):
+        st.caption(
+            f"{format_amount(counts['processes'])} business processes · "
+            f"{format_amount(counts['vendors'])} vendors · "
+            f"{format_amount(counts['controls'])} controls · "
+            f"{format_amount(counts['kri_observations'])} KRI observations"
+        )

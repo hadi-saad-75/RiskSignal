@@ -15,10 +15,10 @@ START_API_HELP = (
     "`uvicorn risksignal.api.main:app --reload`, or set `RISKSIGNAL_API_URL` if it runs elsewhere."
 )
 LLM_HELP = (
-    "The deterministic parts of RiskSignal (Overview, System Explorer and Scenario Lab) still work "
-    "without any API key. The live AI investigator requires `ANTHROPIC_API_KEY` (set it in the "
-    "environment or in a `.env` file, then restart the API). For an offline demonstration, start the "
-    "API with `RISKSIGNAL_LLM_PROVIDER=mock`."
+    "The Overview, System Explorer, and Scenario Analysis pages do not require a language-model API key. "
+    "The investigation page requires `ANTHROPIC_API_KEY`, set in the environment or a `.env` file before "
+    "starting the API. To use the deterministic mock provider, set "
+    "`RISKSIGNAL_LLM_PROVIDER=mock`."
 )
 
 
@@ -30,17 +30,17 @@ def get_api_client() -> ApiClient:
 
 
 def banner() -> None:
-    st.warning(f"**{BANNER_TEXT}**", icon="⚠️")
+    st.warning(f"**{BANNER_TEXT}**")
 
 
 def simulation_notice() -> None:
-    st.info(SIMULATION_NOTICE, icon="ℹ️")
+    st.info(SIMULATION_NOTICE)
 
 
 def show_request_error(error: ApiRequestError) -> None:
     """Explain an API error to the user in plain language. Never shows technical detail."""
     if error.error_type == "llm_unavailable":
-        st.error(f"The live AI investigator is not available. {error.message}", icon="🤖")
+        st.error(f"The language model is unavailable. {error.message}")
         st.info(LLM_HELP)
     elif error.error_type == "data_unavailable":
         st.error(f"{error.message}\n\n{START_API_HELP}")
@@ -70,13 +70,16 @@ def sidebar_status() -> None:
         try:
             health = client.health()
         except ApiUnavailableError:
-            st.error("API not reachable")
+            st.error("API unavailable")
             st.caption(client.base_url)
             return
         (st.success if health["status"] == "ok" else st.warning)(f"API {health['status']}")
         st.caption(client.base_url)
-        st.caption(f"Database: {'available' if health['database_available'] else 'missing'}")
-        st.caption(f"AI provider: {health['llm_provider']} ({'ready' if health['llm_configured'] else 'not configured'})")
+        st.caption(f"Database: {'available' if health['database_available'] else 'unavailable'}")
+        st.caption(
+            f"Language model: {health['llm_provider']} "
+            f"({'configured' if health['llm_configured'] else 'not configured'})"
+        )
         st.caption("All data are synthetic.")
 
 

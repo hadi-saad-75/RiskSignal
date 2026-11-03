@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
 REQUIREMENTS = ROOT / "deploy" / "streamlit_cloud" / "requirements.txt"
 SECRET = "RISKSIGNAL_API_URL"
-BANNER = "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."
+BANNER = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
 
 
 def find_sh() -> str | None:
@@ -216,7 +216,7 @@ def test_secret_is_read_from_st_secrets_and_the_dashboard_runs(api_client: ApiCl
     assert not at.exception
     assert at.title[0].value == "RiskSignal" and BANNER in texts(at.warning)
     assert os.environ[SECRET] == "http://testserver"  # trailing slash removed, value passed to the dashboard's API client
-    assert "API ok" in texts(at.sidebar.success) and "AI provider: mock (ready)" in texts(at.sidebar.caption)
+    assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
     assert {m.label: m.value for m in at.metric}["Systems"] == "20"  # data came from the API, not from backend imports
 
 

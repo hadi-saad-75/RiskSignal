@@ -31,6 +31,10 @@ _OVERVIEW_COUNTS = {
     "incidents": "SELECT COUNT(*) AS n FROM incidents",
     "kri_observations": "SELECT COUNT(*) AS n FROM kri_observations",
 }
+_OVERVIEW_SUMMARY = {
+    "overdue_controls": "SELECT COUNT(*) AS n FROM controls WHERE review_status = 'overdue'",
+    "total_recorded_loss": "SELECT COALESCE(SUM(financial_loss), 0.0) AS n FROM incidents",
+}
 _SELECT_RECENT_INCIDENTS = (
     "SELECT i.incident_id, i.date, i.system_id, s.name AS system_name, i.category, i.severity, "
     "i.financial_loss, i.description FROM incidents i JOIN systems s ON s.system_id = i.system_id "
@@ -47,9 +51,15 @@ def get_bank_overview(ctx: ToolContext, recent_incidents: int = 10) -> BankOverv
     """
     limit = check_int("recent_incidents", recent_incidents, 1, 100)
     counts = {name: ctx.query(sql)[0]["n"] for name, sql in _OVERVIEW_COUNTS.items()}
+    summary = {name: ctx.query(sql)[0]["n"] for name, sql in _OVERVIEW_SUMMARY.items()}
     return BankOverviewResult(
         tool_name="get_bank_overview",
-        counts=OverviewCounts(**counts, data_window_start=ctx.observation_start, data_window_end=ctx.as_of_date),
+        counts=OverviewCounts(
+            **counts,
+            **summary,
+            data_window_start=ctx.observation_start,
+            data_window_end=ctx.as_of_date,
+        ),
         recent_incidents=[OverviewIncident(**dict(row)) for row in ctx.query(_SELECT_RECENT_INCIDENTS, (limit,))],
     )
 

@@ -39,7 +39,7 @@ def read_api_url() -> str | None:
 
 
 def show_configuration_error(message: str) -> None:
-    st.set_page_config(page_title="RiskSignal", page_icon="📊")
+    st.set_page_config(page_title="RiskSignal")
     st.title("RiskSignal")
     st.error(message)
     st.markdown(

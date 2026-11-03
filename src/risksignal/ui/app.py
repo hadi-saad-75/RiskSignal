@@ -20,13 +20,13 @@ from risksignal.ui.views.system_explorer import render_system_explorer
 
 
 def main() -> None:
-    st.set_page_config(page_title="RiskSignal", page_icon="📊", layout="wide")
+    st.set_page_config(page_title="RiskSignal", layout="wide")
     sidebar_status()
     navigation = st.navigation([
-        st.Page(render_overview, title="Overview", icon="🏠", url_path="overview", default=True),
-        st.Page(render_system_explorer, title="System Explorer", icon="🔎", url_path="system-explorer"),
-        st.Page(render_scenario_lab, title="Scenario Lab", icon="🧪", url_path="scenario-lab"),
-        st.Page(render_ai_investigator, title="AI Investigator", icon="🤖", url_path="ai-investigator"),
+        st.Page(render_overview, title="Overview", url_path="overview", default=True),
+        st.Page(render_system_explorer, title="System Explorer", url_path="system-explorer"),
+        st.Page(render_scenario_lab, title="Scenario Analysis", url_path="scenario-lab"),
+        st.Page(render_ai_investigator, title="Investigation", url_path="ai-investigator"),
     ])
     navigation.run()
 

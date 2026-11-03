@@ -287,6 +287,12 @@ def test_overview_counts_and_recent_incidents(client: TestClient, ctx: ToolConte
     counts = body["counts"]
     assert (counts["systems"], counts["processes"], counts["vendors"], counts["controls"]) == (20, 10, 8, 40)
     assert counts["incidents"] == ctx.query("SELECT COUNT(*) AS n FROM incidents")[0]["n"] > 250
+    assert counts["overdue_controls"] == ctx.query(
+        "SELECT COUNT(*) AS n FROM controls WHERE review_status = 'overdue'"
+    )[0]["n"]
+    assert counts["total_recorded_loss"] == pytest.approx(
+        ctx.query("SELECT SUM(financial_loss) AS total FROM incidents")[0]["total"]
+    )
     assert counts["kri_observations"] > 5000 and counts["data_window_end"] == "2026-09-30"
     recent = body["recent_incidents"]
     assert len(recent) == 10 and [i["date"] for i in recent] == sorted((i["date"] for i in recent), reverse=True)

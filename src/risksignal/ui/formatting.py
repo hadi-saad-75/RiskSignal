@@ -7,8 +7,8 @@ arranges text for display.
 import re
 from typing import Any
 
-BANNER_TEXT = "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."
-SIMULATION_NOTICE = "Simulation outputs depend on illustrative assumptions and synthetic data."
+BANNER_TEXT = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
+SIMULATION_NOTICE = "Simulation results are conditional on the stated assumptions and synthetic data."
 
 SECTION_HEADINGS = (
     "Observed evidence",
@@ -35,8 +35,6 @@ METRIC_LABELS = (
     ("expected_shortfall_95", "Expected Shortfall 95%"),
     ("expected_shortfall_99", "Expected Shortfall 99%"),
 )
-STATUS_ICONS = {"overdue": "🔴", "due": "🟠", "current": "🟢"}
-
 _HEADING_LINE = re.compile(
     r"^\s*(?:#{1,6}\s*)?(?:[*_]{1,2})?\s*(?:\d+[.)]\s*)?(" + "|".join(SECTION_HEADINGS) + r")\s*:?\s*(?:[*_]{1,2})?\s*:?\s*$",
     re.IGNORECASE,

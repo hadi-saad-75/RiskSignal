@@ -229,14 +229,17 @@ def test_overview_page(api: ApiClient) -> None:
     at = run_view(api, "overview", "render_overview")
     assert not at.exception
     assert BANNER_TEXT in texts(at.warning)
-    assert at.title[0].value == "RiskSignal"
-    assert metric_values(at) == {"Systems": "20", "Business processes": "10", "Vendors": "8", "Controls": "40",
-                                 "Incidents": metric_values(at)["Incidents"]}
-    assert int(metric_values(at)["Incidents"].replace(",", "")) > 250
-    assert any("Recent synthetic incidents" in s.value for s in at.subheader)
+    assert at.title[0].value == "Management overview"
+    metrics = metric_values(at)
+    assert set(metrics) == {"Incident records", "Recorded loss", "Overdue controls", "Systems in scope"}
+    assert metrics["Incident records"] != "0"
+    assert metrics["Recorded loss"] != "0"
+    assert metrics["Systems in scope"] == "20"
+    assert any("Latest incidents" in s.value for s in at.subheader)
     frame = at.dataframe[0].value
-    assert len(frame) == 10 and {"Date", "Incident", "System", "Description"} <= set(frame.columns)
+    assert len(frame) == 5 and {"Date", "System", "Category", "Severity", "Loss"} == set(frame.columns)
     assert "risk score" not in (texts(at.markdown) + texts(at.subheader) + texts(at.caption)).lower()
+    assert "not JPMorgan data" in texts(at.markdown)
 
 
 def test_overview_without_the_api_shows_help_and_does_not_crash() -> None:
@@ -260,7 +263,7 @@ def test_system_explorer_page(api: ApiClient) -> None:
     tables = [d.value for d in at.dataframe]
     assert any("Also used by" in t.columns and t["Also used by"].str.contains("PAYMENT_ENGINE_02").any() for t in tables)
     assert any("Relationship" in t.columns and t["Relationship"].str.contains("Keystone Payment Rails").any() for t in tables)
-    assert any("Status" in t.columns and t["Status"].str.contains("overdue").any() for t in tables)
+    assert any("Status" in t.columns and t["Status"].str.contains("Overdue").any() for t in tables)
 
 
 def test_system_explorer_switches_system_and_window(api: ApiClient) -> None:
@@ -282,17 +285,17 @@ def test_scenario_lab_shows_estimates_notice_and_runs_baseline_and_stress(api: A
     values = metric_values(at)
     assert {"λ: expected incidents per year", "μ: log-severity location", "σ: log-severity spread"} <= set(values)
     assert float(values["λ: expected incidents per year"]) > 0
-    assert any("What do λ, μ and σ mean?" == e.label for e in at.expander)
+    assert any("Parameter interpretation" == e.label for e in at.expander)
     assert at.selectbox[1].value == "SHARED_VENDOR_OUTAGE"
-    assert not any("P95 (stress)" in label for label in values)  # nothing is shown before running
+    assert not any("P95 under stress" in label for label in values)
 
     at.button[0].click().run()
     assert not at.exception
     values = metric_values(at)
-    assert {"Mean annual loss (stress)", "Median annual loss (stress)", "P95 (stress)", "P99 (stress)",
-            "Expected Shortfall 95% (stress)", "Expected Shortfall 99% (stress)"} <= set(values)
+    assert {"Mean annual loss under stress", "Median annual loss under stress", "P95 under stress", "P99 under stress",
+            "Expected Shortfall 95% under stress", "Expected Shortfall 99% under stress"} <= set(values)
     expected = api.compare(FOCAL, "SHARED_VENDOR_OUTAGE", 100_000, 42)["simulation_results"]
-    assert values["P95 (stress)"] == format_amount(expected["stress_metrics"]["p95"])
+    assert values["P95 under stress"] == format_amount(expected["stress_metrics"]["p95"])
     assert len(at.get("plotly_chart")) == 1
     assert texts(at.info).count(SIMULATION_NOTICE) >= 2  # shown again next to the results
     table = next(d.value for d in at.dataframe if "Baseline" in d.value.columns)
@@ -326,9 +329,9 @@ def test_scenario_lab_inputs_are_limited_and_disabled_until_chosen(api: ApiClien
 def test_scenario_lab_new_system_clears_stale_results(api: ApiClient) -> None:
     at = run_view(api, "scenario_lab", "render_scenario_lab")
     at.button[0].click().run()
-    assert "P95 (stress)" in metric_values(at)
+    assert "P95 under stress" in metric_values(at)
     at.selectbox[0].select("PAYMENT_ENGINE_02").run()
-    assert not at.exception and "P95 (stress)" not in metric_values(at)
+    assert not at.exception and "P95 under stress" not in metric_values(at)
 
 
 # ----------------------------------------------------------------- page 4: AI investigator
@@ -379,12 +382,12 @@ def test_ai_investigator_explains_a_missing_api_key_without_crashing(ctx: ToolCo
     client = make_api(ctx, provider_factory=no_key, provider_name="anthropic")
     at = run_view(client, "ai_investigator", "render_ai_investigator")
     assert not at.exception
-    assert "AI provider is not configured" in texts(at.info) and "ANTHROPIC_API_KEY" in texts(at.info)  # told before clicking
+    assert "language-model provider is not configured" in texts(at.info) and "ANTHROPIC_API_KEY" in texts(at.info)
 
     at.button[0].click().run()
     assert not at.exception
-    assert "live AI investigator is not available" in texts(at.error) and "ANTHROPIC_API_KEY" in texts(at.error)
-    assert "deterministic parts of RiskSignal" in texts(at.info) and "RISKSIGNAL_LLM_PROVIDER=mock" in texts(at.info)
+    assert "language model is unavailable" in texts(at.error) and "ANTHROPIC_API_KEY" in texts(at.error)
+    assert "do not require a language-model API key" in texts(at.info) and "RISKSIGNAL_LLM_PROVIDER=mock" in texts(at.info)
     # the deterministic pages still work with the same backend
     assert not run_view(client, "scenario_lab", "render_scenario_lab").exception
     assert not run_view(client, "system_explorer", "render_system_explorer").exception
@@ -396,7 +399,7 @@ def test_ai_investigator_with_an_unknown_system_in_the_request(api: ApiClient) -
     at.button[0].click().run()
     assert not at.exception
     assert any(a in texts(at.markdown) for a in ("could not complete the investigation",))
-    assert "❌" in texts(at.markdown) and "get_system_profile failed (unknown_system)" in texts(at.markdown)
+    assert "Failed:" in texts(at.markdown) and "get_system_profile failed (unknown_system)" in texts(at.markdown)
 
 
 def test_ai_investigator_shows_warnings_for_unmatched_numbers(ctx: ToolContext) -> None:
@@ -422,13 +425,13 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     at.session_state["api_client"] = api
     at.run()
     assert not at.exception
-    assert at.title[0].value == "RiskSignal" and BANNER_TEXT in texts(at.warning)
-    assert "API ok" in texts(at.sidebar.success) and "AI provider: mock (ready)" in texts(at.sidebar.caption)
+    assert at.title[0].value == "Management overview" and BANNER_TEXT in texts(at.warning)
+    assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
 
 
 def test_app_defines_the_four_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    for title in ("Overview", "System Explorer", "Scenario Lab", "AI Investigator"):
+    for title in ("Overview", "System Explorer", "Scenario Analysis", "Investigation"):
         assert f'title="{title}"' in source
     assert "set_page_config" in source
 
@@ -463,6 +466,10 @@ def test_lower_layers_do_not_import_the_ui() -> None:
 
 
 def test_the_banner_and_notice_texts_are_exact() -> None:
-    assert BANNER_TEXT == "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."
-    assert SIMULATION_NOTICE == "Simulation outputs depend on illustrative assumptions and synthetic data."
+    assert BANNER_TEXT == (
+        "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
+    )
+    assert SIMULATION_NOTICE == (
+        "Simulation results are conditional on the stated assumptions and synthetic data."
+    )
     json.dumps([BANNER_TEXT, SIMULATION_NOTICE])

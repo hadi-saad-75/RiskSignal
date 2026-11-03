@@ -1,4 +1,4 @@
-"""Page 3: Scenario Lab."""
+"""Scenario analysis page."""
 
 from typing import Any
 
@@ -25,7 +25,7 @@ SEVERITY_SOURCES = {"system": "this system's own losses", "category": "bank-wide
 
 def render_scenario_lab() -> None:
     banner()
-    st.title("Scenario Lab")
+    st.title("Scenario Analysis")
     simulation_notice()
     client = get_api_client()
     system_id = system_selector(client, "lab")
@@ -40,8 +40,8 @@ def render_scenario_lab() -> None:
     _estimated_baseline(baseline)
     settings = _inputs(scenarios["scenarios"])
 
-    if st.button("Run baseline and stress simulation", type="primary"):
-        with st.spinner("Running Monte Carlo simulations..."):
+    if st.button("Run baseline and stress comparison", type="primary"):
+        with st.spinner("Running the Monte Carlo simulation..."):
             result = _run(client, system_id, settings)
         if result is not None:
             st.session_state["lab_result"] = result
@@ -49,12 +49,12 @@ def render_scenario_lab() -> None:
     if result and result["system_id"] == system_id:
         _results(result)
     else:
-        st.caption("Choose settings and run the simulation to see results.")
+        st.caption("Set the simulation parameters and run the analysis to view the results.")
 
 
 def _estimated_baseline(baseline: dict[str, Any]) -> None:
     assumptions, basis = baseline["model_assumptions"], baseline["observed_basis"]
-    st.subheader("Estimated baseline model")
+    st.subheader("Baseline parameter estimates")
     columns = st.columns(3)
     columns[0].metric("λ: expected incidents per year", format_decimal(assumptions["lambda_used"]))
     columns[1].metric("μ: log-severity location", format_decimal(assumptions["severity_mu"], 3))
@@ -67,7 +67,7 @@ def _estimated_baseline(baseline: dict[str, Any]) -> None:
     )
     for note in basis["severity_fallback_notes"]:
         st.caption(f"Fallback: {note}")
-    with st.expander("What do λ, μ and σ mean?"):
+    with st.expander("Parameter interpretation"):
         st.markdown(
             "The model counts incidents per year with a **Poisson** distribution, `N ~ Poisson(λ)`, where **λ** is the "
             "expected number of incidents per year. The loss of each incident follows a **Lognormal** distribution, "
@@ -80,27 +80,30 @@ def _estimated_baseline(baseline: dict[str, Any]) -> None:
 
 
 def _inputs(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
-    st.subheader("Simulation settings")
+    st.subheader("Simulation parameters")
     left, right = st.columns(2)
     n = left.number_input("Number of simulations", min_value=1_000, max_value=1_000_000, value=100_000, step=10_000)
     seed = right.number_input("Random seed", min_value=0, max_value=2**32 - 1, value=42, step=1)
 
     ids = [s["scenario_id"] for s in scenarios]
     by_id = {s["scenario_id"]: s for s in scenarios}
-    scenario_id = st.selectbox("Predefined stress scenario", ids, format_func=lambda i: by_id[i]["name"])
+    scenario_id = st.selectbox("Stress scenario", ids, format_func=lambda i: by_id[i]["name"])
     scenario = by_id[scenario_id]
     st.table([{"Assumption": "λ multiplier (incident frequency)", "Value": f"{scenario['lambda_multiplier']:g}"},
               {"Assumption": "μ shift (log-severity location)", "Value": f"{scenario['severity_mu_shift']:g}"},
               {"Assumption": "σ multiplier (log-severity spread)", "Value": f"{scenario['severity_sigma_multiplier']:g}"}])
-    with st.expander("Notes on this scenario's assumptions"):
+    with st.expander("Scenario assumptions"):
         st.markdown("\n".join(f"- {note}" for note in scenario["assumption_notes"]))
 
     with st.expander("Advanced assumptions"):
-        use_custom = st.checkbox("Use my own numbers instead of the predefined scenario")
+        use_custom = st.checkbox("Specify custom assumptions")
         left, right = st.columns(2)
         lam = left.number_input("λ multiplier", min_value=0.1, max_value=100.0, value=1.5, step=0.1, disabled=not use_custom)
         sigma = right.number_input("σ multiplier", min_value=0.1, max_value=5.0, value=1.2, step=0.1, disabled=not use_custom)
-        st.caption("User-supplied assumptions. They are not estimates and not calibrated, and the AI agent cannot use them.")
+        st.caption(
+            "These user-specified assumptions are not estimated or calibrated. They are not available "
+            "to the language-model investigation function."
+        )
     return {"n": int(n), "seed": int(seed), "scenario_id": scenario_id, "use_custom": use_custom,
             "lambda_multiplier": float(lam), "sigma_multiplier": float(sigma)}
 
@@ -122,8 +125,9 @@ def _results(result: dict[str, Any]) -> None:
     cards = st.columns(3)
     for index, (key, label) in enumerate(METRIC_LABELS):
         cards[index % 3].metric(
-            f"{label} (stress)", format_amount(out["stress_metrics"][key]),
-            delta=f"{format_percent(out['percentage_differences'][key])} vs baseline {format_amount(out['baseline_metrics'][key])}",
+            f"{label} under stress", format_amount(out["stress_metrics"][key]),
+            delta=f"{format_percent(out['percentage_differences'][key])} relative to baseline "
+                  f"{format_amount(out['baseline_metrics'][key])}",
             delta_color="inverse",
         )
     st.dataframe(comparison_rows(out), hide_index=True, width="stretch")

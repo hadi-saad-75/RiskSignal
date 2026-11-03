@@ -1,4 +1,4 @@
-"""Page 4: AI Investigator."""
+"""Investigation page."""
 
 from typing import Any
 
@@ -22,31 +22,30 @@ def default_question(system_id: str) -> str:
 
 def render_ai_investigator() -> None:
     banner()
-    st.title("AI Investigator")
+    st.title("Investigation")
     st.markdown(
-        "The agent decides which **deterministic tools** to call (system profile, incidents, KRIs, controls, "
-        "dependencies, loss simulation, stress comparison) and then summarises what they returned. Risk numbers "
-        "come from the tools, not from the model; the agent cannot change any records and makes no risk "
-        "decisions: it suggests questions for a human analyst. Numbers in its answer are checked against the "
-        "tool outputs, and any that match none are flagged."
+        "A language model selects among deterministic tools for retrieving system profiles, incidents, key "
+        "risk indicators, controls, dependencies, and simulation results. It summarises the returned evidence "
+        "and may suggest questions for further review. The model cannot modify records or make risk decisions. "
+        "Reported quantitative claims are checked against the tool outputs; unmatched values are flagged."
     )
     client = get_api_client()
     health = call_api(client.health)
     if health is not None and not health["llm_configured"]:
-        st.info(f"The AI provider is not configured. {LLM_HELP}")
+        st.info(f"The language-model provider is not configured. {LLM_HELP}")
 
     system_id = system_selector(client, "agent")
     if system_id is None:
         return
     question = st.text_area(
-        "Investigation request (edit it to ask a custom question)", value=default_question(system_id),
+        "Investigation request", value=default_question(system_id),
         key=f"agent_question_{system_id}", height=110,
     )
-    include_stress = st.checkbox("Also compare with the illustrative SHARED_VENDOR_OUTAGE stress scenario")
+    include_stress = st.checkbox("Include the SHARED_VENDOR_OUTAGE stress scenario")
 
     if st.button("Investigate this system", type="primary"):
         text = question.strip() + (STRESS_REQUEST if include_stress else "")
-        with st.spinner("The agent is calling tools and the language model. A live run can take a minute..."):
+        with st.spinner("Retrieving evidence and preparing the investigation summary..."):
             response = call_api(client.investigate, text)
         if response is not None:
             st.session_state["agent_response"] = response
@@ -55,7 +54,7 @@ def render_ai_investigator() -> None:
     if response:
         _show(response)
     else:
-        st.caption("Press the button to run an investigation. Every tool call will be listed below the answer.")
+        st.caption("Run the investigation to display the evidence summary and tool activity.")
 
 
 def _show(response: dict[str, Any]) -> None:
@@ -64,30 +63,35 @@ def _show(response: dict[str, Any]) -> None:
     if response["status"] != "completed":
         st.warning(f"The investigation did not complete normally (status: {response['status']}).")
 
-    st.subheader("Agent response")
+    st.subheader("Investigation summary")
     render_answer(response["final_response"])
     for warning in response["warnings"]:
-        st.warning(warning, icon="🔎" if "numbers" in warning else None)
+        st.warning(warning)
 
     _tool_activity(response["tool_activity"])
     _simulation_metadata(response["tool_activity"])
-    st.caption(f"Provider: {response['provider']}. Model calls: {response['llm_calls']}. {response['disclaimer']}")
+    st.caption(
+        f"Provider: {response['provider']}. Language-model calls: {response['llm_calls']}. "
+        f"{response['disclaimer']}"
+    )
 
 
 def _tool_activity(activities: list[dict[str, Any]]) -> None:
     st.subheader("Tool activity log")
     if not activities:
-        st.write("The agent did not call any tools.")
+        st.write("No tools were called.")
         return
     for activity in activities:
-        icon = "✅" if activity["status"] == "completed" else "❌"
-        st.markdown(f"{icon} **{activity['step']}.** {activity['summary']}")
+        st.markdown(f"**{activity['step']}. {activity['status'].capitalize()}:** {activity['summary']}")
         with st.expander(f"Details: {activity['tool_name']}", expanded=False):
-            st.caption(f"{activity['started_at']} · {format_decimal(activity['duration_ms'], 0)} ms · status {activity['status']}")
+            st.caption(
+                f"Started: {activity['started_at']}; duration: "
+                f"{format_decimal(activity['duration_ms'], 0)} ms; status: {activity['status']}."
+            )
             st.markdown("Input")
             st.json(activity["tool_input"])
             if activity.get("output") is not None:
-                st.markdown("Output the agent received")
+                st.markdown("Tool output")
                 st.json(activity["output"], expanded=False)
 
 
@@ -96,7 +100,9 @@ def _simulation_metadata(activities: list[dict[str, Any]]) -> None:
     if meta is None:
         return
     st.subheader("Simulation metadata")
-    st.caption("From the simulation tool's output, not written by the language model. Illustrative model, synthetic data.")
+    st.caption(
+        "Values are taken from the simulation tool output. The model is illustrative and uses synthetic data."
+    )
     columns = st.columns(4)
     columns[0].metric("λ (incidents per year)", format_decimal(meta["lambda_used"]))
     columns[1].metric("μ", format_decimal(meta["severity_mu"], 3))
