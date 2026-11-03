@@ -2,16 +2,16 @@
 
 import streamlit as st
 
-from risksignal.ui.components import banner, call_api, get_api_client
+from risksignal.ui.components import banner, call_api, get_api_client, page_header, section_header
 from risksignal.ui.formatting import format_amount, label_for
 
 
 def render_overview() -> None:
     banner()
-    st.title("Management overview")
-    st.markdown(
+    page_header(
+        "01", "Portfolio", "Management overview",
         "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
-        "fictional Atlas Bank data—not JPMorgan data—and is not a production or decision-making tool."
+        "fictional Atlas Bank data—not JPMorgan data—and is not a production or decision-making tool.",
     )
 
     overview = call_api(get_api_client().overview, 5)
@@ -19,7 +19,12 @@ def render_overview() -> None:
         return
     counts = overview["counts"]
 
-    columns = st.columns(4)
+    section_header(
+        "Evidence at a glance",
+        f"Synthetic observation window: {counts['data_window_start']} to {counts['data_window_end']}. "
+        "Recorded loss is historical and synthetic, not a forecast.",
+    )
+    columns = st.columns(4, gap="large")
     for column, (label, key) in zip(
         columns,
         [
@@ -30,23 +35,18 @@ def render_overview() -> None:
         ],
     ):
         column.metric(label, format_amount(counts[key]))
-    st.caption(
-        f"Synthetic observation window: {counts['data_window_start']} to {counts['data_window_end']}. "
-        "Recorded loss is historical and synthetic, not a forecast."
-    )
 
-    st.subheader("Latest incidents")
+    section_header(
+        "Latest incidents",
+        "Overdue reviews are follow-up items, not evidence that a control has failed. "
+        "Use System Explorer, Scenario Analysis, and Investigation for supporting detail.",
+    )
     st.dataframe(
         [{"Date": i["date"], "System": i["system_id"], "Category": label_for(i["category"]),
           "Severity": i["severity"], "Loss": i["financial_loss"]}
          for i in overview["recent_incidents"]],
         hide_index=True, width="stretch",
         column_config={"Loss": st.column_config.NumberColumn("Loss", format="%d")},
-    )
-
-    st.caption(
-        "Overdue reviews are follow-up items, not evidence that a control has failed. "
-        "Use System Explorer, Scenario Analysis, and Investigation for supporting detail."
     )
 
     with st.expander("Dataset coverage"):

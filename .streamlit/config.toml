@@ -1,0 +1,39 @@
+# RiskSignal editorial theme. Base tokens only; the full design system (typography scale,
+# rules, buttons, editorial layouts) is injected by src/risksignal/ui/theme.py.
+
+[theme]
+base = "light"
+primaryColor = "#171717"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#FAF9F6"
+textColor = "#090909"
+linkColor = "#9A6848"
+linkUnderline = false
+borderColor = "#D8D6D1"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "none"
+buttonRadius = "full"
+baseFontSize = 16
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, Helvetica Neue, Arial, sans-serif"
+headingFont = "Instrument Serif:https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap, Cormorant Garamond, serif"
+headingFontWeights = [400, 400, 400, 400, 400, 400]
+metricValueFontWeight = 400
+dataframeBorderColor = "#D8D6D1"
+dataframeHeaderBackgroundColor = "#FFFFFF"
+dataframeHeaderTextColor = "#454545"
+chartCategoricalColors = ["#171717", "#9A6848", "#8F8F8A", "#A97552", "#454545", "#D8D6D1"]
+redColor = "#8C3B2E"
+greenColor = "#4F6B4A"
+yellowColor = "#9A6848"
+blueColor = "#454545"
+orangeColor = "#A97552"
+violetColor = "#454545"
+grayColor = "#8F8F8A"
+
+[theme.sidebar]
+backgroundColor = "#FAF9F6"
+secondaryBackgroundColor = "#FFFFFF"
+
+[client]
+toolbarMode = "minimal"

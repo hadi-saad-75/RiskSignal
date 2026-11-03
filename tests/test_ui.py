@@ -347,9 +347,8 @@ def test_ai_investigator_runs_an_investigation_with_the_mock_llm(api: ApiClient)
     at.button[0].click().run()
     assert not at.exception
     shown = texts(at.markdown)
-    for heading, color in (("Observed evidence", "blue"), ("Model assumptions", "violet"),
-                           ("Simulation results", "green"), ("Suggested investigation questions", "orange")):
-        assert f":{color}-badge[{heading}]" in shown, heading  # each section has its own coloured badge
+    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Suggested investigation questions"):
+        assert f'<span class="rs-title">{heading}</span>' in shown, heading  # each section has its own numbered heading
     assert "Retrieved system profile for PAYMENT_ENGINE_01" in shown
     assert "Ran 100,000 year Monte Carlo simulation (seed 42)" in shown
     assert any("Simulation metadata" in s.value for s in at.subheader)

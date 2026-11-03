@@ -5,10 +5,22 @@ from typing import Any
 import plotly.graph_objects as go
 
 from risksignal.ui.formatting import label_for
+from risksignal.ui.theme import (
+    ACCENT,
+    ACCENT_SECONDARY,
+    BACKGROUND,
+    BORDER_STRONG,
+    DIVIDER,
+    TEXT,
+    TEXT_MUTED,
+    style_figure,
+)
 
-NODE_COLORS = {"focus": "#1f77b4", "vendor": "#ff7f0e", "process": "#2ca02c", "related": "#7f7f7f"}
-BASELINE_COLOR = "#1f77b4"
-STRESS_COLOR = "#d62728"
+NODE_COLORS = {"focus": TEXT, "vendor": ACCENT, "process": TEXT_MUTED, "related": BACKGROUND}
+EDGE_COLORS = {"vendor": ACCENT_SECONDARY, "process": DIVIDER}
+BASELINE_COLOR = BORDER_STRONG
+STRESS_COLOR = ACCENT
+_FILLS = {BASELINE_COLOR: "rgba(23, 23, 23, 0.05)", STRESS_COLOR: "rgba(154, 104, 72, 0.10)"}
 
 
 def kri_figure(series: dict[str, Any]) -> go.Figure:
@@ -16,13 +28,14 @@ def kri_figure(series: dict[str, Any]) -> go.Figure:
     points = series["observations"]
     figure = go.Figure(go.Scatter(
         x=[p["date"] for p in points], y=[p["value"] for p in points],
-        mode="lines+markers", name=label_for(series["kri_name"]), line={"color": BASELINE_COLOR},
+        mode="lines+markers", name=label_for(series["kri_name"]),
+        line={"color": BASELINE_COLOR, "width": 1.5}, marker={"size": 5, "color": BASELINE_COLOR},
     ))
-    figure.add_hline(y=series["window_mean"], line_dash="dash", line_color="grey",
-                     annotation_text="window mean", annotation_position="top left")
-    figure.update_layout(title=label_for(series["kri_name"]), height=280, margin={"l": 10, "r": 10, "t": 40, "b": 10},
-                         showlegend=False, yaxis={"rangemode": "tozero"})
-    return figure
+    figure.add_hline(y=series["window_mean"], line_dash="dot", line_color=ACCENT, line_width=1,
+                     annotation_text="window mean", annotation_position="top left",
+                     annotation_font={"color": ACCENT, "size": 12})
+    return style_figure(figure, title={"text": label_for(series["kri_name"])}, height=300,
+                        margin={"l": 8, "r": 8, "t": 56, "b": 8}, showlegend=False, yaxis={"rangemode": "tozero"})
 
 
 def _density(histogram: dict[str, Any]) -> tuple[list[float], list[float]]:
@@ -49,17 +62,22 @@ def distribution_figure(
         runs.append(("Stress", stress_histogram, stress_p95, STRESS_COLOR))
     for name, histogram, p95, color in runs:
         edges, heights = _density(histogram)
-        figure.add_trace(go.Scatter(x=edges, y=heights, name=name, mode="lines", line={"color": color, "shape": "hv"},
-                                    fill="tozeroy", opacity=0.55))
-        figure.add_vline(x=p95, line_dash="dash", line_color=color, annotation_text=f"{name} P95",
-                         annotation_position="top")
-    figure.update_layout(
-        title="Simulated annual aggregate loss (illustrative model, synthetic data)",
-        xaxis={"title": "Annual loss (plotted up to each run's 99th percentile)", "tickformat": "~s", "rangemode": "tozero"},
-        yaxis={"title": "Density (share of simulated years)", "showticklabels": False},
-        height=420, margin={"l": 10, "r": 10, "t": 60, "b": 10}, legend={"orientation": "h", "y": -0.2},
+        figure.add_trace(go.Scatter(x=edges, y=heights, name=name, mode="lines",
+                                    line={"color": color, "shape": "hv", "width": 1.5},
+                                    fill="tozeroy", fillcolor=_FILLS[color]))
+        figure.add_vline(x=p95, line_dash="dot", line_width=1, line_color=color, annotation_text=f"{name} P95",
+                         annotation_position="top right", annotation_yanchor="top",
+                         annotation_font={"color": color, "size": 12})
+    return style_figure(
+        figure,
+        title={"text": "Simulated annual aggregate loss",
+               "subtitle": {"text": "Illustrative model, synthetic data", "font": {"size": 12, "color": TEXT_MUTED}}},
+        xaxis={"title": {"text": "Annual loss (plotted up to each run's 99th percentile)"}, "tickformat": "~s",
+               "rangemode": "tozero"},
+        yaxis={"title": {"text": "Density (share of simulated years)"}, "showticklabels": False},
+        height=460, margin={"l": 8, "r": 8, "t": 80, "b": 8},
+        legend={"orientation": "h", "y": -0.22, "x": 0},
     )
-    return figure
 
 
 def _spread(count: int, height: float) -> list[float]:
@@ -100,7 +118,7 @@ def dependency_figure(system_id: str, dependencies: dict[str, Any]) -> go.Figure
     layout = dependency_layout(system_id, dependencies)
     position = {n["key"]: (n["x"], n["y"]) for n in layout["nodes"]}
     figure = go.Figure()
-    for kind, color in (("vendor", NODE_COLORS["vendor"]), ("process", NODE_COLORS["process"])):
+    for kind in ("vendor", "process"):
         xs: list[float | None] = []
         ys: list[float | None] = []
         for edge in (e for e in layout["edges"] if e["kind"] == kind):
@@ -108,7 +126,7 @@ def dependency_figure(system_id: str, dependencies: dict[str, Any]) -> go.Figure
             xs += [x0, x1, None]
             ys += [y0, y1, None]
         if xs:
-            figure.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line={"color": color, "width": 1.5},
+            figure.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line={"color": EDGE_COLORS[kind], "width": 1},
                                         hoverinfo="skip", showlegend=False))
     names = {"focus": "Selected system", "vendor": "Vendor", "process": "Business process", "related": "Related system"}
     for kind in ("focus", "vendor", "process", "related"):
@@ -117,12 +135,16 @@ def dependency_figure(system_id: str, dependencies: dict[str, Any]) -> go.Figure
             figure.add_trace(go.Scatter(
                 x=[n["x"] for n in group], y=[n["y"] for n in group], mode="markers+text", name=names[kind],
                 text=[n["label"] for n in group], textposition="middle right" if kind == "related" else "top center",
+                textfont={"color": TEXT, "size": 12},
                 hovertext=[n["hover"] for n in group], hoverinfo="text",
-                marker={"size": 16, "color": NODE_COLORS[kind]},
+                marker={"size": 18 if kind == "focus" else 13, "color": NODE_COLORS[kind],
+                        "line": {"color": BORDER_STRONG, "width": 1}},
             ))
-    figure.update_layout(
-        title="Shared exposure map (synthetic data)", height=max(360, 60 * len({n["y"] for n in layout["nodes"]}) + 120),
+    return style_figure(
+        figure,
+        title={"text": "Shared exposure map",
+               "subtitle": {"text": "Synthetic data", "font": {"size": 12, "color": TEXT_MUTED}}},
+        height=max(380, 60 * len({n["y"] for n in layout["nodes"]}) + 140),
         xaxis={"visible": False, "range": [-0.4, 3.4]}, yaxis={"visible": False},
-        margin={"l": 10, "r": 10, "t": 50, "b": 10}, legend={"orientation": "h", "y": -0.05},
+        margin={"l": 8, "r": 8, "t": 72, "b": 8}, legend={"orientation": "h", "y": -0.05, "x": 0},
     )
-    return figure

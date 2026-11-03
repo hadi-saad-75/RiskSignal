@@ -22,6 +22,19 @@ USER app
 # Where to find the API (docker-compose service name). Override with the RISKSIGNAL_API_URL variable.
 ENV RISKSIGNAL_API_URL=http://api:8000
 
+# Base theme tokens (mirrors .streamlit/config.toml, which is kept out of the build context together
+# with any secrets). The full editorial design system is injected by src/risksignal/ui/theme.py.
+ENV STREAMLIT_THEME_BASE=light \
+    STREAMLIT_THEME_PRIMARY_COLOR="#171717" \
+    STREAMLIT_THEME_BACKGROUND_COLOR="#FFFFFF" \
+    STREAMLIT_THEME_SECONDARY_BACKGROUND_COLOR="#FAF9F6" \
+    STREAMLIT_THEME_TEXT_COLOR="#090909" \
+    STREAMLIT_THEME_LINK_COLOR="#9A6848" \
+    STREAMLIT_THEME_BORDER_COLOR="#D8D6D1" \
+    STREAMLIT_THEME_BASE_RADIUS=none \
+    STREAMLIT_THEME_BUTTON_RADIUS=full \
+    STREAMLIT_CLIENT_TOOLBAR_MODE=minimal
+
 EXPOSE 8501
 CMD ["streamlit", "run", "src/risksignal/ui/app.py", \
      "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", \

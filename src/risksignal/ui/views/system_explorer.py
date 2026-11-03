@@ -3,19 +3,40 @@
 import streamlit as st
 
 from risksignal.ui.charts import dependency_figure, kri_figure
-from risksignal.ui.components import banner, call_api, get_api_client, system_selector
+from risksignal.ui.components import (
+    banner,
+    call_api,
+    get_api_client,
+    label,
+    lead,
+    page_header,
+    rule,
+    ruled_list,
+    spacer,
+    statement,
+    system_selector,
+)
 from risksignal.ui.formatting import format_amount, format_decimal, format_percent, label_for
 
 
 def render_system_explorer() -> None:
     banner()
-    st.title("System Explorer")
-    st.caption("This page reports synthetic observations; no values on this page are forecasts.")
+    page_header(
+        "02", "Systems", "System Explorer",
+        "Profile, incidents, key risk indicators, controls and shared dependencies for one system. "
+        "This page reports synthetic observations; no values on this page are forecasts.",
+    )
     client = get_api_client()
-    system_id = system_selector(client, "explorer")
+    rule(subtle=True)
+    spacer()
+    select_column, _, window_column = st.columns([6, 1, 5], vertical_alignment="bottom")
+    with select_column:
+        system_id = system_selector(client, "explorer")
     if system_id is None:
         return
-    months = st.slider("Months of history", min_value=3, max_value=60, value=12, step=1)
+    with window_column:
+        months = st.slider("Months of history", min_value=3, max_value=60, value=12, step=1)
+    spacer()
 
     profile = call_api(client.profile, system_id)
     incidents = call_api(client.incidents, system_id, months)
@@ -40,25 +61,38 @@ def render_system_explorer() -> None:
 
 def _profile_tab(profile: dict) -> None:
     system, process, meta = profile["system"], profile["primary_process"], profile["metadata"]
-    st.subheader(f"{system['name']} ({system['system_id']})")
-    st.write(system["description"])
-    columns = st.columns(4)
+    title, _, aside = st.columns([7, 1, 4], vertical_alignment="bottom")
+    with title:
+        label(system["system_id"])
+        st.subheader(system["name"])
+    with aside:
+        lead(system["description"])
+    spacer()
+    columns = st.columns(4, gap="large")
     columns[0].metric("Criticality", system["criticality"].capitalize())
     columns[1].metric("Incidents on record", meta["total_incidents_recorded"])
     columns[2].metric("Controls", meta["number_of_controls"])
     columns[3].metric("KRIs tracked", len(meta["kris_tracked"]))
-    st.markdown(f"**Primary business process:** {process['name']} ({process['process_id']}). {process['description']}")
+    spacer()
+    ruled_list([(f"Primary business process · {process['process_id']}", f"{process['name']}. {process['description']}")])
     st.caption(f"Data window: {meta['data_window_start']} to {meta['data_window_end']}. {meta['data_source']}.")
 
 
 def _incidents_tab(incidents: dict) -> None:
     counts = incidents["counts"]
-    st.markdown(f"**{counts['total']} incidents** between {incidents['window_start_exclusive']} (exclusive) "
-                f"and {incidents['window_end_inclusive']}.")
-    columns = st.columns(3)
-    columns[0].metric("Total recorded loss", format_amount(counts["total_financial_loss"]))
-    columns[1].metric("Incidents by category", ", ".join(f"{label_for(k)}: {v}" for k, v in counts["by_category"].items()) or "none")
-    columns[2].metric("Descriptions mentioning deployment", counts["deployment_keyword_matches"])
+    statement(f"{counts['total']} incidents between {incidents['window_start_exclusive']} "
+              f"(exclusive) and {incidents['window_end_inclusive']}.")
+    spacer()
+    figures, _, categories = st.columns([6, 1, 5])
+    left, right = figures.columns(2, gap="large")
+    left.metric("Total recorded loss", format_amount(counts["total_financial_loss"]))
+    right.metric("Descriptions mentioning deployment", counts["deployment_keyword_matches"])
+    with categories:
+        label("Incidents by category")
+        if counts["by_category"]:
+            ruled_list([(label_for(k), f"{v} incident{'s' if v != 1 else ''}") for k, v in counts["by_category"].items()])
+        else:
+            st.write("None.")
     st.caption("The data have no separate cause field. The deployment count is a keyword match on the description.")
     if incidents["incidents"]:
         st.dataframe(
@@ -73,11 +107,18 @@ def _incidents_tab(incidents: dict) -> None:
 
 
 def _kri_tab(kri: dict) -> None:
-    st.caption("Monthly values. Higher values are less favourable for all five indicators. The dashed line is the "
-               "window mean. Descriptive only: no trend is projected.")
-    columns = st.columns(2)
+    intro, _, note = st.columns([7, 1, 4], vertical_alignment="bottom")
+    with intro:
+        statement("Five key risk indicators, month by month, against their window mean.")
+    with note:
+        st.caption("Monthly values. Higher values are less favourable for all five indicators. The dashed line is the "
+                   "window mean. Descriptive only: no trend is projected.")
+    spacer()
+    columns = st.columns(2, gap="large")
     for index, series in enumerate(kri["series"]):
-        columns[index % 2].plotly_chart(kri_figure(series), width="stretch", key=f"kri_{series['kri_name']}")
+        columns[index % 2].plotly_chart(kri_figure(series), width="stretch", key=f"kri_{series['kri_name']}", theme=None)
+    spacer()
+    label("Window summary")
     st.dataframe(
         [{"KRI": label_for(s["kri_name"]), "Latest": format_decimal(s["latest_value"]),
           "Window mean": format_decimal(s["window_mean"]), "Min": format_decimal(s["window_min"]),
@@ -90,8 +131,13 @@ def _kri_tab(kri: dict) -> None:
 
 def _controls_tab(controls: dict) -> None:
     counts = controls["counts_by_review_status"]
-    st.markdown("**Review status:** " + (", ".join(f"{k.capitalize()}: {v}" for k, v in counts.items()) or "None"))
-    st.caption("An overdue review is a reason to ask questions, not proof that the control has failed.")
+    summary, _, note = st.columns([7, 1, 4], vertical_alignment="bottom")
+    with summary:
+        label("Review status")
+        statement(" · ".join(f"{k.capitalize()} {v}" for k, v in counts.items()) or "None")
+    with note:
+        st.caption("An overdue review is a reason to ask questions, not proof that the control has failed.")
+    spacer()
     st.dataframe(
         [{"Control": c["control_id"], "Name": c["name"], "Type": c["control_type"],
           "Status": c["review_status"].capitalize(),
@@ -103,27 +149,30 @@ def _controls_tab(controls: dict) -> None:
 
 
 def _dependencies_tab(system_id: str, dependencies: dict) -> None:
-    st.plotly_chart(dependency_figure(system_id, dependencies), width="stretch", key="dependency_map")
+    st.plotly_chart(dependency_figure(system_id, dependencies), width="stretch", key="dependency_map", theme=None)
     st.caption("Related systems share a vendor or a business process with the selected system. This is a shared "
                "exposure worth investigating, not evidence that a failure in one system causes a failure in another.")
+    spacer()
 
-    left, right = st.columns(2)
+    left, _, right = st.columns([6, 1, 6])
     with left:
-        st.markdown("**Vendors**")
+        label("Vendors")
         st.dataframe([{"Vendor": v["vendor_id"], "Name": v["name"]} for v in dependencies["vendors"]],
                      hide_index=True, width="stretch")
-        st.markdown("**Supported business processes**")
+        spacer()
+        label("Supported business processes")
         st.dataframe([{"Process": p["process_id"], "Name": p["name"], "Primary": "yes" if p["is_primary"] else ""}
                       for p in dependencies["supported_processes"]], hide_index=True, width="stretch")
     with right:
-        st.markdown("**Vendors shared with other systems**")
+        label("Vendors shared with other systems")
         shared = dependencies["shared_vendors"]
         if shared:
             st.dataframe([{"Vendor": s["vendor"]["name"], "Also used by": ", ".join(o["system_id"] for o in s["other_systems"])}
                           for s in shared], hide_index=True, width="stretch")
         else:
             st.write("None.")
-        st.markdown("**Depends on / depended on by**")
+        spacer()
+        label("Depends on / depended on by")
         links = ([{"Direction": "depends on", "System": link["system"]["system_id"], "Hops": link["hops"],
                    "Via": ", ".join(link["via_system_ids"])} for link in dependencies["upstream_systems"]]
                  + [{"Direction": "depended on by", "System": link["system"]["system_id"], "Hops": link["hops"],
@@ -133,7 +182,8 @@ def _dependencies_tab(system_id: str, dependencies: dict) -> None:
         else:
             st.write("None.")
 
-    st.markdown("**Related systems and why**")
+    spacer()
+    label("Related systems and why")
     if dependencies["related_systems"]:
         st.dataframe(
             [{"System": r["system"]["system_id"], "Criticality": r["system"]["criticality"],
@@ -143,6 +193,7 @@ def _dependencies_tab(system_id: str, dependencies: dict) -> None:
     else:
         st.write("No systems share a vendor or process with this system.")
     if dependencies["indirect_vendors"]:
-        st.markdown("**Vendors reached only indirectly**")
+        spacer()
+        label("Vendors reached only indirectly")
         st.dataframe([{"Vendor": v["vendor"]["name"], "Through system": v["via_system_id"], "Hops": v["hops"]}
                       for v in dependencies["indirect_vendors"]], hide_index=True, width="stretch")

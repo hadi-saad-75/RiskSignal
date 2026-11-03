@@ -316,6 +316,8 @@ streamlit run src/risksignal/ui/app.py
 
 The UI computes no risk figures: every number shown was returned by the API. See the notes on assumptions and limitations in the docs.
 
+**Visual design.** The dashboard uses a restrained editorial design system: an oversized serif display face (Instrument Serif, with Canela, Editorial New and Tiempos preferred where licensed) for page and section titles and key figures, a grotesk sans (Inter, after Neue Haas Grotesk and Helvetica Neue) for body text, controls and data, a white, black and neutral palette with a single warm accent (`#9A6848`) kept for calls to action, index numerals and active states, and hierarchy built from scale, spacing and hairline rules rather than cards or shadows. Tokens, the global stylesheet and the Plotly chart style live in [src/risksignal/ui/theme.py](src/risksignal/ui/theme.py). Base Streamlit theme settings are in [.streamlit/config.toml](.streamlit/config.toml) and are mirrored as `STREAMLIT_THEME_*` variables in `Dockerfile.ui`. The editorial layout helpers (page header, section header, ruled lists, footer) are in [src/risksignal/ui/components.py](src/risksignal/ui/components.py).
+
 ## Documentation
 
 - [docs/project_brief.md](docs/project_brief.md): canonical project reference (scope, rules, exclusions).

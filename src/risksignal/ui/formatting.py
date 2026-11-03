@@ -18,15 +18,6 @@ SECTION_HEADINGS = (
     "Suggested investigation questions",
     "Limitations",
 )
-# Badge colours (Streamlit names) so the sections are visually distinct.
-SECTION_COLORS = {
-    "Observed evidence": "blue",
-    "Model assumptions": "violet",
-    "Simulation results": "green",
-    "Connected exposures": "yellow",
-    "Suggested investigation questions": "orange",
-    "Limitations": "gray",
-}
 METRIC_LABELS = (
     ("mean", "Mean annual loss"),
     ("median", "Median annual loss"),

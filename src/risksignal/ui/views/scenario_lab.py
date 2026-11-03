@@ -5,7 +5,19 @@ from typing import Any
 import streamlit as st
 
 from risksignal.ui.charts import distribution_figure
-from risksignal.ui.components import banner, call_api, get_api_client, simulation_notice, system_selector
+from risksignal.ui.components import (
+    banner,
+    call_api,
+    get_api_client,
+    label,
+    page_header,
+    rule,
+    section_header,
+    simulation_notice,
+    spacer,
+    statement,
+    system_selector,
+)
 from risksignal.ui.formatting import (
     METRIC_LABELS,
     comparison_rows,
@@ -25,10 +37,18 @@ SEVERITY_SOURCES = {"system": "this system's own losses", "category": "bank-wide
 
 def render_scenario_lab() -> None:
     banner()
-    st.title("Scenario Analysis")
-    simulation_notice()
+    aside = page_header(
+        "03", "Scenarios", "Scenario Analysis",
+        "Estimate a baseline loss model for one system, then stress it under a named or custom scenario.",
+    )
+    with aside:
+        simulation_notice()
     client = get_api_client()
-    system_id = system_selector(client, "lab")
+    rule(subtle=True)
+    spacer()
+    system_column, _ = st.columns([6, 6])
+    with system_column:
+        system_id = system_selector(client, "lab")
     if system_id is None:
         return
     scenarios = call_api(client.scenarios)
@@ -40,6 +60,7 @@ def render_scenario_lab() -> None:
     _estimated_baseline(baseline)
     settings = _inputs(scenarios["scenarios"])
 
+    spacer()
     if st.button("Run baseline and stress comparison", type="primary"):
         with st.spinner("Running the Monte Carlo simulation..."):
             result = _run(client, system_id, settings)
@@ -54,19 +75,21 @@ def render_scenario_lab() -> None:
 
 def _estimated_baseline(baseline: dict[str, Any]) -> None:
     assumptions, basis = baseline["model_assumptions"], baseline["observed_basis"]
-    st.subheader("Baseline parameter estimates")
-    columns = st.columns(3)
-    columns[0].metric("λ: expected incidents per year", format_decimal(assumptions["lambda_used"]))
-    columns[1].metric("μ: log-severity location", format_decimal(assumptions["severity_mu"], 3))
-    columns[2].metric("σ: log-severity spread", format_decimal(assumptions["severity_sigma"], 3))
-    st.caption(
+    section_header(
+        "Baseline parameter estimates",
         f"λ is {LAMBDA_SOURCES.get(assumptions['lambda_source'], assumptions['lambda_source'])}: "
         f"{basis['observed_incident_count']} incidents over {format_decimal(basis['observation_years'])} years. "
         f"μ and σ are fitted to {basis['severity_losses_used']} positive losses "
-        f"({SEVERITY_SOURCES.get(basis['severity_data_source'], basis['severity_data_source'])})."
+        f"({SEVERITY_SOURCES.get(basis['severity_data_source'], basis['severity_data_source'])}).",
+        index="01",
     )
+    columns = st.columns(3, gap="large")
+    columns[0].metric("λ: expected incidents per year", format_decimal(assumptions["lambda_used"]))
+    columns[1].metric("μ: log-severity location", format_decimal(assumptions["severity_mu"], 3))
+    columns[2].metric("σ: log-severity spread", format_decimal(assumptions["severity_sigma"], 3))
     for note in basis["severity_fallback_notes"]:
         st.caption(f"Fallback: {note}")
+    spacer()
     with st.expander("Parameter interpretation"):
         st.markdown(
             "The model counts incidents per year with a **Poisson** distribution, `N ~ Poisson(λ)`, where **λ** is the "
@@ -80,18 +103,24 @@ def _estimated_baseline(baseline: dict[str, Any]) -> None:
 
 
 def _inputs(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
-    st.subheader("Simulation parameters")
-    left, right = st.columns(2)
-    n = left.number_input("Number of simulations", min_value=1_000, max_value=1_000_000, value=100_000, step=10_000)
-    seed = right.number_input("Random seed", min_value=0, max_value=2**32 - 1, value=42, step=1)
+    section_header("Simulation parameters", "Choose the size of the run, the random seed and the stress scenario. "
+                   "Baseline and stress share the seed and common random numbers.", index="02")
+    controls, _, assumptions = st.columns([5, 1, 6])
+    with controls:
+        left, right = st.columns(2)
+        n = left.number_input("Number of simulations", min_value=1_000, max_value=1_000_000, value=100_000, step=10_000)
+        seed = right.number_input("Random seed", min_value=0, max_value=2**32 - 1, value=42, step=1)
 
-    ids = [s["scenario_id"] for s in scenarios]
-    by_id = {s["scenario_id"]: s for s in scenarios}
-    scenario_id = st.selectbox("Stress scenario", ids, format_func=lambda i: by_id[i]["name"])
-    scenario = by_id[scenario_id]
-    st.table([{"Assumption": "λ multiplier (incident frequency)", "Value": f"{scenario['lambda_multiplier']:g}"},
-              {"Assumption": "μ shift (log-severity location)", "Value": f"{scenario['severity_mu_shift']:g}"},
-              {"Assumption": "σ multiplier (log-severity spread)", "Value": f"{scenario['severity_sigma_multiplier']:g}"}])
+        ids = [s["scenario_id"] for s in scenarios]
+        by_id = {s["scenario_id"]: s for s in scenarios}
+        scenario_id = st.selectbox("Stress scenario", ids, format_func=lambda i: by_id[i]["name"])
+        scenario = by_id[scenario_id]
+    with assumptions:
+        label("Scenario multipliers")
+        st.table([{"Assumption": "λ multiplier (incident frequency)", "Value": f"{scenario['lambda_multiplier']:g}"},
+                  {"Assumption": "μ shift (log-severity location)", "Value": f"{scenario['severity_mu_shift']:g}"},
+                  {"Assumption": "σ multiplier (log-severity spread)", "Value": f"{scenario['severity_sigma_multiplier']:g}"}])
+    spacer()
     with st.expander("Scenario assumptions"):
         st.markdown("\n".join(f"- {note}" for note in scenario["assumption_notes"]))
 
@@ -118,28 +147,36 @@ def _results(result: dict[str, Any]) -> None:
     out = result["simulation_results"]
     stress = result["stress_assumptions"]
     base_assumptions = result["baseline_assumptions"]
-    st.subheader("Results")
-    simulation_notice()
-    st.markdown(f"**Stress scenario:** {stress['scenario']['name']}  \n_{stress['label']}_")
+    aside = section_header("Results", index="03")
+    with aside:
+        simulation_notice()
+    label("Stress scenario")
+    statement(stress["scenario"]["name"])
+    st.markdown(f"_{stress['label']}_")
+    spacer()
 
-    cards = st.columns(3)
-    for index, (key, label) in enumerate(METRIC_LABELS):
-        cards[index % 3].metric(
-            f"{label} under stress", format_amount(out["stress_metrics"][key]),
+    cards = [st.columns(3, gap="large") for _ in range(2)]
+    for index, (key, label_text) in enumerate(METRIC_LABELS):
+        cards[index // 3][index % 3].metric(
+            f"{label_text} under stress", format_amount(out["stress_metrics"][key]),
             delta=f"{format_percent(out['percentage_differences'][key])} relative to baseline "
                   f"{format_amount(out['baseline_metrics'][key])}",
-            delta_color="inverse",
+            delta_color="off",
         )
+    spacer()
+    label("Baseline and stress compared")
     st.dataframe(comparison_rows(out), hide_index=True, width="stretch")
+    spacer()
 
     st.plotly_chart(
         distribution_figure(out["baseline_histogram"], out["baseline_metrics"]["p95"],
                             out["stress_histogram"], out["stress_metrics"]["p95"]),
-        width="stretch", key="loss_distribution",
+        width="stretch", key="loss_distribution", theme=None,
     )
+    spacer()
 
     parameters = stress["stress_parameters"]
-    st.markdown("**Model parameters**")
+    label("Model parameters")
     st.table([
         {"Parameter": "λ (incidents per year)", "Baseline": format_decimal(base_assumptions["lambda_used"], 3),
          "Stress": format_decimal(parameters["lambda_value"], 3)},
