@@ -11,7 +11,7 @@ def render_overview() -> None:
     page_header(
         "01", "Portfolio", "Management overview",
         "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
-        "fictional Atlas Bank data—not JPMorgan data—and is not a production or decision-making tool.",
+        "fictional Atlas Bank data, not JPMorgan data, and is not a production or decision-making tool.",
     )
 
     overview = call_api(get_api_client().overview, 5)

@@ -12,10 +12,18 @@ AGENT_DISCLAIMER = (
 )
 
 InvestigationStatus = Literal["completed", "stopped_max_steps", "llm_error"]
+ChatRole = Literal["user", "assistant"]
 
 
 class _Model(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
+
+
+class ChatTurn(_Model):
+    """One earlier message of a conversation with the assistant, as plain text."""
+
+    role: ChatRole
+    content: str
 
 
 class ToolActivity(_Model):

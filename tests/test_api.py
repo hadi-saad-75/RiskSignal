@@ -90,7 +90,7 @@ def test_interactive_docs_and_openapi_schema_work(client: TestClient) -> None:
         ("get", "/systems/{system_id}/incidents"), ("get", "/systems/{system_id}/controls"),
         ("get", "/systems/{system_id}/dependencies"), ("get", "/systems/{system_id}/kri"),
         ("post", "/simulations"), ("get", "/scenarios"), ("post", "/scenarios/compare"),
-        ("post", "/scenarios/compare-custom"), ("post", "/agent/investigate"),
+        ("post", "/scenarios/compare-custom"), ("post", "/agent/investigate"), ("post", "/agent/chat"),
     }
     assert {(m, p) for p, ops in spec["paths"].items() for m in ops} == expected
     for ops in spec["paths"].values():

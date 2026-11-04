@@ -110,3 +110,8 @@ class ApiClient:
     def investigate(self, question: str, include_tool_outputs: bool = True) -> dict[str, Any]:
         return self._request("POST", "/agent/investigate", json={
             "question": question, "include_tool_outputs": include_tool_outputs})
+
+    def chat(self, message: str, history: list[dict[str, str]], include_tool_outputs: bool = False) -> dict[str, Any]:
+        """One assistant message. ``history`` holds earlier turns as {"role", "content"}, oldest first."""
+        return self._request("POST", "/agent/chat", json={
+            "message": message, "history": history, "include_tool_outputs": include_tool_outputs})

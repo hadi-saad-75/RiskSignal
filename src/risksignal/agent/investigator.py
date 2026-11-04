@@ -24,6 +24,7 @@ import datetime as dt
 import re
 import sys
 import time
+from collections.abc import Sequence
 from typing import Any
 
 from risksignal.agent.base import (
@@ -68,32 +69,61 @@ def _numbers_in(value: Any, found: set[float]) -> None:
             _numbers_in(item, found)
 
 
-def find_ungrounded_numbers(answer: str, activities: list[ToolActivity]) -> list[str]:
+def _written_numbers(text: str) -> list[tuple[str, float, float]]:
+    """(token, value, rounding tolerance) for every number written in prose, e.g. "0.9 million"."""
+    text = _LIST_MARKER.sub(" ", _ISO_DATE.sub(" ", _IDENTIFIER.sub(" ", text)))
+    found: list[tuple[str, float, float]] = []
+    for match in _NUMBER.finditer(text):
+        whole, fraction, suffix = match.group(1), match.group(2), match.group(3)
+        multiplier = _SUFFIX_MULTIPLIER.get((suffix or "").lower(), 1.0)
+        value = float(whole.replace(",", "") + ("." + fraction if fraction else "")) * multiplier
+        tolerance = 0.5 * 10 ** -(len(fraction) if fraction else 0) * multiplier + 1e-9
+        found.append((match.group(0).strip(), value, tolerance))
+    return found
+
+
+def find_ungrounded_numbers(
+    answer: str, activities: list[ToolActivity], context: Sequence[str] = ()
+) -> list[str]:
     """Numbers in ``answer`` that match nothing in the tool inputs or outputs.
 
     A best-effort safety net, not a proof. A number counts as grounded if some number the
     tools returned (or were asked with) lies within the rounding implied by how the answer
     writes it: "0.9 million" allows +/- 50,000, "896,435" allows +/- 0.5. Identifiers (P95,
     V04, PAYMENT_ENGINE_01), ISO dates, list numbering and small whole numbers are ignored.
+    Numbers written in ``context`` (earlier turns of a conversation, the user's own message)
+    also count as grounded.
     """
     known: set[float] = set()
     for activity in activities:
         _numbers_in(activity.tool_input, known)
         _numbers_in(activity.output, known)
+    for text in context:
+        known.update(value for _, value, _ in _written_numbers(text))
 
-    text = _LIST_MARKER.sub(" ", _ISO_DATE.sub(" ", _IDENTIFIER.sub(" ", answer)))
     ungrounded: list[str] = []
-    for match in _NUMBER.finditer(text):
-        whole, fraction, suffix = match.group(1), match.group(2), match.group(3)
-        multiplier = _SUFFIX_MULTIPLIER.get((suffix or "").lower(), 1.0)
-        value = float(whole.replace(",", "") + ("." + fraction if fraction else "")) * multiplier
-        if fraction is None and suffix is None and value <= _EXEMPT_SMALL_INTEGER:
+    for token, value, tolerance in _written_numbers(answer):
+        if value <= _EXEMPT_SMALL_INTEGER and value.is_integer() and not re.search(r"[.%a-zA-Z]", token):
             continue
-        tolerance = 0.5 * 10 ** -(len(fraction) if fraction else 0) * multiplier + 1e-9
-        token = match.group(0).strip()
         if not any(abs(value - k) <= tolerance for k in known) and token not in ungrounded:
             ungrounded.append(token)
     return ungrounded
+
+
+# --------------------------------------------------------------------------- house style
+
+_DASH_AT_LINE_START = re.compile(r"(?m)^(\s*)[\u2013\u2014]\s+")
+_DASH_IN_RANGE = re.compile(r"(?<=\d)\s*[\u2013\u2014]\s*(?=\d)")
+_DASH_IN_COMPOUND = re.compile(r"(?<=\w)\u2013(?=\w)")
+_ANY_LONG_DASH = re.compile(r"\s*[\u2013\u2014]+\s*")
+
+
+def remove_long_dashes(text: str) -> str:
+    """House style: no en or em dashes. Ranges become "to", compounds a hyphen, the rest a comma."""
+    text = _DASH_AT_LINE_START.sub(r"\1- ", text)
+    text = _DASH_IN_RANGE.sub(" to ", text)
+    text = _DASH_IN_COMPOUND.sub("-", text)
+    return _ANY_LONG_DASH.sub(", ", text)
 
 
 # --------------------------------------------------------------------------- the agent
@@ -117,16 +147,20 @@ class Investigator:
         self.max_tokens = max_tokens
         self.system_prompt = system_prompt
 
-    def investigate(self, question: str) -> InvestigationResult:
+    def investigate(
+        self, question: str, history: Sequence[LLMMessage] = (), context: Sequence[str] = ()
+    ) -> InvestigationResult:
         """Answer ``question`` (for example "Investigate PAYMENT_ENGINE_01.") using the tools.
 
+        ``history`` holds earlier turns of a conversation (plain user and assistant text, oldest
+        first, ending with an assistant turn). Numbers written in ``context`` count as grounded.
         Raises ``ValueError`` only for an empty question. Provider failures and step limits are
         reported in the result, never raised.
         """
         if not question or not question.strip():
             raise ValueError("question must not be empty")
         question = question.strip()
-        messages = [LLMMessage(role="user", text=question)]
+        messages = [*history, LLMMessage(role="user", text=question)]
         activities: list[ToolActivity] = []
         warnings: list[str] = []
         status: InvestigationStatus = "stopped_max_steps"
@@ -144,7 +178,7 @@ class Investigator:
             messages.append(LLMMessage(role="assistant", text=response.text or None, tool_calls=response.tool_calls))
 
             if not response.tool_calls:
-                status, final_answer = "completed", response.text.strip()
+                status, final_answer = "completed", remove_long_dashes(response.text.strip())
                 if response.stop_reason == "max_tokens":
                     warnings.append("The model reached its output limit; the answer may be cut off.")
                 if not final_answer:
@@ -157,7 +191,7 @@ class Investigator:
                             "answer. The tool activity so far is listed.")
             warnings.append("Step limit reached before the model produced a final answer.")
 
-        ungrounded = find_ungrounded_numbers(final_answer, activities) if status == "completed" else []
+        ungrounded = find_ungrounded_numbers(final_answer, activities, context) if status == "completed" else []
         if ungrounded:
             warnings.append("Some numbers in the answer could not be matched to any tool output: "
                             + ", ".join(ungrounded) + ". Check them against the tool activity before relying on them.")

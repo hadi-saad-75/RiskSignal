@@ -22,8 +22,8 @@ from risksignal.tools.graph_tools import get_dependencies
 from risksignal.tools.incident_tools import get_recent_incidents
 from risksignal.tools.kri_tools import get_kri_history
 from risksignal.tools.schemas import ToolError
-from risksignal.tools.simulation_tools import compare_baseline_and_stress, run_loss_simulation
-from risksignal.tools.system_tools import get_system_profile
+from risksignal.tools.simulation_tools import compare_baseline_and_stress, list_scenarios, run_loss_simulation
+from risksignal.tools.system_tools import get_bank_overview, get_portfolio_summary, get_system_profile, list_systems
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +115,22 @@ def _summary_stress(args: dict[str, Any], r: Any) -> str:
             f"({n:,} simulated years each)")
 
 
+def _summary_systems(args: dict[str, Any], r: Any) -> str:
+    return f"Listed systems ({len(r.systems)} found)"
+
+
+def _summary_portfolio(args: dict[str, Any], r: Any) -> str:
+    return f"Compared all {r.totals.systems} systems over {r.months} months"
+
+
+def _summary_overview(args: dict[str, Any], r: Any) -> str:
+    return f"Retrieved bank-wide counts and the {len(r.recent_incidents)} most recent incidents"
+
+
+def _summary_scenarios(args: dict[str, Any], r: Any) -> str:
+    return f"Listed predefined stress scenarios ({len(r.scenarios)} found)"
+
+
 def _definitions() -> list[ToolDefinition]:
     scenarios = sorted(PREDEFINED_SCENARIOS)
     return [
@@ -166,6 +182,37 @@ def _definitions() -> list[ToolDefinition]:
                      "number_of_simulations": _SIMULATIONS, "random_seed": _SEED},
                     ["system_id", "scenario_id"]),
             compare_baseline_and_stress, _summary_stress),
+    ]
+
+
+def _portfolio_definitions() -> list[ToolDefinition]:
+    """Bank-wide tools offered only to the conversational assistant."""
+    return [
+        ToolDefinition(
+            "list_systems",
+            "List every system with its ID, name, criticality and primary business process. Use it to "
+            "find the ID of a system the user names in words. Synthetic data.",
+            _schema({}, []), list_systems, _summary_systems),
+        ToolDefinition(
+            "get_portfolio_summary",
+            "Compare all systems over the last N months: incidents, high or critical incidents, recorded "
+            "loss, incident count in the previous window of the same length and its change, and overdue or "
+            "due control reviews, sorted by recorded loss (highest first), with bank-wide totals. Use it for "
+            "questions across systems such as where to look first. Observable facts, not a risk score. "
+            "Synthetic data.",
+            _schema({"months": _MONTHS}, []), get_portfolio_summary, _summary_portfolio),
+        ToolDefinition(
+            "get_bank_overview",
+            "Bank-wide counts (systems, processes, vendors, controls, incidents, overdue controls, total "
+            "recorded loss, data window) and the most recent incidents across all systems. Synthetic data.",
+            _schema({"recent_incidents": {"type": "integer", "minimum": 1, "maximum": 100, "default": 10,
+                                          "description": "How many of the latest incidents to return."}}, []),
+            get_bank_overview, _summary_overview),
+        ToolDefinition(
+            "list_scenarios",
+            "List the predefined illustrative stress scenarios with their multipliers and assumption notes. "
+            "Scenario numbers are illustrative assumptions, not calibrated.",
+            _schema({}, []), list_scenarios, _summary_scenarios),
     ]
 
 
@@ -233,12 +280,20 @@ class ToolRegistry:
         )
 
 
-def build_default_registry(ctx: ToolContext | None = None) -> ToolRegistry:
-    """The seven RiskSignal tools bound to a database context (default: the Atlas Bank database)."""
+def _bind(definitions: list[ToolDefinition], ctx: ToolContext | None) -> ToolRegistry:
     context = ctx or ToolContext()
-    bound = [
+    return ToolRegistry([
         ToolDefinition(d.name, d.description, d.input_schema,
                        (lambda f: (lambda **kwargs: f(context, **kwargs)))(d.function), d.summarise)
-        for d in _definitions()
-    ]
-    return ToolRegistry(bound)
+        for d in definitions
+    ])
+
+
+def build_default_registry(ctx: ToolContext | None = None) -> ToolRegistry:
+    """The seven RiskSignal tools bound to a database context (default: the Atlas Bank database)."""
+    return _bind(_definitions(), ctx)
+
+
+def build_chat_registry(ctx: ToolContext | None = None) -> ToolRegistry:
+    """The seven investigation tools plus the bank-wide tools used by the conversational assistant."""
+    return _bind(_definitions() + _portfolio_definitions(), ctx)

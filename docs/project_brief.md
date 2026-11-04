@@ -1,8 +1,6 @@
-# RiskSignal — Project Brief
+# RiskSignal: Project Brief
 
-> **Canonical reference for all development steps.**
-> If you are a future session with no memory of earlier conversations, read this file in full before writing or changing anything. It defines what RiskSignal is, what it is **not**, and what should and should not be built.
-> If a task conflicts with this brief, stop and ask rather than silently deviating.
+> **Reference document for the project.** It defines what RiskSignal is, what it is **not**, and what is in and out of scope.
 
 ---
 
@@ -16,13 +14,13 @@ RiskSignal combines:
 
 - synthetic Operational Risk data,
 - a simple dependency graph,
-- classical stochastic Operational Risk modelling (frequency–severity),
+- classical stochastic Operational Risk modelling (frequency-severity),
 - Monte Carlo simulation,
 - an AI investigation agent,
 - a REST API,
 - a simple dashboard.
 
-Its purpose is to **demonstrate capability** — quantitative modelling, applied mathematics, AI and software engineering — to an Operational Risk team. It is a portfolio / conversation-opening artefact, not a production system and not a product.
+Its purpose is to **demonstrate capability** in quantitative modelling, applied mathematics, AI and software engineering to an Operational Risk team. It is a portfolio / conversation-opening artefact, not a production system and not a product.
 
 The prototype should be able to support questions such as:
 
@@ -44,8 +42,8 @@ The author is a recent Master 2 graduate (Applied Mathematics, Artificial Intell
 
 Expected reviewers:
 
-1. **Senior Operational Risk professionals** — they care about clarity, relevance to real Op Risk practice, honesty about limits and sensible governance.
-2. **A technically and quantitatively oriented Operational Risk professional** with experience in Monte Carlo simulation, Poisson processes, loss distributions and tail risk — they will scrutinise the mathematics.
+1. **Senior Operational Risk professionals**: they care about clarity, relevance to real Op Risk practice, honesty about limits and sensible governance.
+2. **A technically and quantitatively oriented Operational Risk professional** with experience in Monte Carlo simulation, Poisson processes, loss distributions and tail risk. They will scrutinise the mathematics.
 
 Consequence for every design decision: **mathematical correctness, intellectual honesty and explainability matter more than flashy AI.**
 
@@ -61,7 +59,7 @@ Technology Operational Risk is analysed today with a mix of incident records, ke
 - scenario / stress analysis needs to be reproducible and clearly separated from baseline assumptions;
 - it is hard to know which questions to ask next.
 
-RiskSignal demonstrates a workflow that **assembles the evidence, runs transparent classical models and suggests investigation questions for a human analyst** — without pretending to replace the analyst or the institution's models.
+RiskSignal demonstrates a workflow that **assembles the evidence, runs transparent classical models and suggests investigation questions for a human analyst**: without pretending to replace the analyst or the institution's models.
 
 ---
 
@@ -82,7 +80,7 @@ The strongest demonstration (the "money shot"):
    - optionally runs a **predefined stress scenario** (e.g. vendor outage),
    - produces an **evidence-based investigation summary**.
 
-Conceptual shape of the output (illustrative only — **never hardcode these facts or numbers**; every one must be computed from the synthetic dataset and the simulation engine):
+Conceptual shape of the output (illustrative only: **never hardcode these facts or numbers**; every one must be computed from the synthetic dataset and the simulation engine):
 
 ```
 Observed evidence:
@@ -136,7 +134,7 @@ Layer responsibilities:
 | Synthetic data | Deterministically generated fictional Atlas Bank dataset (seeded). |
 | SQLite | Single-file storage of systems, processes, vendors, controls, incidents, KRIs and relationships. |
 | Dependency graph | NetworkX graph built from SQLite; answers dependency / shared-vendor / process-impact queries. |
-| Stochastic risk engine | Parameter estimation, frequency–severity Monte Carlo, risk metrics, stress scenarios. Pure Python/numpy/scipy; **no LLM dependency**. |
+| Stochastic risk engine | Parameter estimation, frequency-severity Monte Carlo, risk metrics, stress scenarios. Pure Python/numpy/scipy; **no LLM dependency**. |
 | Python tool layer | Small, typed, deterministic functions exposed to the agent (retrieve data, query graph, run simulation). Read-only. |
 | AI investigation agent | Simple direct tool-calling loop behind a small LLM-provider interface. Orchestrates tools and writes the summary. |
 | FastAPI backend | Thin REST layer over business logic. |
@@ -155,13 +153,13 @@ Boundaries that must hold:
 
 > Each concept is explained in plain language first, then formally.
 
-### 6.1 Frequency — how many incidents in a year?
+### 6.1 Frequency: how many incidents in a year?
 
 **Plain language:** In any given year we do not know exactly how many incidents will occur. We model the count as a random number whose average is λ (the expected number of incidents per year). A Poisson model assumes incidents arrive independently and at a steady average rate.
 
 **Formal:** `N ~ Poisson(λ)`, where `N` is the number of incidents in one simulated year and `λ > 0` is the expected annual number of incidents. `E[N] = Var[N] = λ`.
 
-### 6.2 Severity — how costly is each incident?
+### 6.2 Severity: how costly is each incident?
 
 **Plain language:** Most incidents are small, a few are very expensive. The Lognormal distribution captures this: it is always positive and has a long right tail.
 
@@ -187,7 +185,7 @@ Boundaries that must hold:
 | Median annual loss | The "typical" year: half of years are better, half worse. | 50th percentile of `L` |
 | 95th percentile (P95 / VaR 95%) | A loss level exceeded in about 1 year in 20. | `VaR_0.95 = inf{x : P(L ≤ x) ≥ 0.95}` |
 | 99th percentile (P99 / VaR 99%) | A loss level exceeded in about 1 year in 100. | `VaR_0.99` |
-| Expected Shortfall 95% (ES95) | The average loss in the worst 5% of years — says *how bad* things are once the P95 line is crossed. | `ES_α = E[L | L ≥ VaR_α]` |
+| Expected Shortfall 95% (ES95) | The average loss in the worst 5% of years. It says *how bad* things are once the P95 line is crossed. | `ES_α = E[L | L ≥ VaR_α]` |
 | Expected Shortfall 99% (ES99) | The average loss in the worst 1% of years. | as above with `α = 0.99` |
 
 Note for implementers: be explicit and consistent about the empirical ES estimator (mean of simulated losses at or above the empirical quantile), and state it in docs and docstrings. Tail estimates at 99% are noisy for small simulation counts; document the Monte Carlo standard error / number of simulations where relevant.
@@ -196,11 +194,11 @@ Note for implementers: be explicit and consistent about the empirical ES estimat
 
 The code and outputs must clearly distinguish five categories, and never blur them:
 
-1. **Historical synthetic observations** — incidents, losses, KRIs in the generated dataset.
-2. **Estimated parameters** — λ, μ, σ derived from those observations by a documented estimator.
-3. **User-supplied assumptions** — parameters overridden by the user.
-4. **Stress scenario assumptions** — predefined, explicitly labelled adjustments (e.g. vendor outage multipliers on frequency/severity).
-5. **Simulation outputs** — metrics computed by the Monte Carlo engine.
+1. **Historical synthetic observations**: incidents, losses, KRIs in the generated dataset.
+2. **Estimated parameters**: λ, μ, σ derived from those observations by a documented estimator.
+3. **User-supplied assumptions**: parameters overridden by the user.
+4. **Stress scenario assumptions**: predefined, explicitly labelled adjustments (e.g. vendor outage multipliers on frequency/severity).
+5. **Simulation outputs**: metrics computed by the Monte Carlo engine.
 
 Every result object should carry enough metadata (parameter source, seed, number of simulations, scenario name) so a reader can tell which category each number belongs to.
 
@@ -307,22 +305,22 @@ Do **not** build these, and do not add unrequested features:
 
 ## 11. Future research directions
 
-Documented only — **not implemented** in the prototype. All require better data and domain expertise.
+Documented only, **not implemented** in the prototype. All require better data and domain expertise.
 
-- **Negative Binomial frequency** — to capture over-dispersion (variance > mean) that Poisson cannot.
-- **Time-varying intensity λ(t)** — non-homogeneous Poisson processes reflecting changing conditions.
-- **ML estimation of λ from KRIs** (e.g. gradient boosting such as XGBoost; tabular foundation models such as TabPFN) — linking leading indicators to incident frequency.
-- **Extreme Value Theory / Generalized Pareto** tail modelling — principled treatment of rare, extreme losses beyond a threshold.
-- **Hawkes (self-exciting) processes** — incident clustering, where one incident raises the short-term probability of others.
-- **Beta distributions for uncertain control effectiveness** — propagating uncertainty about how well controls work.
-- **Graph Neural Networks** — learning risk propagation over the dependency graph.
+- **Negative Binomial frequency**: to capture over-dispersion (variance > mean) that Poisson cannot.
+- **Time-varying intensity λ(t)**: non-homogeneous Poisson processes reflecting changing conditions.
+- **ML estimation of λ from KRIs** (e.g. gradient boosting such as XGBoost; tabular foundation models such as TabPFN), linking leading indicators to incident frequency.
+- **Extreme Value Theory / Generalized Pareto** tail modelling: principled treatment of rare, extreme losses beyond a threshold.
+- **Hawkes (self-exciting) processes**: incident clustering, where one incident raises the short-term probability of others.
+- **Beta distributions for uncertain control effectiveness**: propagating uncertainty about how well controls work.
+- **Graph Neural Networks**: learning risk propagation over the dependency graph.
 - Parameter-uncertainty propagation, dependence/copula structures between systems or vendors, richer scenario design.
 
 **Central open research question (intentionally NOT answered by this prototype):**
 
-> *Can modern AI and machine learning improve early identification of deteriorating Operational Risk conditions when combined with classical frequency–severity modelling?*
+> *Can modern AI and machine learning improve early identification of deteriorating Operational Risk conditions when combined with classical frequency-severity modelling?*
 
-RiskSignal provides a transparent classical baseline and an evidence-gathering workflow within which such a question could be studied properly — with real data and an Operational Risk team.
+RiskSignal provides a transparent classical baseline and an evidence-gathering workflow within which such a question could be studied properly, with real data and an Operational Risk team.
 
 ---
 
@@ -375,7 +373,6 @@ No other major dependencies should be introduced without a clear reason.
 - Pydantic models for structured results (tool outputs, simulation results, API payloads).
 - Documentation explains advanced mathematical concepts **in beginner-friendly language first, then the mathematical definition**.
 - Tests for: simulation determinism under fixed seed, agreement with analytic `E[L] = λ·E[X]` within Monte Carlo tolerance, risk-metric ordering (`median ≤ P95 ≤ P99`, `P95 ≤ ES95`, `P99 ≤ ES99`), graph queries, tool outputs, and agent behaviour via the mock LLM.
-- **Development workflow, for each task:** (1) inspect existing code before modifying; (2) implement only the requested step; (3) preserve compatibility with previous steps; (4) run relevant tests; (5) fix failures; (6) summarise files created/modified; (7) explain important mathematical or software concepts simply; (8) state assumptions; (9) **stop** — do not continue to future stages automatically.
 
 ---
 
@@ -398,12 +395,12 @@ No other major dependencies should be introduced without a clear reason.
 
 The prototype is successful if:
 
-1. **The demo works end to end:** selecting `PAYMENT_ENGINE_01` and clicking "Investigate" yields an evidence-based, four-section summary, with all facts and numbers computed from the synthetic dataset and the simulation engine — nothing hardcoded.
-2. **The mathematics is correct and verifiable:** the compound Poisson–Lognormal simulation is seeded, reproducible, agrees with analytic checks, and reports mean, median, P95, P99, ES95, ES99 with clearly stated estimators.
+1. **The demo works end to end:** selecting `PAYMENT_ENGINE_01` and clicking "Investigate" yields an evidence-based, four-section summary, with all facts and numbers computed from the synthetic dataset and the simulation engine, with nothing hardcoded.
+2. **The mathematics is correct and verifiable:** the compound Poisson-Lognormal simulation is seeded, reproducible, agrees with analytic checks, and reports mean, median, P95, P99, ES95, ES99 with clearly stated estimators.
 3. **Provenance is always clear:** a reviewer can tell what is observed, estimated, assumed, stressed or simulated.
 4. **The agent is trustworthy by design:** it is read-only, tool-grounded, traceable, makes no verdicts and invents nothing.
 5. **Limitations are stated openly,** and the missing institutional elements are presented as the natural next research steps rather than hidden.
 6. **The code is clean and small:** readable, typed, tested, layered so that business logic is independent of UI and LLM, and swappable at the LLM boundary.
-7. **A quantitative Op Risk reviewer would find it credible,** and a senior Op Risk reviewer would find it clear and relevant — and both would come away with concrete ideas for what could be researched together with real data.
+7. **A quantitative Op Risk reviewer would find it credible,** and a senior Op Risk reviewer would find it clear and relevant, and both would come away with concrete ideas for what could be researched together with real data.
 
 Success is **not** measured by predictive accuracy, scale, UI polish, or the number of AI techniques used.

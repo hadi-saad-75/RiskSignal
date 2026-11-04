@@ -45,7 +45,7 @@ def html(markup: str) -> None:
 
 
 def eyebrow(index: str, label: str) -> None:
-    """Brown index numeral, a short hairline and an uppercase label, e.g. '01 —— OVERVIEW'."""
+    """Brown index numeral, a short hairline and an uppercase label, e.g. '01 ---- OVERVIEW'."""
     html(f'<div class="rs-eyebrow"><span class="rs-index">{escape(index)}</span>'
          f'<span class="rs-line"></span><span>{escape(label)}</span></div>')
 
@@ -197,7 +197,7 @@ def system_selector(client: ApiClient, page_key: str, label: str = "System") -> 
     remembered = st.session_state.get("selected_system", DEFAULT_SYSTEM)
     choice = st.selectbox(
         label, ids, index=ids.index(remembered) if remembered in ids else 0, key=f"system_{page_key}",
-        format_func=lambda i: f"{i} — {details[i]['name']} ({details[i]['criticality']})",
+        format_func=lambda i: f"{i} · {details[i]['name']} ({details[i]['criticality']})",
     )
     st.session_state["selected_system"] = choice
     return choice

@@ -237,6 +237,8 @@ simulation = run_loss_simulation(ctx, "PAYMENT_ENGINE_01", number_of_simulations
 print(simulation.simulation_results.metrics.p95)
 ```
 
+The conversational assistant (below) also has four read-only bank-wide tools: `list_systems`, `get_portfolio_summary` (every system side by side over a window: incidents, high or critical incidents, recorded loss, change on the previous window and overdue control reviews), `get_bank_overview` and `list_scenarios`.
+
 See [docs/agent_tools.md](docs/agent_tools.md) for why this makes the agent safer and more auditable.
 
 ## Investigation agent
@@ -252,6 +254,10 @@ python -m risksignal.agent.investigator "Investigate PAYMENT_ENGINE_01."
 ```
 
 Generate the data first (`python -m risksignal.data.generator`). See [docs/agent_design.md](docs/agent_design.md) for the design, the safety rules and the limitations.
+
+### Conversational assistant
+
+The assistant lets an operator ask free questions over several turns: about one system ("What incidents did CORE_LEDGER_01 have?", "And its controls?"), about the whole portfolio ("Which systems should I look at first?") or about the methods ("What is Expected Shortfall?"). It is the same agent loop with a conversational prompt ([prompts.py](src/risksignal/agent/prompts.py)) that shares the investigation's ground rules: tools only, no invented facts, no calculations of its own, no risk verdicts. It adapts the length and shape of each answer to the question, remembers the conversation (the caller sends earlier turns with each message, so the API stays stateless), and every answer comes with its tool activity and the same check on numbers. Answers never contain long dashes. In offline mode a deterministic stand-in ([mock_assistant.py](src/risksignal/agent/mock_assistant.py)) recognises the common question types and writes answers only from tool results.
 
 ## REST API
 
@@ -284,6 +290,7 @@ RISKSIGNAL_LLM_PROVIDER=mock uvicorn risksignal.api.main:app --reload
 | `POST /scenarios/compare` | Baseline versus a predefined illustrative stress scenario (`scenario_id`, e.g. `SHARED_VENDOR_OUTAGE`). |
 | `POST /scenarios/compare-custom` | Baseline versus stress numbers supplied by a person (`lambda_multiplier`, `severity_mu_shift`, `severity_sigma_multiplier`). Not available to the AI agent. |
 | `POST /agent/investigate` | Ask the agent (`question`, optional `include_tool_outputs`). Returns the answer, a tool activity log and warnings. |
+| `POST /agent/chat` | Send one message to the conversational assistant (`message`, `history` of earlier `{role, content}` turns, optional `include_tool_outputs`). Same response shape; the reply is in `final_response`. |
 
 ```bash
 curl http://127.0.0.1:8000/systems/PAYMENT_ENGINE_01/incidents
@@ -297,7 +304,7 @@ Errors use one JSON shape, `{"error": {"type", "message", "suggestions"}}`, and 
 
 ## Dashboard (Streamlit)
 
-A simple technical-demo dashboard with four pages. It talks **only to the FastAPI backend** and imports none of the engines: **Overview** (counts and recent incidents), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Lab** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions) and **AI Investigator** (the agent's sectioned answer, tool activity log and simulation metadata). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
+A technical-demo dashboard with five pages. It talks **only to the FastAPI backend** and imports none of the engines: **Overview** (counts and recent incidents), **Assistant** (a conversation with the assistant, with suggested questions and the evidence behind each answer), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Analysis** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions) and **Investigation** (the agent's sectioned answer, tool activity log and simulation metadata). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
 
 ```bash
 # 1. Generate the synthetic data (once)
@@ -339,7 +346,7 @@ The UI computes no risk figures: every number shown was returned by the API. See
 
 This bank is grounded in the implementation and documentation in this repository. The short answer is a presentation-ready version; the technical answer is for follow-up. “Careful” marks the boundary that should not be crossed in a claim. All file links below are repository-relative.
 
-### CATEGORY 1 — PROJECT PURPOSE AND POSITIONING
+### CATEGORY 1: PROJECT PURPOSE AND POSITIONING
 
 **Q1. Why did you build RiskSignal?**
 
@@ -397,14 +404,14 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** Access to data alone is not sufficient; definitions, quality, permissions and intended-use governance come first.
 - **Project evidence:** [institutional validation roadmap](docs/institutional_validation.md).
 
-**Q9. What would you say this project is—and is not?**
+**Q9. What would you say this project is, and is not?**
 
 - **Presentation answer:** It is a working research prototype for evidence gathering and illustrative scenario analysis; it is not predictive, validated, production-secure or regulatory capital software.
 - **Technical detail:** The code and mathematics have been technically reviewed, but that review explicitly is not independent model validation.
 - **Caution:** “Tested code” must not be shortened to “validated model.”
 - **Project evidence:** [limitations](docs/limitations.md), [technical review](docs/technical_review.md).
 
-### CATEGORY 2 — OPERATIONAL RISK
+### CATEGORY 2: OPERATIONAL RISK
 
 **Q1. What is Operational Risk?**
 
@@ -415,7 +422,7 @@ This bank is grounded in the implementation and documentation in this repository
 
 **Q2. What is an incident?**
 
-- **Presentation answer:** An event that happened and had an operational effect—for example, a system outage or a failed release.
+- **Presentation answer:** An event that happened and had an operational effect, for example a system outage or a failed release.
 - **Technical detail:** In the dataset, an incident has a date, affected system, category, description, financial loss and severity label.
 - **Caution:** A recorded incident is not automatically equivalent to a loss event under a particular bank’s policy; definitions need alignment.
 - **Project evidence:** [domain model](docs/domain_model.md), [data schemas](src/risksignal/data/schemas.py).
@@ -462,7 +469,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** A shared vendor is a reason to investigate concentration, not evidence that systems fail together.
 - **Project evidence:** [graph queries](src/risksignal/graph/queries.py), [limitations](docs/limitations.md).
 
-### CATEGORY 3 — MATHEMATICS
+### CATEGORY 3: MATHEMATICS
 
 **Q1. Why did you choose a Poisson distribution?**
 
@@ -608,7 +615,7 @@ This bank is grounded in the implementation and documentation in this repository
 
 **Q21. What about Hawkes processes?**
 
-- **Presentation answer:** A Hawkes process models events whose occurrence can temporarily increase the rate of further events—useful to investigate clustering hypotheses.
+- **Presentation answer:** A Hawkes process models events whose occurrence can temporarily increase the rate of further events. This is useful to investigate clustering hypotheses.
 - **Technical detail:** It would require reliable timestamps and a defensible event-excitation structure, then comparison against simpler count models.
 - **Caution:** Hawkes is a documented future research idea, not part of the implementation or a conclusion from the synthetic data.
 - **Project evidence:** [research extensions](docs/research_extensions.md), [limitations](docs/limitations.md).
@@ -620,7 +627,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** A graph edge shows a dependency record, not a calibrated dependence parameter or causal effect.
 - **Project evidence:** [limitations](docs/limitations.md), [scenario engine](src/risksignal/stochastic/scenario.py).
 
-### CATEGORY 4 — AGENT AND AI
+### CATEGORY 4: AGENT AND AI
 
 **Q1. Why use an agent rather than a normal chatbot?**
 
@@ -755,7 +762,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** These are design ideas only; multiple agents can add cost, latency and coordination errors, and none are implemented.
 - **Project evidence:** [agent design](docs/agent_design.md), [architecture](docs/architecture.md).
 
-### CATEGORY 5 — SOFTWARE ARCHITECTURE
+### CATEGORY 5: SOFTWARE ARCHITECTURE
 
 **Q1. Why FastAPI?**
 
@@ -883,7 +890,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** The current prototype explicitly lacks production security and is not suitable for confidential data.
 - **Project evidence:** [limitations](docs/limitations.md), [institutional validation roadmap](docs/institutional_validation.md).
 
-### CATEGORY 6 — DATA AND VALIDATION
+### CATEGORY 6: DATA AND VALIDATION
 
 **Q1. What parts are artificial, and what parts are real?**
 
@@ -955,7 +962,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** This prototype does not have a validated tail model and its small synthetic samples cannot solve the problem.
 - **Project evidence:** [limitations](docs/limitations.md), [institutional validation roadmap](docs/institutional_validation.md).
 
-### CATEGORY 7 — REGULATION AND GOVERNANCE
+### CATEGORY 7: REGULATION AND GOVERNANCE
 
 **Q1. How does this relate to Basel?**
 
@@ -1013,7 +1020,7 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** A prompt is not a control by itself, and the numeric grounding check is only best-effort.
 - **Project evidence:** [tool registry](src/risksignal/agent/tool_registry.py), [agent design](docs/agent_design.md), [limitations](docs/limitations.md).
 
-### CATEGORY 8 — FUTURE RESEARCH
+### CATEGORY 8: FUTURE RESEARCH
 
 **Q1. What would be your first research priority with real JPMorgan data?**
 
@@ -1054,7 +1061,7 @@ This bank is grounded in the implementation and documentation in this repository
 
 - **Presentation answer:** If it fails to save meaningful effort, worsens answer quality, creates unacceptable review burden or cannot meet data governance requirements, I would not deploy it.
 - **Technical detail:** Set rejection thresholds before the evaluation and report performance by task type, including failure and abstention rates.
-- **Caution:** “Reject” may mean reject this agent design or use case—not that all AI assistance is unhelpful.
+- **Caution:** “Reject” may mean reject this agent design or use case, not that all AI assistance is unhelpful.
 - **Project evidence:** [research extensions](docs/research_extensions.md), [institutional validation roadmap](docs/institutional_validation.md).
 
 **Q7. What is the most scientifically uncertain part of RiskSignal?**
@@ -1128,7 +1135,7 @@ Use these as technically rigorous answers. Start with the short answer, then go 
 
 **Q8. What exactly is validated by the tests and technical review?**
 
-- **Strong answer:** They check that code implements the documented formulas and boundaries—parameter fitting, aggregation, metrics, graph/tool/API layering and agent behaviour. The review reports an independent numerical check and 556 passing tests at that time.
+- **Strong answer:** They check that code implements the documented formulas and boundaries: parameter fitting, aggregation, metrics, graph/tool/API layering and agent behaviour. The review reports an independent numerical check and 556 passing tests at that time.
 - **Caution:** It is explicitly not an independent model validation and says nothing about empirical fit or predictive performance.
 - **Project evidence:** [technical review](docs/technical_review.md), [tests](tests/).
 
@@ -1160,7 +1167,7 @@ Use these as technically rigorous answers. Start with the short answer, then go 
 
 **Q3. Why would this justify an internship?**
 
-- **Strong answer:** It creates a bounded research agenda at the intersection of Operational Risk, quantitative validation and human workflow. An internship could test one agreed use case on approved data and produce reproducible evidence—including a negative result—rather than promise a finished product.
+- **Strong answer:** It creates a bounded research agenda at the intersection of Operational Risk, quantitative validation and human workflow. An internship could test one agreed use case on approved data and produce reproducible evidence (including a negative result) rather than promise a finished product.
 - **Caution:** The scope depends on access, governance approvals and analyst availability.
 - **Project evidence:** [institutional validation roadmap](docs/institutional_validation.md), [research extensions](docs/research_extensions.md).
 
@@ -1190,7 +1197,7 @@ Use these as technically rigorous answers. Start with the short answer, then go 
 
 **Q8. What would a successful three-to-six-month outcome look like?**
 
-- **Strong answer:** A clear intended-use decision, a data-quality and baseline report, and one pre-agreed evaluation—either quantitative model comparison or analyst-task study—with uncertainty, limitations and a recommendation.
+- **Strong answer:** A clear intended-use decision, a data-quality and baseline report, and one pre-agreed evaluation (either a quantitative model comparison or an analyst-task study) with uncertainty, limitations and a recommendation.
 - **Caution:** Success need not mean a positive result; ruling out an unhelpful approach is useful.
 - **Project evidence:** [institutional validation roadmap](docs/institutional_validation.md), [research extensions](docs/research_extensions.md).
 

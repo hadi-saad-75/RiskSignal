@@ -1,6 +1,6 @@
 # Technical Review
 
-Review of the whole RiskSignal repository by a senior quantitative software engineer and Operational Risk model reviewer. Date of review: 2026-10-12.
+Internal review of the whole RiskSignal repository, covering the code, the quantitative model and the Operational Risk framing. Date of review: 2026-10-12.
 
 > **What this is.** An internal code and model review of a research prototype, done by reading the code, running independent numerical checks (NumPy and SciPy), type-checking, measuring coverage, and fixing defects. **It is not an independent model validation.** Nothing in this document makes the synthetic data, the model parameters or the scenario multipliers valid for any real institution. See section 7.
 
@@ -74,7 +74,7 @@ See section 5. The most notable: the observation window constants live in the ge
 | **Lognormal parameterisation for SciPy** | `scipy.stats.lognorm(s=σ, scale=exp(μ))`: mean, median and 95th percentile equal the formulas (to 1e-12); a KS test of NumPy draws against the SciPy CDF gives p = 0.17; `scipy.stats.lognorm.fit(floc=0)` returns the same σ and μ as the engine's fit. | Correct. (The engine itself uses NumPy only; SciPy is used in tests as an independent reference.) |
 | **Monte Carlo aggregation is correct** | (a) `aggregate_by_year` against a naive per-year loop on the same draws: maximum difference 4.7e-10. (b) The engine against an independently written loop implementation: two-sample KS p = 0.15. (c) Simulated mean 285,924 against the closed form λ·exp(μ+σ²/2) = 284,931 (0.35% apart, less than one standard error); simulated variance 2.012e11 against 2.027e11; P(L=0) = 0.0227 against e^(−λ) = 0.0224. | Correct. |
 | **P95 and P99 are calculated correctly** | `numpy.quantile(..., method="inverted_cdf")` implements VaR_α = inf{x : F(x) ≥ α}. On the sample 1…100,000 it returns exactly 95,000 and 99,000, independent of input order. | Correct. |
-| **Expected Shortfall uses the appropriate tail** | The estimator averages the worst M·(1−α) simulated years, giving a fractional weight to the boundary year (Acerbi–Tasche), so ES ≥ VaR even with ties and with many zero-loss years. On 1…100,000 it returns exactly 97,500.5 (ES95) and 99,500.5 (ES99); property tests cover awkward sample sizes. | Correct. |
+| **Expected Shortfall uses the appropriate tail** | The estimator averages the worst M·(1−α) simulated years, giving a fractional weight to the boundary year (Acerbi-Tasche), so ES ≥ VaR even with ties and with many zero-loss years. On 1…100,000 it returns exactly 97,500.5 (ES95) and 99,500.5 (ES99); property tests cover awkward sample sizes. | Correct. |
 | **All loss values are non-negative** | Severities are exp(·) > 0; annual losses are sums of positives or exactly 0 when N = 0; checked in tests and in the schemas (`ge=0`). | Correct. |
 | **Deterministic seeds** | Same seed gives identical results in the engine, the scenario comparison, the tools and the API; the synthetic data generator gives byte-identical files across processes with different hash seeds. | Correct. |
 | **Baseline and stress use comparable random handling** | Before the review: same seed, same generator algorithm, same number of simulations, but **uncorrelated** (see F1). After: common random numbers (below). | **Defect found and fixed.** |

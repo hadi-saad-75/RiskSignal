@@ -428,9 +428,9 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
 
 
-def test_app_defines_the_four_pages() -> None:
+def test_app_defines_the_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    for title in ("Overview", "System Explorer", "Scenario Analysis", "Investigation"):
+    for title in ("Overview", "Assistant", "System Explorer", "Scenario Analysis", "Investigation"):
         assert f'title="{title}"' in source
     assert "set_page_config" in source
 

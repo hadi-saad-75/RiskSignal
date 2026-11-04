@@ -22,7 +22,7 @@ from risksignal.ui.formatting import format_amount, format_decimal, format_perce
 def render_system_explorer() -> None:
     banner()
     page_header(
-        "02", "Systems", "System Explorer",
+        "03", "Systems", "System Explorer",
         "Profile, incidents, key risk indicators, controls and shared dependencies for one system. "
         "This page reports synthetic observations; no values on this page are forecasts.",
     )

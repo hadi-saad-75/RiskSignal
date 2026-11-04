@@ -35,7 +35,7 @@ def default_question(system_id: str) -> str:
 def render_ai_investigator() -> None:
     banner()
     page_header(
-        "04", "Investigation", "Investigation",
+        "05", "Investigation", "Investigation",
         "A language model selects among deterministic tools for retrieving system profiles, incidents, key "
         "risk indicators, controls, dependencies, and simulation results. It summarises the returned evidence "
         "and may suggest questions for further review. The model cannot modify records or make risk decisions. "

@@ -1,10 +1,14 @@
-"""System tools: profile, system list and bank overview."""
+"""System tools: profile, system list, bank overview and portfolio summary."""
 
-from risksignal.tools.context import ToolContext, ToolFailure, check_int, guarded
+from risksignal.tools.context import ToolContext, ToolFailure, check_int, check_months, guarded
+from risksignal.tools.incident_tools import window_start
 from risksignal.tools.schemas import (
     BankOverviewResult,
     OverviewCounts,
     OverviewIncident,
+    PortfolioSummaryResult,
+    PortfolioSystem,
+    PortfolioTotals,
     ProcessDetails,
     SystemDetails,
     SystemListResult,
@@ -40,6 +44,21 @@ _SELECT_RECENT_INCIDENTS = (
     "i.financial_loss, i.description FROM incidents i JOIN systems s ON s.system_id = i.system_id "
     "ORDER BY i.date DESC, i.incident_id DESC LIMIT ?"
 )
+# Parameters: window start, window end (x3), previous window start, window start.
+_SELECT_PORTFOLIO = (
+    "SELECT s.system_id, s.name, s.criticality, "
+    "(SELECT COUNT(*) FROM incidents i WHERE i.system_id = s.system_id AND i.date > ? AND i.date <= ?) AS incidents, "
+    "(SELECT COUNT(*) FROM incidents i WHERE i.system_id = s.system_id AND i.date > ? AND i.date <= ? "
+    " AND i.severity IN ('high', 'critical')) AS high_or_critical_incidents, "
+    "(SELECT COALESCE(SUM(i.financial_loss), 0.0) FROM incidents i WHERE i.system_id = s.system_id "
+    " AND i.date > ? AND i.date <= ?) AS recorded_loss, "
+    "(SELECT COUNT(*) FROM incidents i WHERE i.system_id = s.system_id AND i.date > ? AND i.date <= ?) "
+    " AS incidents_previous_window, "
+    "(SELECT COUNT(*) FROM controls c WHERE c.system_id = s.system_id AND c.review_status = 'overdue') "
+    " AS overdue_controls, "
+    "(SELECT COUNT(*) FROM controls c WHERE c.system_id = s.system_id AND c.review_status = 'due') AS due_controls "
+    "FROM systems s"
+)
 
 
 @guarded("get_bank_overview")
@@ -47,7 +66,7 @@ def get_bank_overview(ctx: ToolContext, recent_incidents: int = 10) -> BankOverv
     """Counts of systems, processes, vendors, controls, incidents and KRI observations, plus the
     most recent incidents across the bank.
 
-    Used by the UI. It is not a tool offered to the agent. Observed synthetic data only.
+    Used by the UI and offered to the chat assistant. Observed synthetic data only.
     """
     limit = check_int("recent_incidents", recent_incidents, 1, 100)
     counts = {name: ctx.query(sql)[0]["n"] for name, sql in _OVERVIEW_COUNTS.items()}
@@ -68,7 +87,7 @@ def get_bank_overview(ctx: ToolContext, recent_incidents: int = 10) -> BankOverv
 def list_systems(ctx: ToolContext) -> SystemListResult:
     """All systems with criticality and primary business process, sorted by ID.
 
-    Used by the API and UI to let a person pick a system. It is not a tool offered to the agent.
+    Used by the API and UI to let a person pick a system, and offered to the chat assistant.
     """
     return SystemListResult(
         tool_name="list_systems",
@@ -102,5 +121,41 @@ def get_system_profile(ctx: ToolContext, system_id: str) -> SystemProfileResult:
             kris_tracked=[r["kri_name"] for r in ctx.query(_SELECT_KRI_NAMES, (system_id,))],
             data_window_start=ctx.observation_start,
             data_window_end=ctx.as_of_date,
+        ),
+    )
+
+
+@guarded("get_portfolio_summary")
+def get_portfolio_summary(ctx: ToolContext, months: int = 12) -> PortfolioSummaryResult:
+    """All systems side by side over the last ``months`` months: incidents, high or critical
+    incidents, recorded loss, the incident count in the preceding window of the same length,
+    and overdue or due control reviews. Sorted by recorded loss, highest first.
+
+    These are observable synthetic facts for comparing systems, not a risk score or ranking of
+    risk. Everything returned is observed synthetic data.
+    """
+    months = check_months(months)
+    start = window_start(ctx.as_of_date, months)
+    previous_start = window_start(start, months)
+    end, start_text, previous_text = ctx.as_of_date.isoformat(), start.isoformat(), previous_start.isoformat()
+    rows = ctx.query(_SELECT_PORTFOLIO, (start_text, end, start_text, end, start_text, end, previous_text, start_text))
+    systems = sorted(
+        (PortfolioSystem(**dict(row), incident_change=row["incidents"] - row["incidents_previous_window"])
+         for row in rows),
+        key=lambda s: (-s.recorded_loss, s.system_id),
+    )
+    return PortfolioSummaryResult(
+        tool_name="get_portfolio_summary",
+        months=months,
+        window_start_exclusive=start,
+        window_end_inclusive=ctx.as_of_date,
+        previous_window_start_exclusive=previous_start,
+        systems=systems,
+        totals=PortfolioTotals(
+            systems=len(systems),
+            incidents=sum(s.incidents for s in systems),
+            recorded_loss=sum(s.recorded_loss for s in systems),
+            overdue_controls=sum(s.overdue_controls for s in systems),
+            systems_with_overdue_controls=sorted(s.system_id for s in systems if s.overdue_controls),
         ),
     )

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TypeVar
 
 from dotenv import load_dotenv
+from fastapi import Depends
 
 from risksignal.agent.base import LLMProvider, LLMProviderError
 from risksignal.data.storage import DB_FILENAME, DEFAULT_DATA_DIR
@@ -20,6 +21,7 @@ from risksignal.tools.schemas import ToolError
 
 T = TypeVar("T")
 ProviderFactory = Callable[[str], LLMProvider]
+ChatProviderFactory = Callable[[str, list[str]], LLMProvider]
 
 PROVIDERS = ("anthropic", "mock")
 
@@ -74,6 +76,26 @@ def get_provider_factory() -> ProviderFactory:
             return AnthropicProvider()
         raise LLMProviderError(
             f"Unknown RISKSIGNAL_LLM_PROVIDER '{provider_name}'. Use one of: {', '.join(PROVIDERS)}.")
+
+    return build
+
+
+def get_chat_provider_factory(settings: Settings = Depends(get_settings)) -> ChatProviderFactory:
+    """Returns a function that builds the LLM provider for one assistant message.
+
+    It receives the message and the text of the earlier turns, so the offline mock can resolve
+    follow-up questions. Raises ``LLMProviderError`` (HTTP 503) if the provider is misconfigured.
+    """
+
+    def build(message: str, history: list[str]) -> LLMProvider:
+        if settings.llm_provider == "mock":
+            from risksignal.agent.mock_assistant import assistant_provider
+            return assistant_provider(message, history)
+        if settings.llm_provider == "anthropic":
+            from risksignal.agent.anthropic_provider import AnthropicProvider
+            return AnthropicProvider()
+        raise LLMProviderError(
+            f"Unknown RISKSIGNAL_LLM_PROVIDER '{settings.llm_provider}'. Use one of: {', '.join(PROVIDERS)}.")
 
     return build
 

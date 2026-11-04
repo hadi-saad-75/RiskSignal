@@ -241,5 +241,5 @@ def compare_baseline_and_custom_scenario(
 
 @guarded("list_scenarios")
 def list_scenarios(ctx: ToolContext) -> ScenarioListResult:
-    """The predefined illustrative scenarios with their assumptions. Not offered to the agent."""
+    """The predefined illustrative scenarios with their assumptions. Offered to the chat assistant."""
     return ScenarioListResult(tool_name="list_scenarios", scenarios=[PREDEFINED_SCENARIOS[k] for k in sorted(PREDEFINED_SCENARIOS)])

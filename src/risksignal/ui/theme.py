@@ -80,7 +80,7 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
 
 /* ---------- masthead: wordmark + top navigation */
 [data-testid="stHeader"] {
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--rs-bg);
   border-bottom: 1px solid var(--rs-divider);
   height: 4.5rem;
 }
@@ -532,11 +532,75 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 [class*="st-key-rs_footer_col"] { border-left: 1px solid var(--rs-divider); padding-left: 1.25rem; }
 .rs-footer-legal { font-size: 0.8125rem !important; color: var(--rs-muted) !important; margin-top: clamp(2rem, 4vw, 3rem); }
 
+/* ---------- assistant conversation */
+.rs-chat-question {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rs-strong);
+}
+.rs-chat-question p {
+  font-family: var(--rs-sans);
+  font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.625rem) !important;
+  font-weight: 500;
+  line-height: 1.3 !important;
+  letter-spacing: -0.01em;
+  color: var(--rs-text) !important;
+  margin: 0;
+  max-width: 52rem;
+}
+[class*="st-key-rs_chat_answer_"] {
+  border-left: 1px solid var(--rs-divider);
+  padding-left: 1.5rem;
+  margin: 1.25rem 0 0 2.75rem;
+  max-width: 62rem;
+}
+[class*="st-key-rs_chat_answer_"] table { font-size: 0.9375rem; border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; }
+[class*="st-key-rs_chat_answer_"] th { font-weight: 600; color: var(--rs-text-2); border-bottom: 1px solid var(--rs-strong) !important; }
+[class*="st-key-rs_chat_answer_"] td, [class*="st-key-rs_chat_answer_"] th {
+  border: 0; border-bottom: 1px solid var(--rs-divider); padding: 0.5rem 1rem 0.5rem 0; background: transparent;
+  font-variant-numeric: tabular-nums;
+}
+[class*="st-key-assistant_starter_"] button {
+  border: 0 !important;
+  border-top: 1px solid var(--rs-divider) !important;
+  border-radius: 0 !important;
+  justify-content: flex-start !important;
+  text-align: left;
+  padding: 1.1rem 0 !important;
+  min-height: 0;
+  color: var(--rs-text) !important;
+}
+[class*="st-key-assistant_starter_"] button p { font-weight: 500; text-align: left; }
+[class*="st-key-assistant_starter_"] button > div,
+[class*="st-key-assistant_starter_"] button [data-testid="stMarkdownContainer"] { justify-content: flex-start !important; width: 100%; }
+[class*="st-key-assistant_starter_"] button p::after { content: "\\2192"; color: var(--rs-accent); margin-left: 0.6em; }
+[class*="st-key-assistant_starter_"] button:hover { background: transparent !important; color: var(--rs-accent) !important; }
+[data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"] { background: var(--rs-bg) !important; }
+[data-testid="stBottomBlockContainer"] { max-width: 1440px; padding: 1rem var(--rs-pad) 1.5rem !important; }
+[data-testid="stChatInput"] {
+  border: 1px solid var(--rs-strong) !important;
+  border-radius: 0 !important;
+  background: var(--rs-bg) !important;
+}
+[data-testid="stChatInput"] > div { background: var(--rs-bg) !important; border-radius: 0 !important; }
+[data-testid="stChatInputTextArea"], [data-testid="stChatInput"] textarea {
+  font-family: var(--rs-sans) !important;
+  font-size: 1.0625rem !important;
+  color: var(--rs-text) !important;
+  background: var(--rs-bg) !important;
+}
+[data-testid="stChatInputSubmitButton"] { background: transparent !important; color: var(--rs-accent) !important; }
+[data-testid="stChatInputSubmitButton"]:hover { color: var(--rs-text) !important; }
+
 /* ---------- responsive */
 @media (max-width: 640px) {
   [data-testid="stHeader"]::before { font-size: 1.5rem; padding-right: 1rem; }
   [data-testid="stMetric"] { margin-bottom: 0.5rem; }
   [class*="st-key-rs_answer_body"] { margin-left: 0; }
+  [class*="st-key-rs_chat_answer_"] { margin-left: 0; padding-left: 1rem; }
   /* empty offset columns only exist for the desktop grid; drop them once columns stack */
   [data-testid="stColumn"]:not(:has([data-testid="stElementContainer"])) { display: none; }
   [data-testid="stHorizontalBlock"] { gap: 1.25rem !important; }

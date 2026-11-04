@@ -115,7 +115,7 @@ class SystemSummary(_Model):
 
 
 class SystemListResult(_ToolResult):
-    """All systems in the database. Not offered to the agent; used by the API and UI."""
+    """All systems in the database. Used by the API and UI, and offered to the chat assistant."""
 
     data_kind: Literal["observed_synthetic_data"] = "observed_synthetic_data"
     notice: str = OBSERVED_NOTICE
@@ -147,12 +147,49 @@ class OverviewIncident(_Model):
 
 
 class BankOverviewResult(_ToolResult):
-    """Bank-wide counts and the most recent incidents. Not offered to the agent; used by the UI."""
+    """Bank-wide counts and the most recent incidents. Used by the UI and offered to the chat assistant."""
 
     data_kind: Literal["observed_synthetic_data"] = "observed_synthetic_data"
     notice: str = OBSERVED_NOTICE
     counts: OverviewCounts
     recent_incidents: list[OverviewIncident]
+
+
+class PortfolioSystem(_Model):
+    """Observable indicators of one system over a window. Facts to compare, not a risk score."""
+
+    system_id: str
+    name: str
+    criticality: str
+    incidents: int
+    high_or_critical_incidents: int
+    recorded_loss: float
+    incidents_previous_window: int
+    incident_change: int = Field(description="incidents minus incidents_previous_window.")
+    overdue_controls: int
+    due_controls: int
+
+
+class PortfolioTotals(_Model):
+    systems: int
+    incidents: int
+    recorded_loss: float
+    overdue_controls: int
+    systems_with_overdue_controls: list[str]
+
+
+class PortfolioSummaryResult(_ToolResult):
+    """Every system side by side over the same window, sorted by recorded loss (highest first)."""
+
+    data_kind: Literal["observed_synthetic_data"] = "observed_synthetic_data"
+    notice: str = OBSERVED_NOTICE
+    months: int
+    window_start_exclusive: dt.date
+    window_end_inclusive: dt.date
+    previous_window_start_exclusive: dt.date
+    sorted_by: Literal["recorded_loss_descending"] = "recorded_loss_descending"
+    systems: list[PortfolioSystem]
+    totals: PortfolioTotals
 
 
 # --------------------------------------------------------------------------- incidents
@@ -345,7 +382,7 @@ class ScenarioComparisonResult(_ToolResult):
 
 
 class ScenarioListResult(_ToolResult):
-    """The predefined illustrative scenarios and their assumptions. Not offered to the agent."""
+    """The predefined illustrative scenarios and their assumptions. Offered to the chat assistant."""
 
     data_kind: Literal["illustrative_assumptions"] = "illustrative_assumptions"
     notice: str = (

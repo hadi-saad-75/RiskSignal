@@ -51,6 +51,25 @@ class InvestigationRequest(_Request):
     )
 
 
+class ChatTurnRequest(_Request):
+    """One earlier message of the conversation, as shown to the user."""
+
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=20_000)
+
+
+class ChatRequest(_Request):
+    message: str = Field(min_length=1, max_length=4000, examples=["Which systems should I look at first?"])
+    history: list[ChatTurnRequest] = Field(
+        default_factory=list, max_length=60,
+        description="Earlier turns, oldest first. The API keeps no conversation state; send it with each message.",
+    )
+    include_tool_outputs: bool = Field(
+        default=False,
+        description="Also return the full structured output of every tool call (larger response).",
+    )
+
+
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     service: str = "risksignal"
