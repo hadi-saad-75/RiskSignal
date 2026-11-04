@@ -121,9 +121,9 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## The demo
 
-1. The dashboard opens on the **Assistant**. Ask "Which systems should I look at first?": it compares all systems on incidents, recorded loss, the change on the previous year and overdue control reviews.
-2. Follow up in plain language: "What incidents did CORE_LEDGER_01 have?", then "And are its controls up to date?". The assistant keeps the context and shows the tool calls behind every answer.
-3. Select `PAYMENT_ENGINE_01` and click **Investigate this system** for the full report: profile, incidents, KRIs, controls, dependencies and a baseline Monte Carlo simulation (optionally a vendor-outage stress scenario), written up as observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations.
+1. The dashboard opens on the **Assistant**. Select `PAYMENT_ENGINE_01` and click **Investigate this system**: the agent retrieves the profile, incidents, KRIs, controls and dependencies and runs a baseline Monte Carlo simulation (optionally a vendor-outage stress scenario).
+2. It writes the report as observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations, followed by the tool activity log and the simulation metadata read from the tool output.
+3. Below, the conversational assistant (in development) answers free questions such as "Which systems should I look at first?" or "What incidents did CORE_LEDGER_01 have?", then "And are its controls up to date?", and shows the tool calls behind every answer.
 
 The Overview page is a manager-focused snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. System Explorer and Scenario Analysis retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
 
@@ -138,7 +138,7 @@ RiskSignal is deliberately an early version of an analysis assistant. It shows t
 5. **Access control and approved hosting.** Authentication, entitlements by business area, and a language model hosted under the institution's approval.
 6. **Analyst feedback.** Marking answers as useful or wrong, so that prompts and tools improve on real use.
 
-The same list is shown at the bottom of the Assistant page.
+The same list is shown as the way forward at the bottom of the Assistant page.
 
 ## Generating the synthetic Atlas Bank dataset
 
@@ -316,7 +316,7 @@ Errors use one JSON shape, `{"error": {"type", "message", "suggestions"}}`, and 
 
 ## Dashboard (Streamlit)
 
-A technical-demo dashboard with four pages. It talks **only to the FastAPI backend** and imports none of the engines: **Assistant**, the landing page (a conversation with the assistant, full investigations of one system, the evidence and simulation metadata behind each answer, and the roadmap), **Overview** (counts and recent incidents), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Analysis** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
+A technical-demo dashboard with four pages. It talks **only to the FastAPI backend** and imports none of the engines: **Assistant**, the landing page (first the full investigation of one system with its sectioned summary, tool activity log and simulation metadata; below it the conversational assistant, marked as in development; then the way forward), **Overview** (counts and recent incidents), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Analysis** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
 
 ```bash
 # 1. Generate the synthetic data (once)

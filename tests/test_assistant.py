@@ -228,9 +228,9 @@ def shown(at: AppTest) -> str:
 
 def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
     at = assistant_page(http)
-    assert not at.exception and at.title[0].value == "Ask RiskSignal"
+    assert not at.exception and at.title[0].value == "RiskSignal Assistant"
     assert any("Which systems should I look at first?" == b.label for b in at.button)
-    assert "Not built yet" in " | ".join(s.value for s in at.subheader)  # the roadmap is always visible
+    assert "Way forward" in " | ".join(s.value for s in at.subheader)  # the way forward is always visible
 
     at.chat_input[0].set_value(f"What incidents did {FOCAL} have?").run()
     assert not at.exception and FOCAL in shown(at) and "incidents" in shown(at)
@@ -252,30 +252,21 @@ def test_assistant_page_starter_question_runs(http: TestClient) -> None:
     assert [a["summary"] for a in activity] == ["Compared all 20 systems over 12 months"]
 
 
-def test_full_investigation_from_the_assistant(http: TestClient) -> None:
+def test_page_order_investigation_then_chat_then_way_forward(http: TestClient) -> None:
     at = assistant_page(http)
-    assert at.selectbox[0].value == FOCAL
-    next(b for b in at.button if b.label == "Investigate this system").click().run()
-    assert not at.exception
-    question = at.session_state["assistant_history"][0]["content"]
-    assert question.startswith(f"Investigate {FOCAL}. Review recent incidents, KRIs, controls and dependencies")
-    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Suggested investigation questions"):
-        assert f'<span class="rs-title">{heading}</span>' in shown(at), heading  # numbered editorial sections
-    assert "Retrieved system profile for PAYMENT_ENGINE_01" in shown(at)
-    assert {m.label: m.value for m in at.metric}["Simulations / seed"] == "100,000 / 42"  # read from tool output
-    assert not at.warning[1:] or "numbers" not in " | ".join(w.value for w in at.warning)
+    titles = [s.value for s in at.subheader]
+    assert titles.index("Request") < titles.index("Ask RiskSignal") < titles.index("Way forward")
+    assert "In development" in shown(at)
+    assert at.button[0].label == "Investigate this system"  # the investigation comes first
 
 
-def test_investigation_follows_the_selected_system_and_stress_option(http: TestClient) -> None:
+def test_investigation_and_chat_do_not_interfere(http: TestClient) -> None:
     at = assistant_page(http)
-    at.selectbox[0].select("PAYMENT_ENGINE_02").run()
-    at.checkbox[0].check().run()
     next(b for b in at.button if b.label == "Investigate this system").click().run()
-    assert not at.exception
-    question = at.session_state["assistant_history"][0]["content"]
-    assert question.startswith("Investigate PAYMENT_ENGINE_02.") and "SHARED_VENDOR_OUTAGE" in question
-    tools = [a["tool_name"] for a in at.session_state["assistant_history"][1]["tool_activity"]]
-    assert "compare_baseline_and_stress" in tools
+    assert not at.exception and at.session_state["agent_response"]["status"] == "completed"
+    at.chat_input[0].set_value("Which systems should I look at first?").run()
+    assert not at.exception and len(at.session_state["assistant_history"]) == 2
+    assert at.session_state["agent_response"]["status"] == "completed"  # the report stays on the page
 
 
 def test_assistant_reports_an_unknown_system(http: TestClient) -> None:

@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 
+from risksignal.agent.base import LLMProviderError
 from risksignal.agent.mock_provider import provider_for_question
 from risksignal.api.dependencies import Settings, get_provider_factory, get_settings, get_tool_context
 from risksignal.api.main import create_app
@@ -333,6 +334,88 @@ def test_scenario_lab_new_system_clears_stale_results(api: ApiClient) -> None:
     assert not at.exception and "P95 under stress" not in metric_values(at)
 
 
+# ----------------------------------------------------------------- Assistant page: investigation section
+
+
+def test_investigation_runs_an_investigation_with_the_mock_llm(api: ApiClient) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    assert not at.exception
+    assert at.text_area[0].value.startswith("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies")
+    assert "identify questions that an Operational Risk analyst should investigate." in at.text_area[0].value
+    assert at.button[0].label == "Investigate this system"
+
+    at.button[0].click().run()
+    assert not at.exception
+    shown = texts(at.markdown)
+    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Suggested investigation questions"):
+        assert f'<span class="rs-title">{heading}</span>' in shown, heading  # each section has its own numbered heading
+    assert "Retrieved system profile for PAYMENT_ENGINE_01" in shown
+    assert "Ran 100,000 year Monte Carlo simulation (seed 42)" in shown
+    assert any("Simulation metadata" in s.value for s in at.subheader)
+    assert metric_values(at)["Simulations / seed"] == "100,000 / 42"
+    assert "Details: get_system_profile" in [e.label for e in at.expander]
+    assert not at.warning[1:] or "numbers" not in texts(at.warning)  # nothing flagged for the honest mock answer
+
+
+def test_investigation_custom_question_and_stress_option(api: ApiClient) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    at.text_area[0].set_value("What controls protect PAYMENT_ENGINE_01?")
+    at.checkbox[0].check()
+    at.button[0].click().run()
+    assert not at.exception and "Request: What controls protect PAYMENT_ENGINE_01? Also compare" in texts(at.caption)
+    assert "Compared baseline and stress scenario SHARED_VENDOR_OUTAGE" in texts(at.markdown)
+
+
+def test_investigation_defaults_follow_the_selected_system(api: ApiClient) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    at.selectbox[0].select("PAYMENT_ENGINE_02").run()
+    assert at.text_area[0].value.startswith("Investigate PAYMENT_ENGINE_02.")
+
+
+def test_investigation_explains_a_missing_api_key_without_crashing(ctx: ToolContext, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    def no_key(question: str):
+        raise LLMProviderError("ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.")
+
+    client = make_api(ctx, provider_factory=no_key, provider_name="anthropic")
+    at = run_view(client, "assistant", "render_assistant")
+    assert not at.exception
+    assert "language-model provider is not configured" in texts(at.info) and "ANTHROPIC_API_KEY" in texts(at.info)
+
+    at.button[0].click().run()
+    assert not at.exception
+    assert "language model is unavailable" in texts(at.error) and "ANTHROPIC_API_KEY" in texts(at.error)
+    assert "do not require a language-model API key" in texts(at.info) and "RISKSIGNAL_LLM_PROVIDER=mock" in texts(at.info)
+    # the deterministic pages still work with the same backend
+    assert not run_view(client, "scenario_lab", "render_scenario_lab").exception
+    assert not run_view(client, "system_explorer", "render_system_explorer").exception
+
+
+def test_investigation_with_an_unknown_system_in_the_request(api: ApiClient) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    at.text_area[0].set_value("Investigate PAYMENT_ENGINE_99.")
+    at.button[0].click().run()
+    assert not at.exception
+    assert any(a in texts(at.markdown) for a in ("could not complete the investigation",))
+    assert "Failed:" in texts(at.markdown) and "get_system_profile failed (unknown_system)" in texts(at.markdown)
+
+
+def test_investigation_shows_warnings_for_unmatched_numbers(ctx: ToolContext) -> None:
+    from risksignal.agent.base import LLMResponse
+    from risksignal.agent.mock_provider import MockProvider
+
+    liar = MockProvider([LLMResponse(text="Simulation results\n- P95 annual loss is 1,234,567.")])
+    at = run_view(make_api(ctx, provider_factory=lambda q: liar), "assistant", "render_assistant")
+    at.button[0].click().run()
+    assert not at.exception and "1,234,567" in texts(at.warning) and "could not be matched" in texts(at.warning)
+
+
+def test_investigation_without_the_api_does_not_crash() -> None:
+    at = run_view(unreachable_api(), "assistant", "render_assistant")
+    assert not at.exception and "Cannot reach the RiskSignal API" in texts(at.error)
+
+
 # ----------------------------------------------------------------- the app entry point
 
 
@@ -341,7 +424,7 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     at.session_state["api_client"] = api
     at.run()
     assert not at.exception
-    assert at.title[0].value == "Ask RiskSignal" and BANNER_TEXT in texts(at.warning)  # the Assistant is the landing page
+    assert at.title[0].value == "RiskSignal Assistant" and BANNER_TEXT in texts(at.warning)  # the Assistant is the landing page
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
 
 

@@ -93,8 +93,9 @@ def page_header(index: str, label: str, title: str, intro: str | None = None,
 
 
 def section_header(title: str, intro: str | None = None, index: str | None = None,
-                   subtle: bool = False) -> DeltaGenerator:
+                   subtle: bool = False, tag: str | None = None) -> DeltaGenerator:
     """A rule, then a large serif section title with optional supporting copy to its right.
+    ``tag`` adds a small status label above the title, for example "In development".
     Returns the right-hand column."""
     rule(subtle)
     spacer()
@@ -102,6 +103,8 @@ def section_header(title: str, intro: str | None = None, index: str | None = Non
     with main:
         if index:
             html(f'<span class="rs-index">{escape(index)}</span>')
+        if tag:
+            html(f'<span class="rs-tag">{escape(tag)}</span>')
         st.subheader(title)
     if intro:
         with aside:

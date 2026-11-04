@@ -151,13 +151,11 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 7. The Assistant (about 2 minutes)
 
-**Screen:** the Assistant (the landing page). `PAYMENT_ENGINE_01` is selected under "Full investigation of".
+**Screen:** the Assistant (the landing page). `PAYMENT_ENGINE_01` is selected and the request is pre-filled ("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies, run a baseline loss simulation, and identify questions that an Operational Risk analyst should investigate.").
 
 **Say:** "This is an early version of the assistant I would like to build with a real team. You can ask it anything, but it decides which deterministic tools to call; it cannot read the database or calculate anything itself, and it cannot change any records."
 
-**Do:** type "Which systems should I look at first?" and show the comparison table, then "And are its controls up to date?" after asking about one system, to show that it keeps the context. *(If you are using the offline provider, say so now.)*
-
-**Do:** click **Investigate this system** for the full report, then walk through its numbered sections:
+**Do:** click **Investigate this system**. *(If you are using the offline provider, say so now.)* Then walk through the report's numbered sections:
 
 1. **Observed evidence:** "all of this came from tool calls on the synthetic data."
 2. **Model assumptions:** where λ, μ, σ came from.
@@ -168,9 +166,11 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 *(Optional)* Tick the stress checkbox and run again to add the `SHARED_VENDOR_OUTAGE` comparison; the agent can only choose predefined scenarios, never invent numbers.
 
+*(Optional)* Scroll to **Ask RiskSignal**, marked *In development*, and ask "Which systems should I look at first?", then a follow-up such as "And are its controls up to date?". **Say:** "This is the direction I would take it: the same tools and evidence rules, but as a conversation. It is not finished; the way forward below lists what comes next."
+
 ### Step 8. Evidence: how it stays honest (about 1.5 minutes)
 
-**Screen:** under the report, **Simulation metadata** and the **Evidence** drawer.
+**Screen:** under the report, **Tool activity log** and **Simulation metadata**.
 
 **Say:**
 > "Every step is recorded: which tool, with what input, whether it worked, how long it took. These log lines are written by code, not by the model. Open one: here is the exact input to the simulation tool and the exact output the agent received. The model never sees a database or a calculator; every number in the answer should be traceable to one of these outputs. Below, the simulation metadata is read straight from the tool output, not from the model's text. And after each run the application scans the answer for numbers that match no tool output and flags them: a figure with no match in any tool output would raise a warning here."

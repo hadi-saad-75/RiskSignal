@@ -1,6 +1,8 @@
-"""Assistant page: one place to ask RiskSignal anything and to run a full investigation.
+"""Assistant page.
 
-This is an early version. The roadmap at the bottom of the page lists what it does not do yet.
+1. Investigation: the full, tool-based investigation of one system, as before.
+2. Ask RiskSignal: the conversational assistant, shown as in development.
+3. Way forward: what is planned next.
 """
 
 from html import escape
@@ -19,25 +21,26 @@ from risksignal.ui.components import (
     label,
     page_header,
     render_answer,
-    rule,
     ruled_list,
     section_header,
     spacer,
-    system_selector,
 )
-from risksignal.ui.formatting import METRIC_LABELS, extract_simulation_metadata, format_amount, format_decimal
+from risksignal.ui.formatting import format_decimal
+from risksignal.ui.views.investigation import render_investigation
 
 HISTORY_KEY = "assistant_history"
 PENDING_KEY = "assistant_pending"
 MAX_SENT_TURNS = 20
-STRESS_REQUEST = " Also compare the baseline with the SHARED_VENDOR_OUTAGE stress scenario."
 STARTERS = (
     "Which systems should I look at first?",
     "What incidents did PAYMENT_ENGINE_01 have recently?",
     "What happens to CORE_LEDGER_01 under a shared vendor outage?",
     "Explain Expected Shortfall in plain words.",
 )
-ROADMAP = (
+WAY_FORWARD = (
+    ("Conversational assistant",
+     "Finish the chat above: free questions over several turns, answers adapted to each question, and the "
+     "same evidence rules as the investigation."),
     ("Evaluation with a live model",
      "A set of real operator questions with expected evidence, to measure tool choice, grounding and usefulness."),
     ("Institutional data",
@@ -48,66 +51,59 @@ ROADMAP = (
      "Trend tests, links between KRIs and later incidents, more scenarios, and search over policies and past reviews."),
     ("Access control and approved hosting",
      "Authentication, entitlements by business area, and a language model hosted under the bank's approval."),
-    ("Analyst feedback",
-     "Marking answers as useful or wrong, so that prompts and tools improve on real use."),
 )
-
-
-def default_question(system_id: str) -> str:
-    return (f"Investigate {system_id}. Review recent incidents, KRIs, controls and dependencies, run a baseline "
-            "loss simulation, and identify questions that an Operational Risk analyst should investigate.")
 
 
 def render_assistant() -> None:
     banner()
     page_header(
-        "01", "Assistant · early version", "Ask RiskSignal",
-        "Ask anything about the systems, incidents, controls, vendors, loss simulations or the methods behind "
-        "them, or run a full investigation of one system. Follow-up questions keep the context. Every figure "
-        "comes from read-only tools, and the evidence behind each answer is listed under it.",
+        "01", "Assistant", "RiskSignal Assistant",
+        "A language model selects among deterministic tools for retrieving system profiles, incidents, key "
+        "risk indicators, controls, dependencies, and simulation results. It summarises the returned evidence "
+        "and may suggest questions for further review. The model cannot modify records or make risk decisions. "
+        "Reported quantitative claims are checked against the tool outputs; unmatched values are flagged.",
+        intro_below=True,
     )
     client = get_api_client()
     health = call_api(client.health)
     if health is not None and not health["llm_configured"]:
         st.info(f"The language-model provider is not configured. {LLM_HELP}")
 
+    render_investigation(client)
+    _chat(client)
+    _way_forward()
+
+
+# --------------------------------------------------------------------------- chat (in development)
+
+
+def _chat(client: ApiClient) -> None:
+    section_header(
+        "Ask RiskSignal",
+        "A conversational assistant being built on the same tools: ask about a system, the whole portfolio or "
+        "a method, and follow up in plain language. It works on the synthetic data but is not finished.",
+        tag="In development",
+    )
     history: list[dict[str, Any]] = st.session_state.setdefault(HISTORY_KEY, [])
-    typed = st.chat_input("Ask about a system, the portfolio or a method")
-    requested = _investigation_controls(client)
-    message = (typed or requested or st.session_state.pop(PENDING_KEY, None) or "").strip()
+    conversation = st.container()
+    with st.container(key="rs_chat_input_box"):  # inside a container the input stays in the section
+        typed = st.chat_input("Ask about a system, the portfolio or a method")
+    message = (typed or st.session_state.pop(PENDING_KEY, None) or "").strip()
 
-    if not history and not message:
-        _starters()
-    for number, turn in enumerate(history):
-        _show_turn(number, turn)
-    if message:
-        _ask(client, history, message)
-    if history:
-        spacer()
-        if st.button("Start a new conversation", key="assistant_reset"):
-            st.session_state[HISTORY_KEY] = []
-            st.rerun()
-    _roadmap()
-
-
-def _investigation_controls(client: ApiClient) -> str | None:
-    """System picker and button that send a full investigation request into the conversation."""
-    rule(subtle=True)
-    spacer()
-    picker, _, options = st.columns([5, 1, 6], vertical_alignment="bottom")
-    with picker:
-        system_id = system_selector(client, "assistant", label="Full investigation of")
-    if system_id is None:
-        return None
-    with options:
-        include_stress = st.checkbox("Include the SHARED_VENDOR_OUTAGE stress scenario", key="assistant_stress")
-        clicked = st.button("Investigate this system", type="primary", key="assistant_investigate")
-    return default_question(system_id) + (STRESS_REQUEST if include_stress else "") if clicked else None
+    with conversation:
+        if not history and not message:
+            _starters()
+        for number, turn in enumerate(history):
+            _show_turn(number, turn)
+        if message:
+            _ask(client, history, message)
+    if history and st.button("Start a new conversation", key="assistant_reset"):
+        st.session_state[HISTORY_KEY] = []
+        st.rerun()
 
 
 def _starters() -> None:
-    spacer()
-    label("Or try asking")
+    label("Try asking")
     columns = st.columns(2)
     for index, question in enumerate(STARTERS):
         if columns[index % 2].button(question, key=f"assistant_starter_{index}", width="stretch"):
@@ -123,34 +119,12 @@ def _show_turn(number: int, turn: dict[str, Any]) -> None:
     with st.container(key=f"rs_chat_answer_{number}"):
         label("RiskSignal")
         if is_structured(turn["content"]):
-            render_answer(turn["content"], key=f"rs_sections_{number}")
+            render_answer(turn["content"], key=f"rs_sections_chat_{number}")
         else:
             st.markdown(turn["content"])
         for warning in turn.get("warnings", []):
             st.warning(warning)
-        _simulation_metadata(turn.get("tool_activity", []))
         _evidence(turn)
-
-
-def _simulation_metadata(activities: list[dict[str, Any]]) -> None:
-    meta = extract_simulation_metadata(activities)
-    if meta is None:
-        return
-    spacer()
-    label("Simulation metadata")
-    columns = st.columns(4, gap="large")
-    columns[0].metric("λ (incidents per year)", format_decimal(meta["lambda_used"]))
-    columns[1].metric("μ", format_decimal(meta["severity_mu"], 3))
-    columns[2].metric("σ", format_decimal(meta["severity_sigma"], 3))
-    columns[3].metric("Simulations / seed", f"{meta['number_of_simulations']:,} / {meta['random_seed']}")
-    st.caption(f"Read from the simulation tool output, not from the answer text. λ source: {meta['lambda_source']}. "
-               f"Severity fitted to {meta['severity_losses_used']} losses (data source: {meta['severity_data_source']}).")
-    st.dataframe(
-        [{"Metric": name, "Baseline": format_amount(meta["baseline_metrics"][key]),
-          **({"Stress": format_amount(meta["stress_metrics"][key])} if meta["stress_metrics"] else {})}
-         for key, name in METRIC_LABELS],
-        hide_index=True, width="stretch",
-    )
 
 
 def _evidence(turn: dict[str, Any]) -> None:
@@ -188,14 +162,17 @@ def _ask(client: ApiClient, history: list[dict[str, Any]], message: str) -> None
     _show_turn(len(history) - 1, answer)
 
 
-def _roadmap() -> None:
+# --------------------------------------------------------------------------- way forward
+
+
+def _way_forward() -> None:
     section_header(
-        "Not built yet",
-        "This is an early version: it shows the approach on synthetic data. These are the next steps to make it "
-        "an assistant an Operational Risk team could rely on.",
+        "Way forward",
+        "This is an early version that shows the approach on synthetic data. These are the next steps to make "
+        "it an assistant an Operational Risk team could rely on.",
     )
     left, _, right = st.columns([6, 1, 6])
     with left:
-        ruled_list(ROADMAP[:3])
+        ruled_list(WAY_FORWARD[:3])
     with right:
-        ruled_list(ROADMAP[3:])
+        ruled_list(WAY_FORWARD[3:])

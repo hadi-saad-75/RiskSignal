@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
 REQUIREMENTS = ROOT / "deploy" / "streamlit_cloud" / "requirements.txt"
 SECRET = "RISKSIGNAL_API_URL"
-LANDING_TITLE = "Ask RiskSignal"  # the Assistant is the landing page
+LANDING_TITLE = "RiskSignal Assistant"  # the Assistant is the landing page
 BANNER = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
 
 

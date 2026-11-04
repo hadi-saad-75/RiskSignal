@@ -59,13 +59,14 @@ def llm_is_configured(settings: Settings) -> bool:
     return settings.llm_provider == "anthropic" and bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
-def get_provider_factory() -> ProviderFactory:
+def get_provider_factory(settings: Settings | None = Depends(get_settings)) -> ProviderFactory:
     """Returns a function that builds the LLM provider for one question.
 
     Raises ``LLMProviderError`` (reported as HTTP 503) if the provider is misconfigured,
-    for example when ANTHROPIC_API_KEY is missing.
+    for example when ANTHROPIC_API_KEY is missing. Called directly (outside FastAPI), it reads
+    the settings from the environment.
     """
-    provider_name = get_settings().llm_provider
+    provider_name = (settings if isinstance(settings, Settings) else get_settings()).llm_provider
 
     def build(question: str) -> LLMProvider:
         if provider_name == "mock":
@@ -80,12 +81,13 @@ def get_provider_factory() -> ProviderFactory:
     return build
 
 
-def get_chat_provider_factory(settings: Settings = Depends(get_settings)) -> ChatProviderFactory:
+def get_chat_provider_factory(settings: Settings | None = Depends(get_settings)) -> ChatProviderFactory:
     """Returns a function that builds the LLM provider for one assistant message.
 
     It receives the message and the text of the earlier turns, so the offline mock can resolve
     follow-up questions. Raises ``LLMProviderError`` (HTTP 503) if the provider is misconfigured.
     """
+    settings = settings if isinstance(settings, Settings) else get_settings()
 
     def build(message: str, history: list[str]) -> LLMProvider:
         if settings.llm_provider == "mock":

@@ -235,6 +235,19 @@ h1, h2, h3, h4,
   margin: 0 0 0.5rem;
 }
 .rs-rule { height: 1px; background: var(--rs-strong); border: 0; margin: var(--rs-section) 0 0; }
+.rs-tag {
+  display: inline-block;
+  margin: 0 0 0.9rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--rs-accent);
+  border-radius: 999px;
+  font-family: var(--rs-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rs-accent);
+}
 .rs-rule.rs-rule--subtle { background: var(--rs-divider); margin-top: clamp(2rem, 4vw, 3.5rem); }
 .rs-spacer { height: clamp(1rem, 2vw, 2rem); }
 /* aligns the hero introduction with the cap height of the oversized title beside it */
@@ -604,6 +617,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 }
 [data-testid="stChatInputSubmitButton"] { background: transparent !important; color: var(--rs-accent) !important; }
 [data-testid="stChatInputSubmitButton"]:hover { color: var(--rs-text) !important; }
+.st-key-rs_chat_input_box { margin-top: 1.5rem; }
 
 /* ---------- responsive */
 @media (max-width: 640px) {
