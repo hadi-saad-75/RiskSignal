@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
 REQUIREMENTS = ROOT / "deploy" / "streamlit_cloud" / "requirements.txt"
 SECRET = "RISKSIGNAL_API_URL"
+LANDING_TITLE = "Ask RiskSignal"  # the Assistant is the landing page
 BANNER = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
 
 
@@ -214,10 +215,10 @@ def test_secret_is_read_from_st_secrets_and_the_dashboard_runs(api_client: ApiCl
     monkeypatch.delenv(SECRET, raising=False)
     at = run_entrypoint({SECRET: "http://testserver/"}, api_client)
     assert not at.exception
-    assert at.title[0].value == "RiskSignal" and BANNER in texts(at.warning)
+    assert at.title[0].value == LANDING_TITLE and BANNER in texts(at.warning)
     assert os.environ[SECRET] == "http://testserver"  # trailing slash removed, value passed to the dashboard's API client
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
-    assert {m.label: m.value for m in at.metric}["Systems"] == "20"  # data came from the API, not from backend imports
+    assert len(at.selectbox[0].options) == 20  # the system list came from the API, not from backend imports
 
 
 def test_the_dashboard_client_targets_the_secret_url_without_a_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -231,9 +232,9 @@ def test_the_dashboard_client_targets_the_secret_url_without_a_trailing_slash(mo
 def test_every_rerun_executes_the_dashboard_again(api_client: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(SECRET, raising=False)
     at = run_entrypoint({SECRET: "http://testserver"}, api_client)
-    assert at.title[0].value == "RiskSignal"
+    assert at.title[0].value == LANDING_TITLE
     at.run()  # a second script run (a Streamlit rerun) must render the page again, not an empty app
-    assert not at.exception and at.title[0].value == "RiskSignal" and BANNER in texts(at.warning)
+    assert not at.exception and at.title[0].value == LANDING_TITLE and BANNER in texts(at.warning)
 
 
 def test_a_missing_secret_gives_a_clear_message_not_a_crash(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -256,7 +257,7 @@ def test_an_invalid_secret_value_is_reported(value: str, monkeypatch: pytest.Mon
 def test_the_environment_variable_is_a_local_fallback(api_client: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(SECRET, "http://testserver/")
     at = run_entrypoint(client=api_client)  # no st.secrets entry
-    assert not at.exception and at.title[0].value == "RiskSignal" and os.environ[SECRET] == "http://testserver"
+    assert not at.exception and at.title[0].value == LANDING_TITLE and os.environ[SECRET] == "http://testserver"
 
 
 def test_a_secret_takes_precedence_over_the_environment(api_client: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -149,13 +149,15 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 **If someone asks about precision:** the Monte Carlo error of these percentages is of the order of a few percentage points at 100,000 years ([technical_review.md](technical_review.md), section 3).
 
-### Step 7. AI Investigator (about 1.5 minutes)
+### Step 7. The Assistant (about 2 minutes)
 
-**Screen:** AI Investigator. `PAYMENT_ENGINE_01` is selected and the request is pre-filled ("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies, run a baseline loss simulation, and identify questions that an Operational Risk analyst should investigate.").
+**Screen:** the Assistant (the landing page). `PAYMENT_ENGINE_01` is selected under "Full investigation of".
 
-**Say:** "The agent is not a chatbot. It decides which deterministic tools to call; it cannot read the database or calculate anything itself, and it cannot change any records."
+**Say:** "This is an early version of the assistant I would like to build with a real team. You can ask it anything, but it decides which deterministic tools to call; it cannot read the database or calculate anything itself, and it cannot change any records."
 
-**Do:** click **Investigate this system**. *(If you are using the offline provider, say so now.)* Then walk through the answer's coloured sections:
+**Do:** type "Which systems should I look at first?" and show the comparison table, then "And are its controls up to date?" after asking about one system, to show that it keeps the context. *(If you are using the offline provider, say so now.)*
+
+**Do:** click **Investigate this system** for the full report, then walk through its numbered sections:
 
 1. **Observed evidence:** "all of this came from tool calls on the synthetic data."
 2. **Model assumptions:** where λ, μ, σ came from.
@@ -166,9 +168,9 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 *(Optional)* Tick the stress checkbox and run again to add the `SHARED_VENDOR_OUTAGE` comparison; the agent can only choose predefined scenarios, never invent numbers.
 
-### Step 8. Tool activity: how it stays honest (about 1.5 minutes)
+### Step 8. Evidence: how it stays honest (about 1.5 minutes)
 
-**Screen:** scroll to **Tool activity log** and **Simulation metadata**.
+**Screen:** under the report, **Simulation metadata** and the **Evidence** drawer.
 
 **Say:**
 > "Every step is recorded: which tool, with what input, whether it worked, how long it took. These log lines are written by code, not by the model. Open one: here is the exact input to the simulation tool and the exact output the agent received. The model never sees a database or a calculator; every number in the answer should be traceable to one of these outputs. Below, the simulation metadata is read straight from the tool output, not from the model's text. And after each run the application scans the answer for numbers that match no tool output and flags them: a figure with no match in any tool output would raise a warning here."
@@ -255,7 +257,7 @@ First fix the intended use. Then data mapping and quality checks, then a baselin
 |---|---|
 | Red message "Cannot reach the RiskSignal API" | The API is not running. Start `uvicorn risksignal.api.main:app` (terminal 1) and refresh. |
 | "Database: missing" in the sidebar, or the API reports `degraded` | Run `python -m risksignal.data.generator`, then restart the API. |
-| AI Investigator says the provider is not configured / "live AI investigator is not available" | No `ANTHROPIC_API_KEY`. Either set it and restart the API, or restart the API with `RISKSIGNAL_LLM_PROVIDER=mock` and say so. The other pages never need a key. |
+| The Assistant says the language-model provider is not configured | No `ANTHROPIC_API_KEY`. Either set it and restart the API, or restart the API with `RISKSIGNAL_LLM_PROVIDER=mock` and say so. The other pages never need a key. |
 | The live agent is slow or fails | Fall back to the offline provider, or show a run you did beforehand. From a terminal: `python -m risksignal.agent.investigator --mock "Investigate PAYMENT_ENGINE_01."` prints the tool activity and answer. |
 | The live agent shows a warning about numbers it could not match | Do not hide it. That is the check working; open the tool details and show whether the number is a rounding of a tool value or a real discrepancy. |
 | Port 8000 or 8501 already in use | Start on another port (`--port 8001`, `--server.port 8502`) and set `RISKSIGNAL_API_URL` for the dashboard. |

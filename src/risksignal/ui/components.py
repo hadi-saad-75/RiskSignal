@@ -19,7 +19,7 @@ START_API_HELP = (
 )
 LLM_HELP = (
     "The Overview, System Explorer, and Scenario Analysis pages do not require a language-model API key. "
-    "The investigation page requires `ANTHROPIC_API_KEY`, set in the environment or a `.env` file before "
+    "The Assistant requires `ANTHROPIC_API_KEY`, set in the environment or a `.env` file before "
     "starting the API. To use the deterministic mock provider, set "
     "`RISKSIGNAL_LLM_PROVIDER=mock`."
 )
@@ -203,10 +203,16 @@ def system_selector(client: ApiClient, page_key: str, label: str = "System") -> 
     return choice
 
 
-def render_answer(text: str) -> None:
-    """Show the agent's answer as numbered editorial sections, each body set against a hairline."""
+def is_structured(text: str) -> bool:
+    """True when the answer uses the investigation headings (Observed evidence, ...)."""
+    return any(title not in ("Answer", "Summary") for title, _ in split_sections(text))
+
+
+def render_answer(text: str, key: str = "rs_sections") -> None:
+    """Show the agent's answer as numbered editorial sections, each body set against a hairline.
+    ``key`` must be unique on the page when several answers are shown."""
     for number, (title, body) in enumerate(split_sections(text), start=1):
         html(f'<div class="rs-answer-head"><span class="rs-index">{number:02d}</span>'
              f'<span class="rs-title">{escape(title)}</span></div>')
-        with st.container(key=f"rs_answer_body_{number}"):
+        with st.container(key=f"{key}_body_{number}"):
             st.markdown(body or "_(empty)_")

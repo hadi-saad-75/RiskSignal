@@ -2,10 +2,10 @@
 
 **An agentic Operational Risk investigation and stochastic scenario prototype (research prototype, synthetic data only).**
 
-> **Development status: working prototype.**
-> - **Done:** repository structure, domain documentation, the synthetic Atlas Bank dataset (generator, validation, CSV and SQLite storage), the stochastic frequency-severity engine, the stress scenario engine, the dependency graph, the deterministic tool layer, the investigation agent, the FastAPI backend, the Streamlit dashboard, and Docker setup for local demonstration.
-> - **Not built:** authentication, cloud deployment and anything listed as future research.
-> - **Not yet exercised in development:** the live Anthropic investigator (no API key was available; the offline mock provider is fully tested) and the Docker images (no Docker engine was available; the build steps, health check and minimal UI environment were checked by emulating them with plain Python).
+> **Development status: early version.**
+> - **Done:** repository structure, domain documentation, the synthetic Atlas Bank dataset (generator, validation, CSV and SQLite storage), the stochastic frequency-severity engine, the stress scenario engine, the dependency graph, the deterministic tool layer, the analysis assistant (conversation and full investigations), the FastAPI backend, the Streamlit dashboard, and Docker setup for local demonstration.
+> - **Not built:** everything in the [roadmap](#roadmap-what-this-early-version-does-not-do-yet), cloud deployment and anything listed as future research.
+> - **Not yet exercised in development:** the live Anthropic model (no API key was available; the offline mock provider is fully tested) and the Docker images (no Docker engine was available; the build steps, health check and minimal UI environment were checked by emulating them with plain Python).
 
 ## Objective
 
@@ -14,7 +14,7 @@ RiskSignal explores how technology-related Operational Risk (outages, failed dep
 - a small synthetic dataset for a fictional institution, **Atlas Bank**,
 - a dependency graph (systems, business processes, vendors, controls),
 - a classical **frequency-severity** loss model with Monte Carlo simulation,
-- an **AI investigation agent** that gathers evidence by calling deterministic Python tools.
+- an **AI analysis assistant** that answers an operator's questions, and runs full investigations, by calling deterministic Python tools.
 
 The agent calls only deterministic, read-only Python tools and is instructed to calculate or invent nothing itself: every risk number is computed by a tool, and any number the agent writes is checked against the tool outputs (a best-effort check, not a guarantee; see [docs/agent_design.md](docs/agent_design.md)).
 
@@ -34,7 +34,7 @@ Then open the dashboard at <http://localhost:8501>. The API documentation is at 
 
 - The first build downloads the dependencies and takes a few minutes. The synthetic Atlas Bank database is generated during the API image build (seeded, so it is identical every time).
 - The dashboard container starts only after the API container reports healthy (`GET /health`).
-- **Without an API key** everything works except the live AI Investigator, which explains that it needs `ANTHROPIC_API_KEY`. To try the AI Investigator offline with the deterministic mock provider:
+- **Without an API key** everything works except the live Assistant, which explains that it needs `ANTHROPIC_API_KEY`. To try the Assistant offline with the deterministic mock provider:
   - macOS/Linux: `RISKSIGNAL_LLM_PROVIDER=mock docker compose up --build`
   - Windows PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"; docker compose up --build`
 - **With an API key**: copy `.env.example` to `.env` (macOS/Linux `cp .env.example .env`, Windows `Copy-Item .env.example .env`), set `ANTHROPIC_API_KEY=` to your key, then run `docker compose up --build`. `.env` is git-ignored and excluded from the Docker images.
@@ -66,7 +66,7 @@ uvicorn risksignal.api.main:app --reload
 streamlit run src/risksignal/ui/app.py
 ```
 
-To use the AI Investigator, copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY=` before step 5, or start the API in offline mock mode (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`). You can also try the agent without any server: `python -m risksignal.agent.investigator --mock "Investigate PAYMENT_ENGINE_01."`.
+To use the Assistant with a live model, copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY=` before step 5, or start the API in offline mock mode (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`). You can also try the agent without any server: `python -m risksignal.agent.investigator --mock "Investigate PAYMENT_ENGINE_01."`.
 
 ### Settings
 
@@ -121,12 +121,24 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## The demo
 
-1. Select `PAYMENT_ENGINE_01` in the dashboard and click **Investigate**.
-2. The agent retrieves the system profile, recent incidents, KRIs, controls and dependencies, and identifies systems that share its vendors.
-3. It runs a baseline Monte Carlo simulation and, optionally, a predefined vendor-outage stress scenario.
-4. It writes a summary with four sections: observed evidence, model assumptions, simulation results, and suggested investigation questions.
+1. The dashboard opens on the **Assistant**. Ask "Which systems should I look at first?": it compares all systems on incidents, recorded loss, the change on the previous year and overdue control reviews.
+2. Follow up in plain language: "What incidents did CORE_LEDGER_01 have?", then "And are its controls up to date?". The assistant keeps the context and shows the tool calls behind every answer.
+3. Select `PAYMENT_ENGINE_01` and click **Investigate this system** for the full report: profile, incidents, KRIs, controls, dependencies and a baseline Monte Carlo simulation (optionally a vendor-outage stress scenario), written up as observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations.
 
-The Overview page is a manager-focused snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. System Explorer, Scenario Analysis, and Investigation retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
+The Overview page is a manager-focused snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. System Explorer and Scenario Analysis retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
+
+## Roadmap: what this early version does not do yet
+
+RiskSignal is deliberately an early version of an analysis assistant. It shows the approach end to end on synthetic data; turning it into an assistant an Operational Risk team could rely on is the next stage of work:
+
+1. **Evaluation with a live model.** A set of real operator questions with expected evidence, to measure how often the assistant picks the right tools, how often every figure is grounded, and whether analysts find the answers useful.
+2. **Institutional data.** Connectors to the incident, control and KRI systems of record instead of the synthetic Atlas Bank data, with data-quality checks.
+3. **Saved cases and audit trail.** Conversations and investigations stored as case files that a reviewer can reopen, comment on and sign off.
+4. **Wider analysis.** Trend tests, links between KRIs and later incidents, more stress scenarios, and search over policies, procedures and past reviews.
+5. **Access control and approved hosting.** Authentication, entitlements by business area, and a language model hosted under the institution's approval.
+6. **Analyst feedback.** Marking answers as useful or wrong, so that prompts and tools improve on real use.
+
+The same list is shown at the bottom of the Assistant page.
 
 ## Generating the synthetic Atlas Bank dataset
 
@@ -304,7 +316,7 @@ Errors use one JSON shape, `{"error": {"type", "message", "suggestions"}}`, and 
 
 ## Dashboard (Streamlit)
 
-A technical-demo dashboard with five pages. It talks **only to the FastAPI backend** and imports none of the engines: **Overview** (counts and recent incidents), **Assistant** (a conversation with the assistant, with suggested questions and the evidence behind each answer), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Analysis** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions) and **Investigation** (the agent's sectioned answer, tool activity log and simulation metadata). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
+A technical-demo dashboard with four pages. It talks **only to the FastAPI backend** and imports none of the engines: **Assistant**, the landing page (a conversation with the assistant, full investigations of one system, the evidence and simulation metadata behind each answer, and the roadmap), **Overview** (counts and recent incidents), **System Explorer** (profile, incidents, KRI charts, controls, dependencies and a shared-exposure map), **Scenario Analysis** (estimated baseline model, baseline versus stress simulation with a loss distribution chart, optional advanced numeric assumptions). A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
 
 ```bash
 # 1. Generate the synthetic data (once)
@@ -317,7 +329,7 @@ uvicorn risksignal.api.main:app --reload
 streamlit run src/risksignal/ui/app.py
 ```
 
-- **Without an Anthropic key** the Overview, System Explorer and Scenario Lab work as normal. The AI Investigator shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
+- **Without an Anthropic key** the Overview, System Explorer and Scenario Analysis work as normal. The Assistant shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
 - **With a key**, put `ANTHROPIC_API_KEY=...` in `.env` (git-ignored) or the environment before starting the backend.
 - If the backend runs somewhere else, set `RISKSIGNAL_API_URL` (default `http://127.0.0.1:8000`) before starting Streamlit.
 
@@ -850,10 +862,10 @@ This bank is grounded in the implementation and documentation in this repository
 
 **Q13. What happens when I click “Investigate this system”?**
 
-- **Presentation answer:** The dashboard sends the question to the API, which runs the investigator and returns its answer, tool log and warnings.
-- **Technical detail:** The UI calls `POST /agent/investigate`; the API builds a registry over the tool context and passes it to the investigator.
+- **Presentation answer:** The dashboard sends an investigation request into the conversation; the API runs the assistant and returns its answer, tool log and warnings.
+- **Technical detail:** The UI calls `POST /agent/chat` with the conversation so far; the API builds a registry over the tool context and runs the assistant, the same agent loop as `POST /agent/investigate` with a conversational prompt.
 - **Caution:** A live model can take time; mock mode uses a deterministic script instead.
-- **Project evidence:** [AI Investigator UI](src/risksignal/ui/views/ai_investigator.py), [agent route](src/risksignal/api/routes_agent.py).
+- **Project evidence:** [Assistant UI](src/risksignal/ui/views/assistant.py), [agent route](src/risksignal/api/routes_agent.py).
 
 **Q14. Walk through the full request from browser to answer.**
 

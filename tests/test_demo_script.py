@@ -133,8 +133,8 @@ def test_script_follows_the_requested_ten_step_sequence() -> None:
     steps = re.findall(r"^### Step (\d+)\. (.+)$", SCRIPT, re.MULTILINE)
     assert [int(n) for n, _ in steps] == list(range(1, 11))
     titles = " ".join(t.lower() for _, t in steps)
-    for word in ("problem", "payment_engine_01", "dependencies", "scenario lab", "baseline", "stress", "ai investigator",
-                 "tool activity", "limitations", "real team"):
+    for word in ("problem", "payment_engine_01", "dependencies", "scenario lab", "baseline", "stress", "assistant",
+                 "evidence", "limitations", "real team"):
         assert word in titles, word
     assert "Likely technical questions" in SCRIPT and "Part 2" in SCRIPT and "Part 3" in SCRIPT
 

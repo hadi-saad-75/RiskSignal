@@ -272,7 +272,7 @@ h1, h2, h3, h4,
   line-height: 1;
   color: var(--rs-text);
 }
-[class*="st-key-rs_answer_body"] {
+[class*="st-key-rs_sections_"] {
   border-left: 1px solid var(--rs-divider);
   padding-left: 1.25rem;
   margin-left: 2.5rem;
@@ -558,6 +558,16 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   max-width: 62rem;
 }
 [class*="st-key-rs_chat_answer_"] table { font-size: 0.9375rem; border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; }
+[class*="st-key-rs_chat_answer_"] [data-testid="stMetricValue"],
+[class*="st-key-rs_chat_answer_"] [data-testid="stMetricValue"] div,
+[class*="st-key-rs_chat_answer_"] [data-testid="stMetricValue"] p {
+  font-size: clamp(1.75rem, 1.4rem + 1vw, 2.5rem) !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+[data-testid="stExpander"] summary:hover, [data-testid="stExpander"] summary:focus,
+[data-testid="stExpander"] summary:focus-visible { background: transparent !important; }
 [class*="st-key-rs_chat_answer_"] th { font-weight: 600; color: var(--rs-text-2); border-bottom: 1px solid var(--rs-strong) !important; }
 [class*="st-key-rs_chat_answer_"] td, [class*="st-key-rs_chat_answer_"] th {
   border: 0; border-bottom: 1px solid var(--rs-divider); padding: 0.5rem 1rem 0.5rem 0; background: transparent;
@@ -599,7 +609,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 @media (max-width: 640px) {
   [data-testid="stHeader"]::before { font-size: 1.5rem; padding-right: 1rem; }
   [data-testid="stMetric"] { margin-bottom: 0.5rem; }
-  [class*="st-key-rs_answer_body"] { margin-left: 0; }
+  [class*="st-key-rs_sections_"] { margin-left: 0; }
   [class*="st-key-rs_chat_answer_"] { margin-left: 0; padding-left: 1rem; }
   /* empty offset columns only exist for the desktop grid; drop them once columns stack */
   [data-testid="stColumn"]:not(:has([data-testid="stElementContainer"])) { display: none; }

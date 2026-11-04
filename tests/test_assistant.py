@@ -4,6 +4,7 @@ No test contacts the Anthropic API."""
 import re
 from typing import Any
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
@@ -16,7 +17,7 @@ from risksignal.agent.mock_provider import MockProvider
 from risksignal.agent.prompts import CHAT_SYSTEM_PROMPT, GROUND_RULES, SYSTEM_PROMPT
 from risksignal.agent.schemas import ChatTurn
 from risksignal.agent.tool_registry import build_chat_registry, build_default_registry
-from risksignal.api.dependencies import Settings, get_settings, get_tool_context
+from risksignal.api.dependencies import Settings, get_chat_provider_factory, get_settings, get_tool_context
 from risksignal.api.main import create_app
 from risksignal.data.generator import generate_atlas_bank
 from risksignal.data.storage import save_atlas_bank
@@ -205,22 +206,38 @@ def test_chat_endpoint_rejects_invalid_requests(http: TestClient, payload: dict[
 # ----------------------------------------------------------------- dashboard page
 
 
-def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
+def assistant_page(client: ApiClient | TestClient) -> AppTest:
     at = AppTest.from_string("from risksignal.ui.views.assistant import render_assistant\nrender_assistant()",
                              default_timeout=60)
-    at.session_state["api_client"] = ApiClient(base_url="http://testserver", client=http)
-    at.run()
+    at.session_state["api_client"] = (client if isinstance(client, ApiClient)
+                                      else ApiClient(base_url="http://testserver", client=client))
+    return at.run()
+
+
+def api_with_chat_provider(ctx: ToolContext, factory: Any, provider_name: str = "mock") -> ApiClient:
+    app = create_app()
+    app.dependency_overrides[get_tool_context] = lambda: ctx
+    app.dependency_overrides[get_settings] = lambda: Settings(db_path=ctx.db_path, llm_provider=provider_name)
+    app.dependency_overrides[get_chat_provider_factory] = lambda: factory
+    return ApiClient(base_url="http://testserver", client=TestClient(app))
+
+
+def shown(at: AppTest) -> str:
+    return " | ".join(str(m.value) for m in at.markdown)
+
+
+def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
+    at = assistant_page(http)
     assert not at.exception and at.title[0].value == "Ask RiskSignal"
     assert any("Which systems should I look at first?" == b.label for b in at.button)
+    assert "Not built yet" in " | ".join(s.value for s in at.subheader)  # the roadmap is always visible
 
     at.chat_input[0].set_value(f"What incidents did {FOCAL} have?").run()
-    assert not at.exception
-    shown = " | ".join(m.value for m in at.markdown)
-    assert FOCAL in shown and "incidents" in shown
+    assert not at.exception and FOCAL in shown(at) and "incidents" in shown(at)
     assert any(e.label.startswith("Evidence") for e in at.expander)
 
     at.chat_input[0].set_value("And its controls?").run()
-    assert not at.exception and "controls" in " | ".join(m.value for m in at.markdown)
+    assert not at.exception and "controls" in shown(at)
     assert len(at.session_state["assistant_history"]) == 4
 
     next(b for b in at.button if b.label == "Start a new conversation").click().run()
@@ -228,10 +245,73 @@ def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
 
 
 def test_assistant_page_starter_question_runs(http: TestClient) -> None:
-    at = AppTest.from_string("from risksignal.ui.views.assistant import render_assistant\nrender_assistant()",
-                             default_timeout=60)
-    at.session_state["api_client"] = ApiClient(base_url="http://testserver", client=http)
-    at.run()
+    at = assistant_page(http)
     next(b for b in at.button if b.label == "Which systems should I look at first?").click().run()
     assert not at.exception
-    assert at.session_state["assistant_history"][1]["activity"] == ["Compared all 20 systems over 12 months"]
+    activity = at.session_state["assistant_history"][1]["tool_activity"]
+    assert [a["summary"] for a in activity] == ["Compared all 20 systems over 12 months"]
+
+
+def test_full_investigation_from_the_assistant(http: TestClient) -> None:
+    at = assistant_page(http)
+    assert at.selectbox[0].value == FOCAL
+    next(b for b in at.button if b.label == "Investigate this system").click().run()
+    assert not at.exception
+    question = at.session_state["assistant_history"][0]["content"]
+    assert question.startswith(f"Investigate {FOCAL}. Review recent incidents, KRIs, controls and dependencies")
+    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Suggested investigation questions"):
+        assert f'<span class="rs-title">{heading}</span>' in shown(at), heading  # numbered editorial sections
+    assert "Retrieved system profile for PAYMENT_ENGINE_01" in shown(at)
+    assert {m.label: m.value for m in at.metric}["Simulations / seed"] == "100,000 / 42"  # read from tool output
+    assert not at.warning[1:] or "numbers" not in " | ".join(w.value for w in at.warning)
+
+
+def test_investigation_follows_the_selected_system_and_stress_option(http: TestClient) -> None:
+    at = assistant_page(http)
+    at.selectbox[0].select("PAYMENT_ENGINE_02").run()
+    at.checkbox[0].check().run()
+    next(b for b in at.button if b.label == "Investigate this system").click().run()
+    assert not at.exception
+    question = at.session_state["assistant_history"][0]["content"]
+    assert question.startswith("Investigate PAYMENT_ENGINE_02.") and "SHARED_VENDOR_OUTAGE" in question
+    tools = [a["tool_name"] for a in at.session_state["assistant_history"][1]["tool_activity"]]
+    assert "compare_baseline_and_stress" in tools
+
+
+def test_assistant_reports_an_unknown_system(http: TestClient) -> None:
+    at = assistant_page(http)
+    at.chat_input[0].set_value("Investigate PAYMENT_ENGINE_99.").run()
+    assert not at.exception and "could not complete the investigation" in shown(at)
+    assert "get_system_profile failed (unknown_system)" in shown(at)
+
+
+def test_assistant_flags_numbers_that_match_no_tool_output(ctx: ToolContext) -> None:
+    liar = MockProvider([LLMResponse(text="Simulation results\n- P95 annual loss is 1,234,567.")])
+    at = assistant_page(api_with_chat_provider(ctx, lambda message, history: liar))
+    at.chat_input[0].set_value("What is the P95?").run()
+    warnings = " | ".join(w.value for w in at.warning)
+    assert not at.exception and "1,234,567" in warnings and "could not be matched" in warnings
+
+
+def test_assistant_explains_a_missing_api_key(ctx: ToolContext, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("risksignal.agent.anthropic_provider.load_dotenv", lambda *a, **k: False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    app = create_app()
+    app.dependency_overrides[get_tool_context] = lambda: ctx
+    app.dependency_overrides[get_settings] = lambda: Settings(db_path=ctx.db_path, llm_provider="anthropic")
+    at = assistant_page(TestClient(app))
+    infos = " | ".join(i.value for i in at.info)
+    assert not at.exception and "language-model provider is not configured" in infos and "ANTHROPIC_API_KEY" in infos
+    at.chat_input[0].set_value("Which systems should I look at first?").run()
+    errors = " | ".join(e.value for e in at.error)
+    assert not at.exception and "language model is unavailable" in errors and "ANTHROPIC_API_KEY" in errors
+
+
+def test_assistant_without_the_api_does_not_crash() -> None:
+    def refuse(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("refused", request=request)
+
+    client = ApiClient(base_url="http://127.0.0.1:1",
+                       client=httpx.Client(base_url="http://127.0.0.1:1", transport=httpx.MockTransport(refuse)))
+    at = assistant_page(client)
+    assert not at.exception and "Cannot reach the RiskSignal API" in " | ".join(e.value for e in at.error)

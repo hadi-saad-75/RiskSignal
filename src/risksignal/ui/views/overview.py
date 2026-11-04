@@ -9,7 +9,7 @@ from risksignal.ui.formatting import format_amount, label_for
 def render_overview() -> None:
     banner()
     page_header(
-        "01", "Portfolio", "Management overview",
+        "02", "Portfolio", "Management overview",
         "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
         "fictional Atlas Bank data, not JPMorgan data, and is not a production or decision-making tool.",
     )
@@ -39,7 +39,7 @@ def render_overview() -> None:
     section_header(
         "Latest incidents",
         "Overdue reviews are follow-up items, not evidence that a control has failed. "
-        "Use System Explorer, Scenario Analysis, and Investigation for supporting detail.",
+        "Use the Assistant, System Explorer and Scenario Analysis for supporting detail.",
     )
     st.dataframe(
         [{"Date": i["date"], "System": i["system_id"], "Category": label_for(i["category"]),

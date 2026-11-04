@@ -13,7 +13,7 @@ browser  ->  Streamlit Community Cloud (dashboard)  --HTTPS-->  Render (FastAPI 
 
 The dashboard calls the API from Streamlit's **server**, not from the visitor's browser, so no CORS configuration is needed. The dashboard imports none of the backend code; it needs only Streamlit, Plotly and httpx.
 
-> **All data are synthetic and the public deployment uses the deterministic mock agent.** With the mock provider the "AI Investigator" is a script that calls the same tools a language model would and writes the summary from their results. It is not a language model, and the dashboard shows `AI provider: mock (ready)` in the sidebar. Say so when you show it. The live Anthropic provider is deliberately **not** enabled (see section 5).
+> **All data are synthetic and the public deployment uses the deterministic mock agent.** With the mock provider the Assistant is a script that calls the same tools a language model would and writes the summary from their results. It is not a language model, and the dashboard shows `AI provider: mock (ready)` in the sidebar. Say so when you show it. The live Anthropic provider is deliberately **not** enabled (see section 5).
 
 ---
 
@@ -127,10 +127,10 @@ Expected: the simulation returns `"data_kind":"modelled_output"` with the same f
 
 | Check | URL | Expect |
 |---|---|---|
-| Overview | `UI` | banner "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."; sidebar `API ok`, `AI provider: mock (ready)`; counts 20 / 10 / 8 / 40 / 312 |
+| Overview | `UI/overview` | banner "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."; sidebar `API ok`, `AI provider: mock (ready)`; counts 20 / 10 / 8 / 40 / 312 |
 | System Explorer | `UI/system-explorer` | `PAYMENT_ENGINE_01` profile, incidents, KRIs, controls, shared-exposure map |
 | Scenario Lab | `UI/scenario-lab` | estimated λ, μ, σ; running the simulation shows baseline and stress figures matching the API |
-| AI Investigator | `UI/ai-investigator` | **Investigate this system** produces six sections and a tool activity log |
+| Assistant | `UI` | **Investigate this system** produces six sections and a tool activity log; "Which systems should I look at first?" returns the portfolio comparison |
 
 If the sidebar shows `API not reachable`, wait a minute for the Render service to wake and reload.
 
@@ -165,5 +165,5 @@ Performed on 2026-10-12 on Windows with a real Python 3.12.15 (obtained with `uv
 - **Image build steps** replayed from a clean directory: stub package and editable install, copy of `src`, data generation (20 systems, 312 incidents). Python 3.12.15 imported the package from the copied source.
 - **Container command**: the `CMD` was read out of `Dockerfile.api` and executed by a real POSIX `sh` with the mock provider and no API key. With `PORT=10000` the process listened on `0.0.0.0:10000` and not on 8000; with `PORT` unset it listened on `0.0.0.0:8000`.
 - **API behaviour** on that process: `/health` (HTTP 200, `ok`, mock), `/docs`, `/openapi.json`, `/systems` (20), `/systems/PAYMENT_ENGINE_01`, `POST /simulations`, `POST /scenarios/compare`, `POST /agent/investigate` (completed, six tool calls, six sections, no warnings), HTTP 404 for an unknown system and HTTP 422 for an invalid parameter. The process used about 127 MB (Windows working set, indicative only; Render's free instance has 512 MB).
-- **Dashboard entrypoint**: run from the repository root in a fresh Python 3.12 environment created from `deploy/streamlit_cloud/requirements.txt` alone (none of `risksignal`, FastAPI, SciPy, NetworkX, Pydantic or Anthropic installed), with the secret supplied through `.streamlit/secrets.toml` (read through `st.secrets`) and a trailing slash that was removed. The sidebar showed `API ok`; the Overview, Scenario Lab (baseline and stress figures identical to the API) and AI Investigator (six sections, six tool-log lines) all worked. With no secret at all, the page showed the instruction above instead of an error.
+- **Dashboard entrypoint**: run from the repository root in a fresh Python 3.12 environment created from `deploy/streamlit_cloud/requirements.txt` alone (none of `risksignal`, FastAPI, SciPy, NetworkX, Pydantic or Anthropic installed), with the secret supplied through `.streamlit/secrets.toml` (read through `st.secrets`) and a trailing slash that was removed. The sidebar showed `API ok`; the Overview, Scenario Lab (baseline and stress figures identical to the API) and the investigation (six sections, six tool-log lines) all worked. With no secret at all, the page showed the instruction above instead of an error.
 - **Test suite**: see the repository's test results; the deployment tests in `tests/test_deployment.py` and `tests/test_render_and_cloud.py` cover the command, the port behaviour, the entrypoint, its secret handling and the requirements file.
