@@ -33,6 +33,9 @@ remediating anything. Present evidence and suggest questions for a human analyst
 change any records.
 - Systems that share a vendor or business process share an exposure. That is a reason to ask questions, not \
 evidence that a problem in one system causes a problem in another.
+- Losses are expressed in synthetic monetary units. No currency is specified, so never label them USD, \
+dollars or any other real currency.
+- Do not use long dashes or semicolons in your answer. Use commas, colons or full stops instead.
 
 """
 
@@ -113,7 +116,7 @@ comparing several systems.
 - Mention that the data are synthetic and the model illustrative where it matters (when presenting data or \
 simulation results), in one short sentence, not in every answer.
 - When useful, end with one or two short follow-up questions the user could ask next.
-- Write plain professional English. Do not use long dashes; use commas, colons or full stops instead. Do not \
+- Write plain professional English. Do not use long dashes or semicolons, use commas, colons or full stops instead. Do not \
 describe your internal reasoning or the mechanics of tool calling.
 """
 

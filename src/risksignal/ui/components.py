@@ -9,6 +9,7 @@ from streamlit.delta_generator import DeltaGenerator
 
 from risksignal.ui.api_client import ApiClient, ApiRequestError, ApiUnavailableError
 from risksignal.ui.formatting import BANNER_TEXT, SIMULATION_NOTICE, split_sections
+from risksignal.text import normalize_prose
 
 T = TypeVar("T")
 
@@ -51,7 +52,7 @@ def eyebrow(index: str, label: str) -> None:
 
 
 def lead(text: str) -> None:
-    html(f'<p class="rs-lead">{escape(text)}</p>')
+    html(f'<p class="rs-lead">{escape(normalize_prose(text))}</p>')
 
 
 def label(text: str) -> None:
@@ -115,7 +116,10 @@ def section_header(title: str, intro: str | None = None, index: str | None = Non
 
 def ruled_list(items: Sequence[tuple[str, str]]) -> None:
     """Items with a hairline on the left: a semibold title and a short description."""
-    rows = "".join(f"<li><b>{escape(title)}</b><span>{escape(body)}</span></li>" for title, body in items)
+    rows = "".join(
+        f"<li><b>{escape(normalize_prose(title))}</b><span>{escape(normalize_prose(body))}</span></li>"
+        for title, body in items
+    )
     html(f'<ul class="rs-list">{rows}</ul>')
 
 
@@ -145,13 +149,13 @@ def simulation_notice() -> None:
 def show_request_error(error: ApiRequestError) -> None:
     """Explain an API error to the user in plain language. Never shows technical detail."""
     if error.error_type == "llm_unavailable":
-        st.error(f"The language model is unavailable. {error.message}")
+        st.error(normalize_prose(f"The language model is unavailable. {error.message}"))
         st.info(LLM_HELP)
     elif error.error_type == "data_unavailable":
-        st.error(f"{error.message}\n\n{START_API_HELP}")
+        st.error(normalize_prose(f"{error.message}\n\n{START_API_HELP}"))
     else:
         extra = f" Did you mean: {', '.join(error.suggestions)}?" if error.suggestions else ""
-        st.error(f"{error.message}{extra}")
+        st.error(normalize_prose(f"{error.message}{extra}"))
 
 
 def call_api(function: Callable[..., T], *args: Any, **kwargs: Any) -> T | None:

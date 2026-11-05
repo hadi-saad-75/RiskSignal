@@ -61,6 +61,10 @@ _FULL = re.compile(r"investigat|assess|deep dive|analy[sz]e|full picture|everyth
                    r"|tell me about|how is [a-z_]+_\d+ doing", re.IGNORECASE)
 
 GLOSSARY: dict[str, tuple[re.Pattern[str], str]] = {
+    "currency": (re.compile(r"currency|dollars?|\busd\b|euros?|\beur\b|monetary units", re.IGNORECASE),
+        "Losses are in **synthetic monetary units**. Atlas Bank has no currency field, so the amounts are "
+        "not specified as dollars, euros or any other real currency. Historical and simulated losses use "
+        "the same units. Real use would require an agreed currency and loss definition."),
     "expected_shortfall": (re.compile(r"expected shortfall|\bes9[59]?\b|\bcvar\b", re.IGNORECASE),
         "**Expected Shortfall** answers the question: when a bad year happens, how bad is it on average? "
         "ES95 is the average annual loss across the worst one-in-twenty simulated years, so it always sits at "

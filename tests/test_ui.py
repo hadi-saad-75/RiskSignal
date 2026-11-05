@@ -3,6 +3,8 @@ and the mock LLM; no server, network or API key is involved."""
 
 import ast
 import json
+import re
+from html import unescape
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +29,7 @@ from risksignal.ui.charts import (
 )
 from risksignal.ui.formatting import (
     BANNER_TEXT,
+    LOSS_UNIT_NOTICE,
     SIMULATION_NOTICE,
     comparison_rows,
     extract_simulation_metadata,
@@ -35,7 +38,9 @@ from risksignal.ui.formatting import (
     format_percent,
     label_for,
     split_sections,
+    display_prose,
 )
+from risksignal.text import normalize_prose
 
 FOCAL = "PAYMENT_ENGINE_01"
 SRC = Path(__file__).resolve().parents[1] / "src" / "risksignal"
@@ -88,6 +93,17 @@ def test_number_formatting() -> None:
     assert format_decimal(3.8005, 2) == "3.80" and format_decimal(None) == "n/a"
     assert format_percent(154.14) == "+154.1%" and format_percent(-3.2) == "-3.2%" and format_percent(None) == "n/a"
     assert label_for("failed_deployment_rate") == "Failed deployment rate"
+
+
+def test_display_punctuation_preserves_raw_evidence_and_values() -> None:
+    raw = {"description": "Failure\u2014release rolled back; review needed.", "financial_loss": 1234.5,
+           "tool_input": {"system_id": "PAYMENT_ENGINE_01"}, "flags": [True, None]}
+    clean = display_prose(raw)
+    assert clean["description"] == "Failure, release rolled back, review needed."
+    assert clean["financial_loss"] == raw["financial_loss"]
+    assert clean["tool_input"] == raw["tool_input"] and clean["flags"] == raw["flags"]
+    assert ";" in raw["description"] and "\u2014" in raw["description"]
+    assert normalize_prose("2021\u20132026; frequency\u2013severity") == "2021 to 2026, frequency-severity"
 
 
 @pytest.mark.parametrize("text", [
@@ -240,6 +256,7 @@ def test_overview_page(api: ApiClient) -> None:
     assert len(frame) == 5 and {"Date", "System", "Category", "Severity", "Loss"} == set(frame.columns)
     assert "risk score" not in (texts(at.markdown) + texts(at.subheader) + texts(at.caption)).lower()
     assert "not JPMorgan data" in texts(at.markdown)
+    assert LOSS_UNIT_NOTICE in texts(at.caption)
 
 
 def test_overview_without_the_api_shows_help_and_does_not_crash() -> None:
@@ -264,6 +281,9 @@ def test_system_explorer_page(api: ApiClient) -> None:
     assert any("Also used by" in t.columns and t["Also used by"].str.contains("PAYMENT_ENGINE_02").any() for t in tables)
     assert any("Relationship" in t.columns and t["Relationship"].str.contains("Keystone Payment Rails").any() for t in tables)
     assert any("Status" in t.columns and t["Status"].str.contains("Overdue").any() for t in tables)
+    assert LOSS_UNIT_NOTICE in texts(at.caption)
+    descriptions = next(t["Description"] for t in tables if "Incident" in t.columns)
+    assert not descriptions.str.contains("[;\u2013\u2014]").any()
 
 
 def test_system_explorer_switches_system_and_window(api: ApiClient) -> None:
@@ -286,6 +306,10 @@ def test_scenario_lab_shows_estimates_notice_and_runs_baseline_and_stress(api: A
     assert {"λ: expected incidents per year", "μ: log-severity location", "σ: log-severity spread"} <= set(values)
     assert float(values["λ: expected incidents per year"]) > 0
     assert any("Parameter interpretation" == e.label for e in at.expander)
+    assert LOSS_UNIT_NOTICE in texts(at.caption)
+    assert "not of annual loss" in texts(at.markdown)
+    assert "not every loss by 20%" in texts(at.markdown)
+    assert "50% more expected incidents" in next(w.help for w in at.number_input if w.label == "λ multiplier")
     assert at.selectbox[1].value == "SHARED_VENDOR_OUTAGE"
     assert not any("P95 under stress" in label for label in values)
 
@@ -424,15 +448,72 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     at.session_state["api_client"] = api
     at.run()
     assert not at.exception
-    assert at.title[0].value == "RiskSignal Assistant" and BANNER_TEXT in texts(at.warning)  # the Assistant is the landing page
+    assert at.title[0].value == "Operational risk, connected."
+    assert BANNER_TEXT in texts(at.warning)
+    assert "Start the live demo" in texts(at.get("page_link"))
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
+    content = texts(at.markdown) + texts(at.caption) + texts(at.info) + texts(at.subheader)
+    for phrase in ("How Atlas Bank was built", "How RiskSignal was engineered", "seed is 42",
+                   "Poisson draws", "Lognormal draws", "SQLite", "NetworkX", "FastAPI"):
+        assert phrase in content
+    assert len(at.get("image")) == 1
+
+
+def test_intro_remains_readable_without_the_backend() -> None:
+    at = AppTest.from_file(str(SRC / "ui" / "app.py"), default_timeout=60)
+    at.session_state["api_client"] = unreachable_api()
+    at.run()
+    assert not at.exception and at.title[0].value == "Operational risk, connected."
+    assert "How Atlas Bank was built" in texts(at.subheader)
+    assert "API unavailable" in texts(at.sidebar.error)
+
+
+def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient) -> None:
+    at = run_view(api, "way_forward", "render_way_forward")
+    assert not at.exception and at.title[0].value == "Way forward: AI assistant"
+    content = texts(at.markdown) + texts(at.subheader)
+    for phrase in ("Mathematical assumptions", "Institutional calibration", "Negative Binomial", "λ(t)",
+                   "Basel standardised", "Backtesting and validation", "Documented expert decisions",
+                   "multi-agent", "not implemented", "latency and cost"):
+        assert phrase in content
+    assert "Offline mock provider" in texts(at.info)
+    assert len(at.chat_input) == 1
+
+
+@pytest.mark.parametrize("module, function", [
+    ("overview", "render_overview"),
+    ("system_explorer", "render_system_explorer"),
+    ("scenario_lab", "render_scenario_lab"),
+    ("assistant", "render_assistant"),
+    ("way_forward", "render_way_forward"),
+])
+def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module: str, function: str) -> None:
+    at = run_view(api, module, function)
+    if module in ("assistant", "scenario_lab"):
+        at.button[0].click().run()
+    if module == "way_forward":
+        at.chat_input[0].set_value("What incidents did PAYMENT_ENGINE_01 have?").run()
+    assert not at.exception
+    visible = " ".join(
+        texts(getattr(at, kind)) for kind in ("markdown", "caption", "warning", "info", "error", "subheader")
+    )
+    for table in at.dataframe:
+        visible += table.value.to_string()
+    for element in at.get("json"):
+        visible += str(element.value)
+    visible = unescape(re.sub(r"<[^>]*>", "", visible))
+    assert not any(character in visible for character in (";", "\u2013", "\u2014"))
 
 
 def test_app_defines_the_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    for title in ("Assistant", "Overview", "System Explorer", "Scenario Analysis"):
+    titles = ("Overview", "System Explorer", "Scenario Analysis", "Assistant", "Way forward: AI assistant")
+    for title in ("Introduction", *titles):
         assert f'title="{title}"' in source
     assert "set_page_config" in source
+    positions = [source.index(f'title="{title}"') for title in titles]
+    assert positions == sorted(positions)
+    assert "navigation_pages = [introduction, *pages.values()]" in source
 
 
 # ----------------------------------------------------------------- structure
@@ -466,7 +547,7 @@ def test_lower_layers_do_not_import_the_ui() -> None:
 
 def test_the_banner_and_notice_texts_are_exact() -> None:
     assert BANNER_TEXT == (
-        "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
+        "Research prototype based on synthetic Atlas Bank data, results are not calibrated to observed losses."
     )
     assert SIMULATION_NOTICE == (
         "Simulation results are conditional on the stated assumptions and synthetic data."

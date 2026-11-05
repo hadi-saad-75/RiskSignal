@@ -36,6 +36,7 @@ from risksignal.agent.base import (
 from risksignal.agent.prompts import SYSTEM_PROMPT
 from risksignal.agent.schemas import InvestigationResult, InvestigationStatus, ToolActivity
 from risksignal.agent.tool_registry import ToolRegistry, build_default_registry
+from risksignal.text import normalize_prose
 
 DEFAULT_MAX_STEPS = 10
 DEFAULT_MAX_TOKENS = 4096
@@ -112,18 +113,9 @@ def find_ungrounded_numbers(
 
 # --------------------------------------------------------------------------- house style
 
-_DASH_AT_LINE_START = re.compile(r"(?m)^(\s*)[\u2013\u2014]\s+")
-_DASH_IN_RANGE = re.compile(r"(?<=\d)\s*[\u2013\u2014]\s*(?=\d)")
-_DASH_IN_COMPOUND = re.compile(r"(?<=\w)\u2013(?=\w)")
-_ANY_LONG_DASH = re.compile(r"\s*[\u2013\u2014]+\s*")
-
-
 def remove_long_dashes(text: str) -> str:
-    """House style: no en or em dashes. Ranges become "to", compounds a hyphen, the rest a comma."""
-    text = _DASH_AT_LINE_START.sub(r"\1- ", text)
-    text = _DASH_IN_RANGE.sub(" to ", text)
-    text = _DASH_IN_COMPOUND.sub("-", text)
-    return _ANY_LONG_DASH.sub(", ", text)
+    """Apply the prose house style, including commas instead of semicolons."""
+    return normalize_prose(text)
 
 
 # --------------------------------------------------------------------------- the agent
@@ -178,7 +170,7 @@ class Investigator:
             messages.append(LLMMessage(role="assistant", text=response.text or None, tool_calls=response.tool_calls))
 
             if not response.tool_calls:
-                status, final_answer = "completed", remove_long_dashes(response.text.strip())
+                status, final_answer = "completed", response.text.strip()
                 if response.stop_reason == "max_tokens":
                     warnings.append("The model reached its output limit; the answer may be cut off.")
                 if not final_answer:
@@ -191,6 +183,8 @@ class Investigator:
                             "answer. The tool activity so far is listed.")
             warnings.append("Step limit reached before the model produced a final answer.")
 
+        final_answer = remove_long_dashes(final_answer)
+        warnings = [normalize_prose(warning) for warning in warnings]
         ungrounded = find_ungrounded_numbers(final_answer, activities, context) if status == "completed" else []
         if ungrounded:
             warnings.append("Some numbers in the answer could not be matched to any tool output: "

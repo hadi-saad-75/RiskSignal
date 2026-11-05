@@ -7,8 +7,14 @@ arranges text for display.
 import re
 from typing import Any
 
-BANNER_TEXT = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
+from risksignal.text import normalize_prose
+
+BANNER_TEXT = "Research prototype based on synthetic Atlas Bank data, results are not calibrated to observed losses."
 SIMULATION_NOTICE = "Simulation results are conditional on the stated assumptions and synthetic data."
+LOSS_UNIT_NOTICE = (
+    "Loss amounts are in synthetic monetary units, not specified as USD or any other currency. "
+    "Historical losses and simulated losses use the same units."
+)
 
 SECTION_HEADINGS = (
     "Observed evidence",
@@ -51,6 +57,17 @@ def label_for(name: str) -> str:
     return name.replace("_", " ").capitalize()
 
 
+def display_prose(value: Any) -> Any:
+    """Format text in a display-only copy of evidence, preserving raw API data and keys."""
+    if isinstance(value, str):
+        return normalize_prose(value)
+    if isinstance(value, dict):
+        return {key: display_prose(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [display_prose(item) for item in value]
+    return value
+
+
 def split_sections(text: str) -> list[tuple[str, str]]:
     """Split an answer into (heading, body) pairs at the known section headings.
 
@@ -61,6 +78,7 @@ def split_sections(text: str) -> list[tuple[str, str]]:
     sections: list[tuple[str, list[str]]] = []
     current: tuple[str, list[str]] | None = None
     preamble: list[str] = []
+    text = normalize_prose(text)
     for line in text.splitlines():
         match = _HEADING_LINE.match(line)
         if match:

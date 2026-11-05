@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 AGENT_DISCLAIMER = (
     "All data are synthetic (fictional Atlas Bank) and all model parameters are illustrative. "
     "Simulation results are outputs under stated modelling assumptions, not forecasts. "
+    "Losses are in synthetic monetary units, no currency is specified. "
     "This assistant supports human analysts and makes no risk decisions."
 )
 

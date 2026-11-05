@@ -20,11 +20,14 @@ from risksignal.ui.components import (
     system_selector,
 )
 from risksignal.ui.formatting import (
+    LOSS_UNIT_NOTICE,
     METRIC_LABELS,
+    display_prose,
     extract_simulation_metadata,
     format_amount,
     format_decimal,
 )
+from risksignal.text import normalize_prose
 
 STRESS_REQUEST = " Also compare the baseline with the SHARED_VENDOR_OUTAGE stress scenario."
 RESPONSE_KEY = "agent_response"
@@ -36,6 +39,7 @@ def default_question(system_id: str) -> str:
 
 
 def render_investigation(client: ApiClient) -> None:
+    st.caption(LOSS_UNIT_NOTICE)
     section_header("Request", "Choose a system and describe what should be examined. The request is sent "
                    "to the investigation agent exactly as written.", index="01")
     controls, _, request = st.columns([5, 1, 6])
@@ -70,22 +74,22 @@ def render_investigation(client: ApiClient) -> None:
 def _show(response: dict[str, Any]) -> None:
     aside = section_header("Investigation summary", index="02")
     with aside:
-        st.caption(f"Request: {response['question']}")
+        st.caption(normalize_prose(f"Request: {response['question']}"))
     if response["status"] != "completed":
         st.warning(f"The investigation did not complete normally (status: {response['status']}).")
 
     render_answer(response["final_response"])
     for warning in response["warnings"]:
-        st.warning(warning)
+        st.warning(normalize_prose(warning))
 
     _tool_activity(response["tool_activity"])
     _simulation_metadata(response["tool_activity"])
     rule(subtle=True)
     spacer()
-    st.caption(
+    st.caption(normalize_prose(
         f"Provider: {response['provider']}. Language-model calls: {response['llm_calls']}. "
         f"{response['disclaimer']}"
-    )
+    ))
 
 
 def _tool_activity(activities: list[dict[str, Any]]) -> None:
@@ -95,17 +99,18 @@ def _tool_activity(activities: list[dict[str, Any]]) -> None:
         st.write("No tools were called.")
         return
     for activity in activities:
-        st.markdown(f"**{activity['step']}. {activity['status'].capitalize()}:** {activity['summary']}")
+        st.markdown(normalize_prose(f"**{activity['step']}. {activity['status'].capitalize()}:** {activity['summary']}"))
         with st.expander(f"Details: {activity['tool_name']}", expanded=False):
             st.caption(
-                f"Started: {activity['started_at']}; duration: "
-                f"{format_decimal(activity['duration_ms'], 0)} ms; status: {activity['status']}."
+                f"Started: {activity['started_at']}, duration: "
+                f"{format_decimal(activity['duration_ms'], 0)} ms, status: {activity['status']}."
             )
             label("Input")
-            st.json(activity["tool_input"])
+            st.json(display_prose(activity["tool_input"]))
             if activity.get("output") is not None:
                 label("Tool output")
-                st.json(activity["output"], expanded=False)
+                st.json(display_prose(activity["output"]), expanded=False)
+    st.caption("Evidence text uses display punctuation, raw records are unchanged.")
 
 
 def _simulation_metadata(activities: list[dict[str, Any]]) -> None:
@@ -122,6 +127,11 @@ def _simulation_metadata(activities: list[dict[str, Any]]) -> None:
     columns[1].metric("μ", format_decimal(meta["severity_mu"], 3))
     columns[2].metric("σ", format_decimal(meta["severity_sigma"], 3))
     columns[3].metric("Simulations / seed", f"{meta['number_of_simulations']:,} / {meta['random_seed']}")
+    st.caption(
+        "λ (lambda) is the expected annual incident count, μ (mu) is the mean of log-losses, "
+        "and σ (sigma) is their standard deviation."
+    )
+    st.caption(LOSS_UNIT_NOTICE)
     st.caption(f"λ source: {meta['lambda_source']}. Severity fitted to {meta['severity_losses_used']} losses "
                f"(data source: {meta['severity_data_source']}).")
     spacer()

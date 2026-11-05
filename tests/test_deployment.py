@@ -112,7 +112,12 @@ def test_ui_image_is_minimal_and_points_at_the_api() -> None:
     for heavy in ("scipy", "anthropic", "fastapi", "networkx", "pydantic", "uvicorn", "pip install -e"):
         assert heavy not in text, heavy
     copies = re.findall(r"^COPY (\S+) ", text, re.MULTILINE)
-    assert copies == ["src/risksignal/__init__.py", "src/risksignal/ui"]  # only the dashboard code
+    assert copies == [
+        "src/risksignal/__init__.py",
+        "src/risksignal/text.py",
+        "src/risksignal/ui",
+        "docs/media/risksignal_vscode_walkthrough.gif",
+    ]
     assert "ENV RISKSIGNAL_API_URL=http://api:8000" in text
     assert re.search(r"^USER app$", text, re.MULTILINE) and "EXPOSE 8501" in text
     assert "src/risksignal/ui/app.py" in text and "--server.address=0.0.0.0" in text and "--server.headless=true" in text

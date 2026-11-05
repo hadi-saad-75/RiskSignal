@@ -446,6 +446,9 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   text-overflow: clip !important;
   overflow-wrap: anywhere;
 }
+[data-testid="stNumberInput"] label p {
+  text-transform: none !important;
+}
 
 /* ---------- tabs: text with a hairline, brown active marker */
 [data-testid="stTabs"] [role="tablist"], [data-baseweb="tab-list"] {

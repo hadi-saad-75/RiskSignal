@@ -46,13 +46,15 @@ Open `http://localhost:8501`. **With Docker:** `docker compose up --build` (set 
 
 ### 1.3 Browser and screen
 
-Pre-open four tabs, in this order: `/` (Overview), `/system-explorer`, `/scenario-lab`, `/ai-investigator`. Opening a page URL directly is fine (the browser console shows harmless 404 messages for Streamlit assets). Keep `docs/institutional_validation.md` and `docs/limitations.md` open in your editor or on GitHub for steps 9 and 10. Zoom the browser so the back row can read the numbers. Refreshing a tab resets its state.
+The dashboard opens on the **Introduction** page at `/`, including how Atlas Bank was generated and how the software layers were built. Follow the top navigation from left to right: **Introduction → Overview → System Explorer → Scenario Analysis → Assistant → Way forward: AI assistant**. This moves from the problem and portfolio context to evidence, quantitative assumptions, the integrated investigation and future work. Pre-open `/overview`, `/system-explorer`, `/scenario-lab`, `/assistant` and `/way-forward` if you want quick transitions. **Way forward: AI assistant** contains the limitations, future-work discussion and conversational preview. Zoom the browser so the back row can read the numbers. Refreshing a tab resets its state.
 
 On the **System Explorer** page, before you present the KRIs, set *Months of history* to **24**: click the slider and press the right-arrow key 12 times (it starts at 12).
 
 ### 1.4 Reference values for the default data (check your screen against these)
 
 With the default data (seed 42) and default simulation settings (100,000 simulated years, seed 42) the screen should show the values below. They were read from the application and are **checked by an automated test** (`tests/test_demo_script.py`), so they cannot silently go stale. If your screen differs, trust the screen, find out why (data regenerated with another seed? different settings?) and do not quote this table.
+
+All loss figures are in **synthetic monetary units**, not specified as dollars or any other currency. Lowercase **λ (lambda)** is the expected annual incident count. Lowercase **σ (sigma)** is the standard deviation of log-losses, not annual losses. A λ multiplier of 1.5 means 50% more expected incidents, a σ multiplier of 1.2 means 20% more log-loss spread, not a 20% increase in every loss.
 
 | Item | Value on screen |
 |---|---|
@@ -90,12 +92,12 @@ With the default data (seed 42) and default simulation settings (100,000 simulat
 
 ### Step 1. The problem (under one minute)
 
-**Screen:** Overview tab. Point at the banner.
+**Screen:** Introduction page. Point out the goal, workflow illustration and synthetic-data notice.
 
 **Say (about 45 seconds):**
-> "Operational Risk information is fragmented. Incidents live in one place, controls in another, key risk indicators in a third, and the map of which systems depend on which vendors in a fourth. An analyst investigating one system has to assemble all of that by hand, and the connections between systems are the easiest thing to miss. RiskSignal is a research prototype on a fictional bank, built to show how that evidence could be brought together, modelled transparently, and summarised by an assistant that is not allowed to invent anything. Everything you will see is synthetic, as the banner says."
+> "Operational Risk information is fragmented. Incidents live in one place, controls in another, key risk indicators in a third, and the map of which systems depend on which vendors in a fourth. An analyst investigating one system has to assemble all of that by hand, and the connections between systems are the easiest thing to miss. RiskSignal is a research prototype that brings those signals into one analyst-led investigation. Everything I’ll show uses synthetic data and illustrative assumptions—not a forecast or a real-bank finding."
 
-**Show:** the counts (20 systems, 10 processes, 8 vendors, 40 controls, 312 incidents) and the recent-incidents table. No scores, nothing predicted.
+**Show:** the goal, workflow illustration and synthetic-data notice. Then select **Overview** in the top navigation and point out the scope and recent incidents. No scores, nothing predicted.
 
 ### Step 2. Open `PAYMENT_ENGINE_01`: observed data (about 2 minutes)
 
@@ -119,9 +121,9 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 > Watch-out: the vendor outage that hits both systems is **not** modelled jointly. The loss model simulates each system alone. Say so if asked (see the questions).
 
-### Step 4. Scenario Lab: the model, in plain words (about 1.5 minutes)
+### Step 4. Scenario Analysis: the model, in plain words (about 1.5 minutes)
 
-**Screen:** Scenario Lab, `PAYMENT_ENGINE_01`. Show *Estimated baseline model* (λ 3.80, μ 10.114, σ 1.478) and open "What do λ, μ and σ mean?".
+**Screen:** Scenario Analysis, `PAYMENT_ENGINE_01`. Show *Baseline parameter estimates* (λ 3.80, μ 10.114, σ 1.478) and open "Parameter interpretation".
 
 **Say (plain first):**
 - **Poisson frequency:** "We do not know how many incidents next year brings. We model the count as random with an average of about 3.8 a year, which is 19 incidents over five years."
@@ -134,7 +136,7 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 5. Run the baseline (about 1 minute)
 
-**Do:** leave the defaults (100,000 simulations, seed 42) and click **Run baseline and stress simulation**. The page shows both runs together; for now talk only about the **baseline** column and the blue distribution.
+**Do:** leave the defaults (100,000 simulations, seed 42) and click **Run baseline and stress comparison**. The page shows both runs together; for now talk only about the **baseline** column and the blue distribution.
 
 **Say:** "Mean about 278 thousand, but median about 164 thousand: the mean sits above the median because of the long tail. P95 is about 896 thousand, Expected Shortfall 95% about 1.5 million. The seed makes it reproducible: same seed, same numbers, every time." *(Read the numbers off the screen; they match the table in 1.4.)*
 
@@ -151,7 +153,7 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 7. The Assistant (about 2 minutes)
 
-**Screen:** the Assistant (the landing page). `PAYMENT_ENGINE_01` is selected and the request is pre-filled ("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies, run a baseline loss simulation, and identify questions that an Operational Risk analyst should investigate.").
+**Screen:** select **Assistant** in the top navigation. `PAYMENT_ENGINE_01` is selected and the request is pre-filled ("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies, run a baseline loss simulation, and identify questions that an Operational Risk analyst should investigate.").
 
 **Say:** "This is an early version of the assistant I would like to build with a real team. You can ask it anything, but it decides which deterministic tools to call; it cannot read the database or calculate anything itself, and it cannot change any records."
 
@@ -159,14 +161,14 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 1. **Observed evidence:** "all of this came from tool calls on the synthetic data."
 2. **Model assumptions:** where λ, μ, σ came from.
-3. **Simulation results:** "the same baseline numbers you just saw in the Scenario Lab: same tool, same seed." (True when the agent uses the default settings, as the offline provider always does; a live model could choose others, and its tool log would show it.)
+3. **Simulation results:** "the same baseline numbers you just saw in Scenario Analysis: same tool, same seed." (True when the agent uses the default settings, as the offline provider always does; a live model could choose others, and its tool log would show it.)
 4. **Connected exposures:** the shared vendors.
 5. **Suggested investigation questions:** "questions for an analyst, for example *should control C002 be retested?*, *does the shared vendor create concentration risk?*, *does `PAYMENT_ENGINE_02` have similar exposure?* It does not decide anything." (The wording of a live model's questions will differ.)
 6. **Limitations.**
 
 *(Optional)* Tick the stress checkbox and run again to add the `SHARED_VENDOR_OUTAGE` comparison; the agent can only choose predefined scenarios, never invent numbers.
 
-*(Optional)* Scroll to **Ask RiskSignal**, marked *In development*, and ask "Which systems should I look at first?", then a follow-up such as "And are its controls up to date?". **Say:** "This is the direction I would take it: the same tools and evidence rules, but as a conversation. It is not finished; the way forward below lists what comes next."
+*(Optional)* Open **Way forward: AI assistant** and scroll to **Ask RiskSignal**, marked *In development*. Ask "Which systems should I look at first?", then a follow-up such as "And are its controls up to date?". **Say:** "This unfinished conversation uses the current tools. The institutional knowledge and multi-agent design described above are future research, not implemented."
 
 ### Step 8. Evidence: how it stays honest (about 1.5 minutes)
 

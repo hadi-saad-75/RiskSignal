@@ -127,10 +127,12 @@ Expected: the simulation returns `"data_kind":"modelled_output"` with the same f
 
 | Check | URL | Expect |
 |---|---|---|
+| Introduction | `UI` | presentation-style opening, workflow animation, synthetic-data boundary and links to the demo |
 | Overview | `UI/overview` | banner "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."; sidebar `API ok`, `AI provider: mock (ready)`; counts 20 / 10 / 8 / 40 / 312 |
 | System Explorer | `UI/system-explorer` | `PAYMENT_ENGINE_01` profile, incidents, KRIs, controls, shared-exposure map |
-| Scenario Lab | `UI/scenario-lab` | estimated λ, μ, σ; running the simulation shows baseline and stress figures matching the API |
-| Assistant | `UI` | **Investigate this system** produces six sections and a tool activity log; "Which systems should I look at first?" returns the portfolio comparison |
+| Scenario Analysis | `UI/scenario-lab` | estimated λ, μ, σ; running the simulation shows baseline and stress figures matching the API |
+| Assistant | `UI/assistant` | **Investigate this system** produces six sections and a tool activity log |
+| Way forward: AI assistant | `UI/way-forward` | limitations and future-work topics, followed by the conversational preview, where "Which systems should I look at first?" returns the portfolio comparison |
 
 If the sidebar shows `API not reachable`, wait a minute for the Render service to wake and reload.
 

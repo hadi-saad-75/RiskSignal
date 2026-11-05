@@ -3,7 +3,7 @@
 import streamlit as st
 
 from risksignal.ui.components import banner, call_api, get_api_client, page_header, section_header
-from risksignal.ui.formatting import format_amount, label_for
+from risksignal.ui.formatting import LOSS_UNIT_NOTICE, format_amount, label_for
 
 
 def render_overview() -> None:
@@ -35,6 +35,7 @@ def render_overview() -> None:
         ],
     ):
         column.metric(label, format_amount(counts[key]))
+    st.caption(LOSS_UNIT_NOTICE)
 
     section_header(
         "Latest incidents",

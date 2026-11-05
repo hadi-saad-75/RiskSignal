@@ -107,15 +107,16 @@ def test_both_prompts_share_the_ground_rules_and_contain_no_figures() -> None:
     ("frequency\u2013severity model", "frequency-severity model"),
     ("\u2014 first point", "- first point"),
     ("this\u2014and that", "this, and that"),
+    ("Observed evidence; no forecast.", "Observed evidence, no forecast."),
 ])
 def test_long_dashes_are_removed(raw: str, clean: str) -> None:
     assert remove_long_dashes(raw) == clean
 
 
 def test_long_dashes_never_reach_the_user(ctx: ToolContext) -> None:
-    provider = MockProvider([LLMResponse(text="Observed evidence \u2014 nothing unusual \u2013 see 2021\u20132022.")])
+    provider = MockProvider([LLMResponse(text="Observed evidence \u2014 nothing unusual; see 2021\u20132022.")])
     answer = Assistant(provider, build_chat_registry(ctx)).reply("Anything unusual?").final_answer
-    assert "\u2014" not in answer and "\u2013" not in answer
+    assert "\u2014" not in answer and "\u2013" not in answer and ";" not in answer
 
 
 def test_numbers_from_earlier_turns_count_as_grounded() -> None:
@@ -159,6 +160,14 @@ def test_a_broad_request_runs_the_full_investigation(ctx: ToolContext) -> None:
     (result,) = converse(ctx, f"Investigate {FOCAL} under the shared vendor outage scenario.")
     assert {"get_system_profile", "get_controls", "compare_baseline_and_stress"} <= set(tools_of(result))
     assert "Suggested investigation questions" in result.final_answer and result.ungrounded_numbers == []
+
+
+@pytest.mark.parametrize("question", ["What currency are the losses in?", "Are the losses in dollars?"])
+def test_offline_assistant_does_not_invent_a_currency(ctx: ToolContext, question: str) -> None:
+    (result,) = converse(ctx, question)
+    assert result.status == "completed" and tools_of(result) == []
+    assert "synthetic monetary units" in result.final_answer
+    assert "not specified as dollars" in result.final_answer
 
 
 def test_a_follow_up_without_any_system_asks_which_one(ctx: ToolContext) -> None:
@@ -206,9 +215,13 @@ def test_chat_endpoint_rejects_invalid_requests(http: TestClient, payload: dict[
 # ----------------------------------------------------------------- dashboard page
 
 
-def assistant_page(client: ApiClient | TestClient) -> AppTest:
-    at = AppTest.from_string("from risksignal.ui.views.assistant import render_assistant\nrender_assistant()",
-                             default_timeout=60)
+def assistant_page(client: ApiClient | TestClient, *, investigation: bool = False) -> AppTest:
+    source = (
+        "from risksignal.ui.views.assistant import render_assistant\nrender_assistant()"
+        if investigation else
+        "from risksignal.ui.views.way_forward import render_way_forward\nrender_way_forward()"
+    )
+    at = AppTest.from_string(source, default_timeout=60)
     at.session_state["api_client"] = (client if isinstance(client, ApiClient)
                                       else ApiClient(base_url="http://testserver", client=client))
     return at.run()
@@ -228,9 +241,9 @@ def shown(at: AppTest) -> str:
 
 def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
     at = assistant_page(http)
-    assert not at.exception and at.title[0].value == "RiskSignal Assistant"
+    assert not at.exception and at.title[0].value == "Way forward: AI assistant"
     assert any("Which systems should I look at first?" == b.label for b in at.button)
-    assert "Way forward" in " | ".join(s.value for s in at.subheader)  # the way forward is always visible
+    assert "Mathematical assumptions" in " | ".join(s.value for s in at.subheader)
 
     at.chat_input[0].set_value(f"What incidents did {FOCAL} have?").run()
     assert not at.exception and FOCAL in shown(at) and "incidents" in shown(at)
@@ -252,21 +265,27 @@ def test_assistant_page_starter_question_runs(http: TestClient) -> None:
     assert [a["summary"] for a in activity] == ["Compared all 20 systems over 12 months"]
 
 
-def test_page_order_investigation_then_chat_then_way_forward(http: TestClient) -> None:
+def test_future_work_and_chat_are_separate_from_the_investigation(http: TestClient) -> None:
     at = assistant_page(http)
     titles = [s.value for s in at.subheader]
-    assert titles.index("Request") < titles.index("Ask RiskSignal") < titles.index("Way forward")
+    assert titles.index("Practical development roadmap") < titles.index("Ask RiskSignal")
+    assert "Request" not in titles
     assert "In development" in shown(at)
-    assert at.button[0].label == "Investigate this system"  # the investigation comes first
+    investigation = assistant_page(http, investigation=True)
+    assert investigation.button[0].label == "Investigate this system"
+    assert not investigation.chat_input
 
 
 def test_investigation_and_chat_do_not_interfere(http: TestClient) -> None:
-    at = assistant_page(http)
+    at = assistant_page(http, investigation=True)
     next(b for b in at.button if b.label == "Investigate this system").click().run()
     assert not at.exception and at.session_state["agent_response"]["status"] == "completed"
-    at.chat_input[0].set_value("Which systems should I look at first?").run()
-    assert not at.exception and len(at.session_state["assistant_history"]) == 2
-    assert at.session_state["agent_response"]["status"] == "completed"  # the report stays on the page
+    report = at.session_state["agent_response"]
+    chat = assistant_page(http)
+    chat.session_state["agent_response"] = report
+    chat.chat_input[0].set_value("Which systems should I look at first?").run()
+    assert not chat.exception and len(chat.session_state["assistant_history"]) == 2
+    assert chat.session_state["agent_response"] == report
 
 
 def test_assistant_reports_an_unknown_system(http: TestClient) -> None:

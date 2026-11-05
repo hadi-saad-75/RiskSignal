@@ -16,7 +16,8 @@ from risksignal.ui.components import (
     statement,
     system_selector,
 )
-from risksignal.ui.formatting import format_amount, format_decimal, format_percent, label_for
+from risksignal.ui.formatting import LOSS_UNIT_NOTICE, format_amount, format_decimal, format_percent, label_for
+from risksignal.text import normalize_prose
 
 
 def render_system_explorer() -> None:
@@ -24,7 +25,7 @@ def render_system_explorer() -> None:
     page_header(
         "03", "Systems", "System Explorer",
         "Profile, incidents, key risk indicators, controls and shared dependencies for one system. "
-        "This page reports synthetic observations; no values on this page are forecasts.",
+        "This page reports synthetic observations, no values on this page are forecasts.",
     )
     client = get_api_client()
     rule(subtle=True)
@@ -87,6 +88,7 @@ def _incidents_tab(incidents: dict) -> None:
     left, right = figures.columns(2, gap="large")
     left.metric("Total recorded loss", format_amount(counts["total_financial_loss"]))
     right.metric("Descriptions mentioning deployment", counts["deployment_keyword_matches"])
+    st.caption(LOSS_UNIT_NOTICE)
     with categories:
         label("Incidents by category")
         if counts["by_category"]:
@@ -97,7 +99,7 @@ def _incidents_tab(incidents: dict) -> None:
     if incidents["incidents"]:
         st.dataframe(
             [{"Date": i["date"], "Incident": i["incident_id"], "Category": label_for(i["category"]),
-              "Severity": i["severity"], "Loss": i["financial_loss"], "Description": i["description"]}
+              "Severity": i["severity"], "Loss": i["financial_loss"], "Description": normalize_prose(i["description"])}
              for i in incidents["incidents"]],
             hide_index=True, width="stretch",
             column_config={"Loss": st.column_config.NumberColumn("Loss", format="%d")},

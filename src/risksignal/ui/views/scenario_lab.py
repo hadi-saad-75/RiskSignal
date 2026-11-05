@@ -19,12 +19,14 @@ from risksignal.ui.components import (
     system_selector,
 )
 from risksignal.ui.formatting import (
+    LOSS_UNIT_NOTICE,
     METRIC_LABELS,
     comparison_rows,
     format_amount,
     format_decimal,
     format_percent,
 )
+from risksignal.text import normalize_prose
 
 LAMBDA_SOURCES = {
     "system_history": "estimated from this system's own incident history",
@@ -43,6 +45,7 @@ def render_scenario_lab() -> None:
     )
     with aside:
         simulation_notice()
+    st.caption(LOSS_UNIT_NOTICE)
     client = get_api_client()
     rule(subtle=True)
     spacer()
@@ -87,8 +90,14 @@ def _estimated_baseline(baseline: dict[str, Any]) -> None:
     columns[0].metric("λ: expected incidents per year", format_decimal(assumptions["lambda_used"]))
     columns[1].metric("μ: log-severity location", format_decimal(assumptions["severity_mu"], 3))
     columns[2].metric("σ: log-severity spread", format_decimal(assumptions["severity_sigma"], 3))
+    st.markdown(
+        "**λ (lambda)** is the expected number of incidents per year. "
+        "**μ (mu)** is the mean of log-losses. "
+        "**σ (sigma)** is the standard deviation of log-losses, not of annual loss. "
+        "A larger σ gives a wider severity distribution at a fixed μ."
+    )
     for note in basis["severity_fallback_notes"]:
-        st.caption(f"Fallback: {note}")
+        st.caption(normalize_prose(f"Fallback: {note}"))
     spacer()
     with st.expander("Parameter interpretation"):
         st.markdown(
@@ -97,7 +106,7 @@ def _estimated_baseline(baseline: dict[str, Any]) -> None:
             "`X ~ Lognormal(μ, σ)`: its logarithm is bell-shaped with mean **μ** and standard deviation **σ**. So `exp(μ)` "
             "is the median loss of one incident, and a larger **σ** means a heavier tail of rare, very large losses. "
             "The annual loss is `L = X₁ + … + X_N`, simulated many times. The parameters are estimated from the "
-            "synthetic history; the synthetic losses were themselves generated from Lognormal distributions, so a good "
+            "synthetic history, the synthetic losses were themselves generated from Lognormal distributions, so a good "
             "fit says nothing about real losses."
         )
 
@@ -122,13 +131,25 @@ def _inputs(scenarios: list[dict[str, Any]]) -> dict[str, Any]:
                   {"Assumption": "σ multiplier (log-severity spread)", "Value": f"{scenario['severity_sigma_multiplier']:g}"}])
     spacer()
     with st.expander("Scenario assumptions"):
-        st.markdown("\n".join(f"- {note}" for note in scenario["assumption_notes"]))
+        st.markdown(normalize_prose("\n".join(f"- {note}" for note in scenario["assumption_notes"])))
 
     with st.expander("Advanced assumptions"):
         use_custom = st.checkbox("Specify custom assumptions")
         left, right = st.columns(2)
-        lam = left.number_input("λ multiplier", min_value=0.1, max_value=100.0, value=1.5, step=0.1, disabled=not use_custom)
-        sigma = right.number_input("σ multiplier", min_value=0.1, max_value=5.0, value=1.2, step=0.1, disabled=not use_custom)
+        lam = left.number_input(
+            "λ multiplier", min_value=0.1, max_value=100.0, value=1.5, step=0.1, disabled=not use_custom,
+            help="Multiplies the baseline incident rate. A value of 1.5 means 50% more expected incidents per year.",
+        )
+        sigma = right.number_input(
+            "σ multiplier", min_value=0.1, max_value=5.0, value=1.2, step=0.1, disabled=not use_custom,
+            help="Multiplies the standard deviation of log-losses. A value of 1.2 means 20% more log-loss spread.",
+        )
+        st.markdown(
+            "These are lowercase **λ (lambda)** and **σ (sigma)**, not capital Λ or the summation sign Σ. "
+            "A λ multiplier of **1.5** increases the expected incident rate by **50%**. "
+            "A σ multiplier of **1.2** increases log-loss spread by **20%**, not every loss by 20%. "
+            "The median incident loss stays unchanged when only σ changes, but the mean and upper tail change."
+        )
         st.caption(
             "These user-specified assumptions are not estimated or calibrated. They are not available "
             "to the language-model investigation function."
@@ -152,7 +173,8 @@ def _results(result: dict[str, Any]) -> None:
         simulation_notice()
     label("Stress scenario")
     statement(stress["scenario"]["name"])
-    st.markdown(f"_{stress['label']}_")
+    st.markdown(normalize_prose(f"_{stress['label']}_"))
+    st.caption(LOSS_UNIT_NOTICE)
     spacer()
 
     cards = [st.columns(3, gap="large") for _ in range(2)]
@@ -192,7 +214,7 @@ def _results(result: dict[str, Any]) -> None:
         f"stress {format_amount(out['stress_analytic_mean_annual_loss'])}."
     )
     with st.expander("Model assumptions"):
-        st.markdown("\n".join(f"- {s}" for s in base_assumptions["assumption_statements"]))
+        st.markdown(normalize_prose("\n".join(f"- {s}" for s in base_assumptions["assumption_statements"])))
     with st.expander("Stress assumptions"):
-        st.markdown("\n".join(f"- {note}" for note in stress["scenario"]["assumption_notes"]))
-    st.caption(result["notice"])
+        st.markdown(normalize_prose("\n".join(f"- {note}" for note in stress["scenario"]["assumption_notes"])))
+    st.caption(normalize_prose(result["notice"]))

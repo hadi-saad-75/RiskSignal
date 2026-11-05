@@ -72,7 +72,7 @@ def distribution_figure(
         figure,
         title={"text": "Simulated annual aggregate loss",
                "subtitle": {"text": "Illustrative model, synthetic data", "font": {"size": 12, "color": TEXT_MUTED}}},
-        xaxis={"title": {"text": "Annual loss (plotted up to each run's 99th percentile)"}, "tickformat": "~s",
+        xaxis={"title": {"text": "Annual loss in synthetic monetary units (up to each run's P99)"}, "tickformat": "~s",
                "rangemode": "tozero"},
         yaxis={"title": {"text": "Density (share of simulated years)"}, "showticklabels": False},
         height=460, margin={"l": 8, "r": 8, "t": 80, "b": 8},

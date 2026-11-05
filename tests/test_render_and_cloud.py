@@ -30,8 +30,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
 REQUIREMENTS = ROOT / "deploy" / "streamlit_cloud" / "requirements.txt"
 SECRET = "RISKSIGNAL_API_URL"
-LANDING_TITLE = "RiskSignal Assistant"  # the Assistant is the landing page
-BANNER = "Research prototype based on synthetic Atlas Bank data; results are not calibrated to observed losses."
+LANDING_TITLE = "Operational risk, connected."
+BANNER = "Research prototype based on synthetic Atlas Bank data, results are not calibrated to observed losses."
 
 
 def find_sh() -> str | None:
@@ -94,6 +94,13 @@ def test_the_build_context_keeps_everything_the_dockerfile_copies() -> None:
     ignored = {l.strip().rstrip("/") for l in (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
                if l.strip() and not l.startswith(("#", "!"))}
     assert not (copied & ignored), f"the Docker build context excludes files the image needs: {copied & ignored}"
+
+
+def test_ui_image_includes_the_introduction_walkthrough_animation() -> None:
+    asset = "docs/media/risksignal_vscode_walkthrough.gif"
+    assert (ROOT / asset).is_file()
+    assert f"COPY {asset} {asset}" in (ROOT / "Dockerfile.ui").read_text(encoding="utf-8")
+    assert f"!{asset}" in (ROOT / ".dockerignore").read_text(encoding="utf-8")
 
 
 def test_the_api_image_needs_no_secret_and_runs_as_non_root() -> None:
@@ -218,7 +225,7 @@ def test_secret_is_read_from_st_secrets_and_the_dashboard_runs(api_client: ApiCl
     assert at.title[0].value == LANDING_TITLE and BANNER in texts(at.warning)
     assert os.environ[SECRET] == "http://testserver"  # trailing slash removed, value passed to the dashboard's API client
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
-    assert len(at.selectbox[0].options) == 20  # the system list came from the API, not from backend imports
+    assert "Start the live demo" in texts(at.get("page_link"))
 
 
 def test_the_dashboard_client_targets_the_secret_url_without_a_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -226,7 +233,7 @@ def test_the_dashboard_client_targets_the_secret_url_without_a_trailing_slash(mo
     at = run_entrypoint({SECRET: "http://127.0.0.1:1/"})  # nothing listens on port 1: fails fast, must not crash
     assert not at.exception
     assert at.session_state["api_client"].base_url == "http://127.0.0.1:1"
-    assert "Cannot reach the RiskSignal API" in texts(at.error) and "http://127.0.0.1:1" in texts(at.sidebar.caption)
+    assert "API unavailable" in texts(at.sidebar.error) and "http://127.0.0.1:1" in texts(at.sidebar.caption)
 
 
 def test_every_rerun_executes_the_dashboard_again(api_client: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
