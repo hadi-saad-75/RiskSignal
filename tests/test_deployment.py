@@ -116,7 +116,6 @@ def test_ui_image_is_minimal_and_points_at_the_api() -> None:
         "src/risksignal/__init__.py",
         "src/risksignal/text.py",
         "src/risksignal/ui",
-        "docs/media/risksignal_vscode_walkthrough.gif",
     ]
     assert "ENV RISKSIGNAL_API_URL=http://api:8000" in text
     assert re.search(r"^USER app$", text, re.MULTILINE) and "EXPOSE 8501" in text

@@ -96,13 +96,6 @@ def test_the_build_context_keeps_everything_the_dockerfile_copies() -> None:
     assert not (copied & ignored), f"the Docker build context excludes files the image needs: {copied & ignored}"
 
 
-def test_ui_image_includes_the_introduction_walkthrough_animation() -> None:
-    asset = "docs/media/risksignal_vscode_walkthrough.gif"
-    assert (ROOT / asset).is_file()
-    assert f"COPY {asset} {asset}" in (ROOT / "Dockerfile.ui").read_text(encoding="utf-8")
-    assert f"!{asset}" in (ROOT / ".dockerignore").read_text(encoding="utf-8")
-
-
 def test_the_api_image_needs_no_secret_and_runs_as_non_root() -> None:
     dockerfile = (ROOT / "Dockerfile.api").read_text(encoding="utf-8")
     assert "ANTHROPIC_API_KEY" not in dockerfile and "sk-ant-" not in dockerfile

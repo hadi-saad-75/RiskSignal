@@ -40,7 +40,7 @@ SEVERITY_SOURCES = {"system": "this system's own losses", "category": "bank-wide
 def render_scenario_lab() -> None:
     banner()
     aside = page_header(
-        "04", "Scenarios", "Scenario Analysis",
+        "03", "Scenarios", "Scenario Analysis",
         "Estimate a baseline loss model for one system, then stress it under a named or custom scenario.",
     )
     with aside:

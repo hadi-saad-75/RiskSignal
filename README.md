@@ -121,12 +121,12 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## The demo
 
-1. The dashboard opens on **Introduction**, a presentation-style summary of the goal, synthetic-data boundary and demo flow. Select **Overview** for portfolio counts, then **System Explorer** to follow the evidence and shared-vendor connection for `PAYMENT_ENGINE_01`.
+1. The dashboard opens on **Introduction**, combining the goal, synthetic-data boundary, detailed workflow and live portfolio snapshot. Then select **System Explorer** to follow the evidence and shared-vendor connection for `PAYMENT_ENGINE_01`.
 2. Select **Scenario Analysis** to compare the illustrative baseline and stress assumptions, then **Assistant** to investigate `PAYMENT_ENGINE_01`: the agent retrieves the profile, incidents, KRIs, controls and dependencies and runs a baseline Monte Carlo simulation.
 3. The Assistant writes the report as observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations, followed by the tool activity log and simulation metadata.
-4. Open **Way forward: AI assistant**, beside Assistant, for limitations, mathematical assumptions, institutional calibration and the proposed knowledge-assisted and multi-agent research directions. The conversational preview lives on this page and is labelled **In development**.
+4. Open **Way forward: AI assistant**, beside Assistant, for limitations, mathematical assumptions, institutional calibration and the proposed knowledge-assisted and multi-agent research directions.
 
-The Overview page is a manager-focused snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. System Explorer and Scenario Analysis retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
+The Introduction includes a manager-focused portfolio snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. It provides context rather than repeating the detailed investigation. System Explorer and Scenario Analysis retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
 
 ## Roadmap: what this early version does not do yet
 
@@ -270,7 +270,7 @@ Generate the data first (`python -m risksignal.data.generator`). See [docs/agent
 
 ### Conversational assistant
 
-The assistant lets an operator ask free questions over several turns: about one system ("What incidents did CORE_LEDGER_01 have?", "And its controls?"), about the whole portfolio ("Which systems should I look at first?") or about the methods ("What is Expected Shortfall?"). It is the same agent loop with a conversational prompt ([prompts.py](src/risksignal/agent/prompts.py)) that shares the investigation's ground rules: tools only, no invented facts, no calculations of its own, no risk verdicts. It adapts the length and shape of each answer to the question, remembers the conversation (the caller sends earlier turns with each message, so the API stays stateless), and every answer comes with its tool activity and the same check on numbers. Answers replace long dashes and semicolons with ordinary prose punctuation. In offline mode a deterministic stand-in ([mock_assistant.py](src/risksignal/agent/mock_assistant.py)) recognises the common question types and writes answers only from tool results. The conversational UI is an unfinished preview on **Way forward: AI assistant**, separate from the current investigation page.
+The assistant lets an operator ask free questions over several turns: about one system ("What incidents did CORE_LEDGER_01 have?", "And its controls?"), about the whole portfolio ("Which systems should I look at first?") or about the methods ("What is Expected Shortfall?"). It is the same agent loop with a conversational prompt ([prompts.py](src/risksignal/agent/prompts.py)) that shares the investigation's ground rules: tools only, no invented facts, no calculations of its own, no risk verdicts. It adapts the length and shape of each answer to the question, remembers the conversation (the caller sends earlier turns with each message, so the API stays stateless), and every answer comes with its tool activity and the same check on numbers. Answers replace long dashes and semicolons with ordinary prose punctuation. In offline mode a deterministic stand-in ([mock_assistant.py](src/risksignal/agent/mock_assistant.py)) recognises the common question types and writes answers only from tool results. The conversational API and unfinished UI component remain available in the codebase, but the preview is not displayed in the presentation.
 
 ## REST API
 
@@ -317,14 +317,13 @@ Errors use one JSON shape, `{"error": {"type", "message", "suggestions"}}`, and 
 
 ## Dashboard (Streamlit)
 
-A technical-demo dashboard with six sections, ordered left to right for the presentation. It talks **only to the FastAPI backend** and imports none of the engines:
+A technical-demo dashboard with five sections, ordered left to right for the presentation. It talks **only to the FastAPI backend** and imports none of the engines:
 
-- **Introduction**, the goal, workflow illustration, how Atlas Bank was generated and the engineering path through the project.
-- **Overview**, portfolio counts and recent incidents.
+- **Introduction**, the goal, a detailed three-step workflow in readable cards, how Atlas Bank was generated, the engineering path through the project, and live portfolio counts and recent incidents. The former Overview tab is folded into this page.
 - **System Explorer**, profiles, incidents, KRI charts, controls, dependencies and a shared-exposure map.
 - **Scenario Analysis**, baseline estimates and stress comparisons with explanatory controls.
 - **Assistant**, the current investigation with its sectioned summary, tool activity log and simulation metadata.
-- **Way forward: AI assistant**, limitations, mathematical assumptions, institutional calibration, a proposed knowledge-assisted workflow and multi-agent evaluation, followed by the conversational preview.
+- **Way forward: AI assistant**, limitations, mathematical assumptions, institutional calibration, a proposed knowledge-assisted workflow and multi-agent evaluation.
 
 Losses use **synthetic monetary units**, not a specified real currency. The UI explains lowercase **λ** as the annual incident rate, **μ** as the mean of log-losses and **σ** as the standard deviation of log-losses. Custom multipliers change λ or σ, not every loss by that percentage.
 
@@ -341,7 +340,7 @@ uvicorn risksignal.api.main:app --reload
 streamlit run src/risksignal/ui/app.py
 ```
 
-- **Without an Anthropic key** the Overview, System Explorer and Scenario Analysis work as normal. The Assistant shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
+- **Without an Anthropic key** the Introduction, System Explorer and Scenario Analysis work as normal. The Assistant shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
 - **With a key**, put `ANTHROPIC_API_KEY=...` in `.env` (git-ignored) or the environment before starting the backend.
 - If the backend runs somewhere else, set `RISKSIGNAL_API_URL` (default `http://127.0.0.1:8000`) before starting Streamlit.
 

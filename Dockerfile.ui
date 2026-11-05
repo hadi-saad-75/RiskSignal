@@ -16,7 +16,6 @@ RUN pip install "streamlit>=1.40,<2" "plotly>=6.0,<8" "httpx>=0.27,<1"
 COPY src/risksignal/__init__.py src/risksignal/__init__.py
 COPY src/risksignal/text.py src/risksignal/text.py
 COPY src/risksignal/ui src/risksignal/ui
-COPY docs/media/risksignal_vscode_walkthrough.gif docs/media/risksignal_vscode_walkthrough.gif
 
 RUN useradd --create-home --uid 1000 app && chown -R app:app /app
 USER app

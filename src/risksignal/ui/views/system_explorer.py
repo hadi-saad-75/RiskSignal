@@ -23,7 +23,7 @@ from risksignal.text import normalize_prose
 def render_system_explorer() -> None:
     banner()
     page_header(
-        "03", "Systems", "System Explorer",
+        "02", "Systems", "System Explorer",
         "Profile, incidents, key risk indicators, controls and shared dependencies for one system. "
         "This page reports synthetic observations, no values on this page are forecasts.",
     )

@@ -127,12 +127,11 @@ Expected: the simulation returns `"data_kind":"modelled_output"` with the same f
 
 | Check | URL | Expect |
 |---|---|---|
-| Introduction | `UI` | presentation-style opening, workflow animation, synthetic-data boundary and links to the demo |
-| Overview | `UI/overview` | banner "Research prototype using synthetic Atlas Bank data. Not a calibrated risk model."; sidebar `API ok`, `AI provider: mock (ready)`; counts 20 / 10 / 8 / 40 / 312 |
+| Introduction | `UI` | text-led opening, detailed three-step workflow cards, data construction, engineering roadmap and live portfolio snapshot with recent incidents. The former Overview tab is merged here |
 | System Explorer | `UI/system-explorer` | `PAYMENT_ENGINE_01` profile, incidents, KRIs, controls, shared-exposure map |
 | Scenario Analysis | `UI/scenario-lab` | estimated λ, μ, σ; running the simulation shows baseline and stress figures matching the API |
 | Assistant | `UI/assistant` | **Investigate this system** produces six sections and a tool activity log |
-| Way forward: AI assistant | `UI/way-forward` | limitations and future-work topics, followed by the conversational preview, where "Which systems should I look at first?" returns the portfolio comparison |
+| Way forward: AI assistant | `UI/way-forward` | limitations, mathematical assumptions, institutional calibration and the proposed knowledge-assisted and multi-agent roadmap, with no conversational preview |
 
 If the sidebar shows `API not reachable`, wait a minute for the Render service to wake and reload.
 

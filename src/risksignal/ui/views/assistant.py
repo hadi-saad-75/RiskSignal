@@ -36,7 +36,7 @@ STARTERS = (
 def render_assistant() -> None:
     banner()
     page_header(
-        "05", "Assistant", "RiskSignal Assistant",
+        "04", "Assistant", "RiskSignal Assistant",
         "A language model selects among deterministic tools for retrieving system profiles, incidents, key "
         "risk indicators, controls, dependencies, and simulation results. It summarises the returned evidence "
         "and may suggest questions for further review. The model cannot modify records or make risk decisions. "

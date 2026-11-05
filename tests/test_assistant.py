@@ -219,7 +219,8 @@ def assistant_page(client: ApiClient | TestClient, *, investigation: bool = Fals
     source = (
         "from risksignal.ui.views.assistant import render_assistant\nrender_assistant()"
         if investigation else
-        "from risksignal.ui.views.way_forward import render_way_forward\nrender_way_forward()"
+        "from risksignal.ui.components import get_api_client\n"
+        "from risksignal.ui.views.assistant import render_chat\nrender_chat(get_api_client())"
     )
     at = AppTest.from_string(source, default_timeout=60)
     at.session_state["api_client"] = (client if isinstance(client, ApiClient)
@@ -241,9 +242,8 @@ def shown(at: AppTest) -> str:
 
 def test_assistant_page_holds_a_conversation(http: TestClient) -> None:
     at = assistant_page(http)
-    assert not at.exception and at.title[0].value == "Way forward: AI assistant"
+    assert not at.exception
     assert any("Which systems should I look at first?" == b.label for b in at.button)
-    assert "Mathematical assumptions" in " | ".join(s.value for s in at.subheader)
 
     at.chat_input[0].set_value(f"What incidents did {FOCAL} have?").run()
     assert not at.exception and FOCAL in shown(at) and "incidents" in shown(at)
@@ -265,12 +265,18 @@ def test_assistant_page_starter_question_runs(http: TestClient) -> None:
     assert [a["summary"] for a in activity] == ["Compared all 20 systems over 12 months"]
 
 
-def test_future_work_and_chat_are_separate_from_the_investigation(http: TestClient) -> None:
-    at = assistant_page(http)
+def test_future_work_has_no_conversational_preview(http: TestClient) -> None:
+    at = AppTest.from_string(
+        "from risksignal.ui.views.way_forward import render_way_forward\nrender_way_forward()",
+        default_timeout=60,
+    ).run()
+    assert not at.exception
     titles = [s.value for s in at.subheader]
-    assert titles.index("Practical development roadmap") < titles.index("Ask RiskSignal")
+    assert "Practical development roadmap" in titles
+    assert "Ask RiskSignal" not in titles
+    assert "Conversational preview" not in titles
     assert "Request" not in titles
-    assert "In development" in shown(at)
+    assert not at.chat_input and not at.button
     investigation = assistant_page(http, investigation=True)
     assert investigation.button[0].label == "Investigate this system"
     assert not investigation.chat_input
@@ -310,8 +316,7 @@ def test_assistant_explains_a_missing_api_key(ctx: ToolContext, monkeypatch: pyt
     app.dependency_overrides[get_tool_context] = lambda: ctx
     app.dependency_overrides[get_settings] = lambda: Settings(db_path=ctx.db_path, llm_provider="anthropic")
     at = assistant_page(TestClient(app))
-    infos = " | ".join(i.value for i in at.info)
-    assert not at.exception and "language-model provider is not configured" in infos and "ANTHROPIC_API_KEY" in infos
+    assert not at.exception
     at.chat_input[0].set_value("Which systems should I look at first?").run()
     errors = " | ".join(e.value for e in at.error)
     assert not at.exception and "language model is unavailable" in errors and "ANTHROPIC_API_KEY" in errors
@@ -324,4 +329,5 @@ def test_assistant_without_the_api_does_not_crash() -> None:
     client = ApiClient(base_url="http://127.0.0.1:1",
                        client=httpx.Client(base_url="http://127.0.0.1:1", transport=httpx.MockTransport(refuse)))
     at = assistant_page(client)
+    at.chat_input[0].set_value("Which systems should I look at first?").run()
     assert not at.exception and "Cannot reach the RiskSignal API" in " | ".join(e.value for e in at.error)

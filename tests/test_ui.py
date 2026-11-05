@@ -456,7 +456,17 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     for phrase in ("How Atlas Bank was built", "How RiskSignal was engineered", "seed is 42",
                    "Poisson draws", "Lognormal draws", "SQLite", "NetworkX", "FastAPI"):
         assert phrase in content
-    assert len(at.get("image")) == 1
+    assert not at.get("image")
+    for phrase in ("Gather evidence", "Connect exposure", "Explore assumptions", "Atlas Bank at a glance"):
+        assert phrase in content
+    for phrase in ("less manual collation", "not automated risk decisions",
+                   "benefits are proposed, not measured", "team's existing process"):
+        assert phrase in content
+    assert metric_values(at)["Systems in scope"] == "20"
+    assert len(at.dataframe[0].value) == 5
+    assert not any(phrase in content for phrase in (
+        "Read at your own pace", "Present from left to right", "Evidence supports judgement",
+    ))
 
 
 def test_intro_remains_readable_without_the_backend() -> None:
@@ -466,6 +476,8 @@ def test_intro_remains_readable_without_the_backend() -> None:
     assert not at.exception and at.title[0].value == "Operational risk, connected."
     assert "How Atlas Bank was built" in texts(at.subheader)
     assert "API unavailable" in texts(at.sidebar.error)
+    assert "Cannot reach the RiskSignal API" in texts(at.error)
+    assert "Start the live demo" in texts(at.get("page_link"))
 
 
 def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient) -> None:
@@ -476,8 +488,10 @@ def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient)
                    "Basel standardised", "Backtesting and validation", "Documented expert decisions",
                    "multi-agent", "not implemented", "latency and cost"):
         assert phrase in content
-    assert "Offline mock provider" in texts(at.info)
-    assert len(at.chat_input) == 1
+    assert "Conversational preview" not in content
+    assert "Offline mock provider" not in texts(at.info)
+    assert not at.chat_input
+    assert not at.button
 
 
 @pytest.mark.parametrize("module, function", [
@@ -491,8 +505,6 @@ def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module:
     at = run_view(api, module, function)
     if module in ("assistant", "scenario_lab"):
         at.button[0].click().run()
-    if module == "way_forward":
-        at.chat_input[0].set_value("What incidents did PAYMENT_ENGINE_01 have?").run()
     assert not at.exception
     visible = " ".join(
         texts(getattr(at, kind)) for kind in ("markdown", "caption", "warning", "info", "error", "subheader")
@@ -507,13 +519,14 @@ def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module:
 
 def test_app_defines_the_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    titles = ("Overview", "System Explorer", "Scenario Analysis", "Assistant", "Way forward: AI assistant")
+    titles = ("System Explorer", "Scenario Analysis", "Assistant", "Way forward: AI assistant")
     for title in ("Introduction", *titles):
         assert f'title="{title}"' in source
     assert "set_page_config" in source
     positions = [source.index(f'title="{title}"') for title in titles]
     assert positions == sorted(positions)
     assert "navigation_pages = [introduction, *pages.values()]" in source
+    assert 'title="Overview"' not in source
 
 
 # ----------------------------------------------------------------- structure

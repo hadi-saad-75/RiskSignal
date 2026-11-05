@@ -1,64 +1,68 @@
 """Presentation-style introduction to the RiskSignal demonstration."""
 
-from pathlib import Path
 from typing import Any
 
 import streamlit as st
 
 from risksignal.ui.components import banner, eyebrow, lead, ruled_list, section_header
 from risksignal.ui.formatting import LOSS_UNIT_NOTICE
-
-WALKTHROUGH = Path(__file__).resolve().parents[4] / "docs" / "media" / "risksignal_vscode_walkthrough.gif"
+from risksignal.ui.views.overview import render_portfolio_snapshot
 
 
 def render_introduction(pages: dict[str, Any]) -> None:
     banner()
-    copy, visual = st.columns([5, 7], gap="large", vertical_alignment="center")
-    with copy:
-        eyebrow("01", "The idea")
-        st.title("Operational risk, connected.")
-        lead(
-            "Incidents, key risk indicators, controls and technology dependencies often sit in separate places. "
-            "RiskSignal brings them into one investigation so an analyst can see the evidence in context."
-        )
-        st.markdown(
-            "**The goal:** connect the signals, quantify explicit assumptions and help an analyst decide "
-            "what to investigate next."
-        )
-        st.caption("Demo data: fictional Atlas Bank · 20 systems · 10 processes · 8 vendors · 40 controls")
-        st.page_link(
-            pages["Overview"],
-            label="Start the live demo",
-            icon=":material/arrow_forward:",
-        )
-        st.caption(
-            "Present from left to right: Overview, System Explorer, Scenario Analysis, Assistant, "
-            "then Way forward: AI assistant."
-        )
-    with visual:
-        st.image(
-            str(WALKTHROUGH),
-            width="stretch",
-            alt=(
-                "A three-part workflow: separate incident, KRI, control and dependency evidence is brought "
-                "together by an investigation agent, then connected to a simulated loss distribution."
-            ),
-        )
-        st.caption(
-            "A visual summary of the workflow on the synthetic demo data. The animation illustrates a "
-            "constructed example, not a real-world finding."
-        )
+    eyebrow("01", "The idea")
+    st.title("Operational risk, connected.")
+    lead(
+        "Incidents, key risk indicators, controls and technology dependencies often sit in separate places. "
+        "RiskSignal brings them into one investigation so an analyst can see the evidence in context."
+    )
+    st.markdown(
+        "**The goal:** help an Operational Risk team move from separate records to a connected, "
+        "traceable investigation. Where analysts currently assemble evidence manually, RiskSignal "
+        "brings incidents, KRIs, control reviews and shared dependencies into one workflow, lets them "
+        "compare explicit loss scenarios, and prepares an evidence-linked summary with questions for "
+        "human review. The intended benefit is less manual collation and a more consistent basis for "
+        "deciding what to investigate next, not automated risk decisions."
+    )
+    st.caption(
+        "These benefits are proposed, not measured. A pilot would compare analyst time, evidence "
+        "coverage and review quality against the team's existing process."
+    )
+    st.caption("Demo data: fictional Atlas Bank · 20 systems · 10 processes · 8 vendors · 40 controls")
+    st.page_link(
+        pages["System Explorer"],
+        label="Start the live demo",
+        icon=":material/arrow_forward:",
+    )
 
     section_header(
         "A short, analyst-led walkthrough",
         "One fictional payment system provides a concrete thread through the evidence, dependency map and model.",
         index="02",
     )
-    ruled_list([
-        ("Gather evidence", "Review incidents, KRI trends and control-review status for one system."),
-        ("Connect exposure", "Trace shared vendors and related systems, a connection is a lead, not causation."),
-        ("Explore assumptions", "Compare a baseline with a clearly stated stress scenario, not a forecast."),
-    ])
+    evidence, exposure, assumptions = st.columns(3, gap="large")
+    with evidence, st.container(border=True):
+        st.markdown(":material/fact_check: **01 / Evidence**")
+        st.subheader("Gather evidence")
+        st.write("Review incidents, KRI trends and control-review status for one system.")
+        st.divider()
+        st.markdown("**What happened?**")
+        st.write("Bring the system's observations into a single view before interpreting them.")
+    with exposure, st.container(border=True):
+        st.markdown(":material/account_tree: **02 / Connections**")
+        st.subheader("Connect exposure")
+        st.write("Trace shared vendors and related systems, a connection is a lead, not causation.")
+        st.divider()
+        st.markdown("**Where else should we look?**")
+        st.write("Follow the dependency map to identify systems that share the same vendor.")
+    with assumptions, st.container(border=True):
+        st.markdown(":material/query_stats: **03 / Scenarios**")
+        st.subheader("Explore assumptions")
+        st.write("Compare a baseline with a clearly stated stress scenario, not a forecast.")
+        st.divider()
+        st.markdown("**What changes under stress?**")
+        st.write("Inspect the incident-rate and severity assumptions behind the simulated losses.")
 
     section_header(
         "How Atlas Bank was built",
@@ -121,10 +125,17 @@ def render_introduction(pages: dict[str, Any]) -> None:
         "All Atlas Bank data are synthetic, the model assumptions are illustrative."
     )
 
-    overview, explorer, scenario = st.columns(3, gap="large")
-    with overview:
-        st.page_link(pages["Overview"], label="Portfolio overview", icon=":material/space_dashboard:")
+    section_header(
+        "Atlas Bank at a glance",
+        "Live portfolio context for the demonstration, before we investigate one payment system.",
+        index="05",
+    )
+    render_portfolio_snapshot()
+
+    explorer, scenario, assistant = st.columns(3, gap="large")
     with explorer:
         st.page_link(pages["System Explorer"], label="System evidence", icon=":material/account_tree:")
     with scenario:
         st.page_link(pages["Scenario Analysis"], label="Scenario analysis", icon=":material/monitoring:")
+    with assistant:
+        st.page_link(pages["Assistant"], label="Integrated investigation", icon=":material/assistant:")

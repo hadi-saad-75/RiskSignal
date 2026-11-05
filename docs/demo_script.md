@@ -46,7 +46,7 @@ Open `http://localhost:8501`. **With Docker:** `docker compose up --build` (set 
 
 ### 1.3 Browser and screen
 
-The dashboard opens on the **Introduction** page at `/`, including how Atlas Bank was generated and how the software layers were built. Follow the top navigation from left to right: **Introduction → Overview → System Explorer → Scenario Analysis → Assistant → Way forward: AI assistant**. This moves from the problem and portfolio context to evidence, quantitative assumptions, the integrated investigation and future work. Pre-open `/overview`, `/system-explorer`, `/scenario-lab`, `/assistant` and `/way-forward` if you want quick transitions. **Way forward: AI assistant** contains the limitations, future-work discussion and conversational preview. Zoom the browser so the back row can read the numbers. Refreshing a tab resets its state.
+The dashboard opens on the **Introduction** page at `/`, including the detailed workflow, how Atlas Bank was generated, how the software layers were built and the live portfolio snapshot formerly on Overview. Follow the top navigation from left to right: **Introduction → System Explorer → Scenario Analysis → Assistant → Way forward: AI assistant**. This moves from the problem and portfolio context to evidence, quantitative assumptions, the integrated investigation and future work. Pre-open `/system-explorer`, `/scenario-lab`, `/assistant` and `/way-forward` if you want quick transitions. **Way forward: AI assistant** contains the limitations and future-work discussion, without a conversational preview. Zoom the browser so the back row can read the numbers. Refreshing a tab resets its state.
 
 On the **System Explorer** page, before you present the KRIs, set *Months of history* to **24**: click the slider and press the right-arrow key 12 times (it starts at 12).
 
@@ -92,12 +92,12 @@ All loss figures are in **synthetic monetary units**, not specified as dollars o
 
 ### Step 1. The problem (under one minute)
 
-**Screen:** Introduction page. Point out the goal, workflow illustration and synthetic-data notice.
+**Screen:** Introduction page. Point out the goal, detailed workflow cards and synthetic-data notice.
 
 **Say (about 45 seconds):**
 > "Operational Risk information is fragmented. Incidents live in one place, controls in another, key risk indicators in a third, and the map of which systems depend on which vendors in a fourth. An analyst investigating one system has to assemble all of that by hand, and the connections between systems are the easiest thing to miss. RiskSignal is a research prototype that brings those signals into one analyst-led investigation. Everything I’ll show uses synthetic data and illustrative assumptions—not a forecast or a real-bank finding."
 
-**Show:** the goal, workflow illustration and synthetic-data notice. Then select **Overview** in the top navigation and point out the scope and recent incidents. No scores, nothing predicted.
+**Show:** the goal, detailed workflow cards and synthetic-data notice. Scroll to **Atlas Bank at a glance** in the Introduction and point out the scope and recent incidents. No scores, nothing predicted. Then open **System Explorer** to start the live investigation.
 
 ### Step 2. Open `PAYMENT_ENGINE_01`: observed data (about 2 minutes)
 
@@ -167,8 +167,6 @@ Mention in passing that the system also shares V02 with two other systems and a 
 6. **Limitations.**
 
 *(Optional)* Tick the stress checkbox and run again to add the `SHARED_VENDOR_OUTAGE` comparison; the agent can only choose predefined scenarios, never invent numbers.
-
-*(Optional)* Open **Way forward: AI assistant** and scroll to **Ask RiskSignal**, marked *In development*. Ask "Which systems should I look at first?", then a follow-up such as "And are its controls up to date?". **Say:** "This unfinished conversation uses the current tools. The institutional knowledge and multi-agent design described above are future research, not implemented."
 
 ### Step 8. Evidence: how it stays honest (about 1.5 minutes)
 

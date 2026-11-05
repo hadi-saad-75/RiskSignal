@@ -14,10 +14,7 @@ __pycache__
 .ipynb_checkpoints
 tests
 notebooks
-docs/*
-!docs/media/
-docs/media/*
-!docs/media/risksignal_vscode_walkthrough.gif
+docs
 data
 *.db
 *.sqlite

@@ -13,7 +13,11 @@ def render_overview() -> None:
         "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
         "fictional Atlas Bank data, not JPMorgan data, and is not a production or decision-making tool.",
     )
+    render_portfolio_snapshot()
 
+
+def render_portfolio_snapshot() -> None:
+    """Render the live portfolio evidence inside the presentation introduction."""
     overview = call_api(get_api_client().overview, 5)
     if overview is None:
         return
