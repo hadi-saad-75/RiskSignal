@@ -19,7 +19,7 @@ import pytest
 from fastapi.testclient import TestClient
 from scipy import stats
 
-from risksignal.agent.prompts import SYSTEM_PROMPT
+from risksignal.agent.prompts import CHAT_SYSTEM_PROMPT, SYSTEM_PROMPT
 from risksignal.api.dependencies import _STATUS_FOR_ERROR_TYPE, Settings, get_settings, get_tool_context
 from risksignal.api.main import create_app
 from risksignal.data.storage import init_db
@@ -196,7 +196,7 @@ def test_system_prompt_has_no_example_values_the_model_could_echo() -> None:
 
 def test_prompt_and_dashboard_use_the_same_section_headings() -> None:
     for heading in SECTION_HEADINGS:
-        assert f"- {heading}" in SYSTEM_PROMPT, heading  # the UI can only split what the prompt asks for
+        assert f"- {heading}" in SYSTEM_PROMPT or heading in CHAT_SYSTEM_PROMPT, heading
 
 
 # ----------------------------------------------------------------- cross-module consistency

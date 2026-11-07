@@ -2,6 +2,7 @@
 editorial layout primitives (page header, section header, ruled lists, footer)."""
 
 from html import escape
+from time import monotonic
 from typing import Any, Callable, Sequence, TypeVar
 
 import streamlit as st
@@ -19,8 +20,8 @@ START_API_HELP = (
     "`uvicorn risksignal.api.main:app --reload`, or set `RISKSIGNAL_API_URL` if it runs elsewhere."
 )
 LLM_HELP = (
-    "The Overview, System Explorer, and Scenario Analysis pages do not require a language-model API key. "
-    "The Assistant requires `ANTHROPIC_API_KEY`, set in the environment or a `.env` file before "
+    "Monitoring and Scenario Analysis do not require a language-model API key. "
+    "Live investigation requires `ANTHROPIC_API_KEY`, set in the environment or a `.env` file before "
     "starting the API. To use the deterministic mock provider, set "
     "`RISKSIGNAL_LLM_PROVIDER=mock`."
 )
@@ -30,6 +31,10 @@ def get_api_client() -> ApiClient:
     """One client per browser session. Tests can place their own in ``st.session_state['api_client']``."""
     if "api_client" not in st.session_state:
         st.session_state["api_client"] = ApiClient()
+    elif not isinstance(st.session_state["api_client"], ApiClient):
+        # Source reloads replace the class, but session state retains its old instances.
+        previous = st.session_state["api_client"]
+        st.session_state["api_client"] = ApiClient(base_url=previous.base_url, client=previous._http)
     return st.session_state["api_client"]
 
 
@@ -137,8 +142,8 @@ def footer(pages: Sequence[Any]) -> None:
                 st.page_link(page)
         with method, st.container(key="rs_footer_col_method"):
             html('<p class="rs-label">Method</p>')
-            html('<p class="rs-footer-note">Poisson frequency, Lognormal severity, Monte Carlo aggregation. '
-                 'Language-model output is checked against tool results.</p>')
+            html('<p class="rs-footer-note">Illustrative incident and loss assumptions. Simulated results are '
+                 'not forecasts; the analyst checks the evidence and remains responsible for conclusions.</p>')
         html(f'<p class="rs-footer-legal">{escape(BANNER_TEXT)} Fictional Atlas Bank data only.</p>')
 
 
@@ -180,9 +185,15 @@ def sidebar_status() -> None:
         try:
             health = client.health()
         except ApiUnavailableError:
+            st.session_state.pop("app_health", None)
             st.error("API unavailable")
             st.caption(client.base_url)
             return
+        except ApiRequestError as error:
+            st.session_state.pop("app_health", None)
+            show_request_error(error)
+            return
+        st.session_state["app_health"] = health
         (st.success if health["status"] == "ok" else st.warning)(f"API {health['status']}")
         st.caption(client.base_url)
         st.caption(f"Database: {'available' if health['database_available'] else 'unavailable'}")
@@ -195,13 +206,24 @@ def sidebar_status() -> None:
 
 def system_selector(client: ApiClient, page_key: str, label: str = "System") -> str | None:
     """Select a system. The choice is remembered when moving between pages."""
-    result = call_api(client.systems)
-    if result is None:
-        return None
+    cached = st.session_state.get("system_inventory")
+    if cached is None or cached["url"] != client.base_url or monotonic() - cached["loaded"] > 60:
+        result = call_api(client.systems)
+        if result is None:
+            return None
+        cached = {"result": result, "loaded": monotonic(), "url": client.base_url}
+        st.session_state["system_inventory"] = cached
+    result = cached["result"]
     systems = result["systems"]
     ids = [s["system_id"] for s in systems]
+    if not ids:
+        st.error("No systems are available. Load the dataset before investigating.")
+        return None
     details = {s["system_id"]: s for s in systems}
     remembered = st.session_state.get("selected_system", DEFAULT_SYSTEM)
+    if st.session_state.get("selector_page") != page_key and remembered in ids:
+        st.session_state[f"system_{page_key}"] = remembered
+    st.session_state["selector_page"] = page_key
     choice = st.selectbox(
         label, ids, index=ids.index(remembered) if remembered in ids else 0, key=f"system_{page_key}",
         format_func=lambda i: f"{i} · {details[i]['name']} ({details[i]['criticality']})",

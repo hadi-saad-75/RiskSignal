@@ -87,7 +87,7 @@ def test_portfolio_summary_rejects_bad_windows(ctx: ToolContext) -> None:
 
 def test_chat_registry_adds_bank_wide_tools_and_leaves_the_investigation_registry_alone(ctx: ToolContext) -> None:
     chat, default = set(build_chat_registry(ctx).names), set(build_default_registry(ctx).names)
-    assert len(default) == 7 and chat == default | PORTFOLIO_TOOLS
+    assert len(default) == 10 and chat == default | PORTFOLIO_TOOLS
     assert "compare_baseline_and_custom_scenario" not in chat  # user-supplied assumptions stay out of the agent
 
 
@@ -159,7 +159,7 @@ def test_the_assistant_adapts_to_each_kind_of_question(ctx: ToolContext) -> None
 def test_a_broad_request_runs_the_full_investigation(ctx: ToolContext) -> None:
     (result,) = converse(ctx, f"Investigate {FOCAL} under the shared vendor outage scenario.")
     assert {"get_system_profile", "get_controls", "compare_baseline_and_stress"} <= set(tools_of(result))
-    assert "Suggested investigation questions" in result.final_answer and result.ungrounded_numbers == []
+    assert "Next Investigations" in result.final_answer and result.ungrounded_numbers == []
 
 
 @pytest.mark.parametrize("question", ["What currency are the losses in?", "Are the losses in dollars?"])
@@ -272,19 +272,19 @@ def test_future_work_has_no_conversational_preview(http: TestClient) -> None:
     ).run()
     assert not at.exception
     titles = [s.value for s in at.subheader]
-    assert "Practical development roadmap" in titles
+    assert "5. Test the live LLM on the agreed analyst task" in titles
     assert "Ask RiskSignal" not in titles
     assert "Conversational preview" not in titles
     assert "Request" not in titles
     assert not at.chat_input and not at.button
     investigation = assistant_page(http, investigation=True)
-    assert investigation.button[0].label == "Investigate this system"
+    assert investigation.button(key="agent_investigate").label == "Investigate system"
     assert not investigation.chat_input
 
 
 def test_investigation_and_chat_do_not_interfere(http: TestClient) -> None:
     at = assistant_page(http, investigation=True)
-    next(b for b in at.button if b.label == "Investigate this system").click().run()
+    at.button(key="agent_investigate").click().run()
     assert not at.exception and at.session_state["agent_response"]["status"] == "completed"
     report = at.session_state["agent_response"]
     chat = assistant_page(http)

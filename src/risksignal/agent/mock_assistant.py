@@ -111,6 +111,8 @@ CAPABILITIES = (
     "- **Loss modelling:** \"What is the P95 annual loss for CORE_LEDGER_01?\" or \"What happens under a shared "
     "vendor outage?\"\n"
     "- **Methods:** \"What is Expected Shortfall?\" or \"How is lambda estimated?\"\n\n"
+    "- **Review workbench:** \"Show KRI alerts for PAYMENT_ENGINE_01\", \"Prepare its RCSA workpaper\", "
+    "or \"Show its model diagnostics\".\n\n"
     "Every figure comes from the tools, and the data are synthetic."
 )
 
@@ -296,6 +298,42 @@ def _one_tool(name: str, arguments: dict[str, Any], write: Callable[[dict[str, A
                          answer])
 
 
+def _monitoring_answer(result: dict[str, Any]) -> str:
+    lines = [f"**{result['system_id']}** monitoring as of {result['as_of_date']} (policy {result['policy_version']}):"]
+    for series in result["series"]:
+        latest = series["latest"]
+        lines.append(
+            f"- **{series['kri_name']}**: {series['data_status']}, "
+            + (f"{latest['signal']} at {latest['date']} (value {latest['value']:g})." if latest else "no observation.")
+        )
+    return "\n".join(lines + ["", *result["limitations"], "", SYNTHETIC_NOTE])
+
+
+def _diagnostics_answer(result: dict[str, Any]) -> str:
+    lines = [
+        f"**{result['system_id']}** temporal diagnostics: **{result['status']}**.",
+        f"Training ends {result['training_end_inclusive']}. Holdout ends {result['holdout_end_inclusive']}.",
+    ]
+    if result["status"] == "evaluated":
+        lines += [
+            f"- Training incidents: {result['training_incidents']}. Holdout incidents: {result['holdout_incidents']}.",
+            f"- Frequency basis: {result['frequency_method']}. Severity basis: {result['severity_source']}.",
+            f"- Holdout positive losses above training P95: {result['holdout_losses_above_p95']}.",
+        ]
+    return "\n".join(lines + ["", *result["limitations"], "", MODEL_NOTE])
+
+
+def _workpaper_answer(result: dict[str, Any]) -> str:
+    lines = [
+        f"Draft RCSA preparation for **{result['system_id']}** as of {result['as_of_date']}.",
+        "This is an evidence review, not a control-effectiveness assessment or risk decision.",
+    ]
+    for question in result["review_questions"]:
+        lines.append(f"- **{question['topic']}**: {question['question']} Sources: "
+                     + (", ".join(question["source_refs"]) or "no control records available") + ".")
+    return "\n".join(lines + ["", *result["limitations"], "", SYNTHETIC_NOTE])
+
+
 def _glossary_answer(text: str) -> str | None:
     entries = [body for pattern, body in GLOSSARY.values() if pattern.search(text)]
     return "\n\n".join(entries[:2]) if entries else None
@@ -310,6 +348,18 @@ def assistant_provider(message: str, history: Sequence[str] = ()) -> MockProvide
     months = _months_in(message)
     portfolio = bool(_PORTFOLIO.search(message) or _LIST_SYSTEMS.search(message))
     kinds = [kind for kind, pattern in _SYSTEM_INTENTS.items() if pattern.search(message)]
+
+    workbench_intents = [
+        (r"\brcsa\b|workpaper", "get_risk_workpaper", _workpaper_answer),
+        (r"model diagnostics|temporal holdout|model evaluation", "get_model_diagnostics", _diagnostics_answer),
+        (r"kri alerts?|monitoring|early warning|unusual increase", "get_kri_monitoring", _monitoring_answer),
+    ]
+    for pattern, tool, write in workbench_intents:
+        if re.search(pattern, message, re.IGNORECASE):
+            target = system or _last_system(history)
+            if target is None:
+                return MockProvider([LLMResponse(text="Which system should I review? Give its system ID.")])
+            return _one_tool(tool, {"system_id": target}, write)
 
     if system is None and _CONCEPT.search(message) and not portfolio and (explained := _glossary_answer(message)):
         return MockProvider([LLMResponse(text=explained)])

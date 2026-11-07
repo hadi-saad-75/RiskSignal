@@ -11,7 +11,7 @@ def render_overview() -> None:
     page_header(
         "02", "Portfolio", "Management overview",
         "A concise portfolio view of technology operational-risk evidence. This demonstration uses "
-        "fictional Atlas Bank data, not JPMorgan data, and is not a production or decision-making tool.",
+        "fictional Atlas Bank data and is not a production or decision-making tool.",
     )
     render_portfolio_snapshot()
 
@@ -44,7 +44,7 @@ def render_portfolio_snapshot() -> None:
     section_header(
         "Latest incidents",
         "Overdue reviews are follow-up items, not evidence that a control has failed. "
-        "Use the Assistant, System Explorer and Scenario Analysis for supporting detail.",
+        "Use Risk Investigator, System Explorer and Scenario Analysis for supporting detail.",
     )
     st.dataframe(
         [{"Date": i["date"], "System": i["system_id"], "Category": label_for(i["category"]),

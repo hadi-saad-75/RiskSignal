@@ -7,6 +7,20 @@
 > - **Not built:** everything in the [roadmap](#roadmap-what-this-early-version-does-not-do-yet), cloud deployment and anything listed as future research.
 > - **Not yet exercised in development:** the live Anthropic model (no API key was available; the offline mock provider is fully tested) and the Docker images (no Docker engine was available; the build steps, health check and minimal UI environment were checked by emulating them with plain Python).
 
+## Signal-led AI investigation
+
+The dashboard opens **Risk Investigator**: select a system, scan up to three monitoring indicators, and click **Investigate system**. Read a short summary, at most three source-linked findings and three ordered next investigation questions. Evidence, review tools and quantitative details stay expandable. **Scenario Analysis** supports optional financial what-ifs.
+
+The top navigation has four pages: **Introduction**, **Risk Investigator**, **Scenario Analysis** and **Way Forward**. Introduction (`/introduction`) covers current approaches, the need, goal and LLM idea. Way Forward (`/way-forward`) covers approved real bank data, regulatory/internal review, expert input, prediction validation and a supervised pilot on one real analyst task. The Database page remains removed; source evidence is available within Risk Investigator.
+
+- Requires Streamlit 1.65 or newer, aligned with the existing Cloud pin and the accessible dataframe APIs used by the workbench. No new packages are needed.
+- [Industry research and ranked requirements](docs/industry_research.md), with a [34-role evidence register](docs/research/job_evidence.csv). Source/date limitations are explicit; this is not 34 fully retrieved and dated AI operational-risk postings.
+- [Application audit, gap analysis, implementation, testing and roadmap](docs/platform_upgrade.md).
+- **Risk Investigator** replaces the separate Assistant and Risk workbench navigation entries. Monitoring and evidence review tools remain available in collapsed supporting sections. Monitoring itself needs no model API key.
+- All workpapers remain drafts. Review dates do not prove control effectiveness; anomaly signals are not approved appetite breaches; synthetic holdout diagnostics are not predictive validation.
+- Evidence/review notes are session-local until downloaded as JSON, not a persistent case-management audit trail.
+- The final reduction and local validation record is in [docs/FINAL_SIMPLIFICATION_AND_AUDIT.md](docs/FINAL_SIMPLIFICATION_AND_AUDIT.md).
+
 ## Objective
 
 RiskSignal explores how technology-related Operational Risk (outages, failed deployments, vendor failures, control failures) can be investigated by combining:
@@ -111,7 +125,7 @@ See [docs/architecture.md](docs/architecture.md).
 
 ## Scientific positioning
 
-- All data are **synthetic**. Nothing here represents any real bank, including JPMorgan.
+- All data are **synthetic**. Nothing here represents any real bank or financial institution.
 - Model parameters are **illustrative**. There is **no claim of predictive validity**, no institution-specific calibration and no regulatory capital claim.
 - The aim is to demonstrate architecture, agent orchestration, quantitative modelling mechanics, dependency analysis and scenario analysis.
 - The AI agent is an investigation assistant. It makes no final risk decision.
@@ -121,12 +135,13 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## The demo
 
-1. The dashboard opens on **Introduction**, combining the goal, synthetic-data boundary, detailed workflow and live portfolio snapshot. Then select **System Explorer** to follow the evidence and shared-vendor connection for `PAYMENT_ENGINE_01`.
-2. Select **Scenario Analysis** to compare the illustrative baseline and stress assumptions, then **Assistant** to investigate `PAYMENT_ENGINE_01`: the agent retrieves the profile, incidents, KRIs, controls and dependencies and runs a baseline Monte Carlo simulation.
-3. The Assistant writes the report as observed evidence, model assumptions, simulation results, connected exposures, suggested investigation questions and limitations, followed by the tool activity log and simulation metadata.
-4. Open **Way forward: AI assistant**, beside Assistant, for limitations, mathematical assumptions, institutional calibration and the proposed knowledge-assisted and multi-agent research directions.
+1. Open **Risk Investigator** at `/`, with `PAYMENT_ENGINE_01` selected.
+2. Notice the unusual failed-deployment indicator, then click **Investigate system**.
+3. Read the summary and three justified next investigations. Follow a source link and expand one incident, control or shared supplier.
+4. Optionally run **Scenario Analysis** at `/scenario-lab`: compare annual losses under stated assumptions, not forecasts.
+5. Close with the limits: synthetic records, a scripted offline provider unless a live LLM is configured, and an analyst who remains responsible for decisions.
 
-The Introduction includes a manager-focused portfolio snapshot: incident-record count, synthetic historical loss, overdue control reviews, and the latest incidents. It provides context rather than repeating the detailed investigation. System Explorer and Scenario Analysis retain the supporting detail. This project can demonstrate relevant operational-risk analysis skills for an internship, but it contains no JPMorgan data and is not suitable for confidential data or operational decisions.
+Use the [presentation-day commands](docs/README_PRESENTATION.md) and [five-minute script](docs/demo_script.md).
 
 ## Roadmap: what this early version does not do yet
 
@@ -139,7 +154,7 @@ RiskSignal is deliberately an early version of an analysis assistant. It shows t
 5. **Access control and approved hosting.** Authentication, entitlements by business area, and a language model hosted under the institution's approval.
 6. **Analyst feedback.** Marking answers as useful or wrong, so that prompts and tools improve on real use.
 
-The **Way forward: AI assistant** page expands these directions with the mathematical assumptions and institutional calibration needed for a real pilot. A specialist multi-agent design is a possible research direction to compare against the existing single-agent workflow, not an implemented or proven improvement.
+The **Way Forward** page presents these next steps without claiming they are already achieved. See [institutional validation](docs/institutional_validation.md).
 
 ## Generating the synthetic Atlas Bank dataset
 
@@ -164,7 +179,7 @@ Checks run on every generation and every CSV load: unique IDs, foreign keys, non
 
 ### Why the data are synthetic
 
-Atlas Bank is fictional. No real institution's data, including JPMorgan's, were used, and real operational loss data are confidential and institution specific. The dataset exists only to exercise the architecture and workflow.
+Atlas Bank is fictional. No real institution's data were used, and operational loss data are institution-specific. The dataset exists only to exercise the architecture and workflow.
 
 - It must **not** be read as realistic, and it is **not** evidence of predictive performance.
 - The generator contains no hidden predictive label, no "future incident probability" and no machine learning target.
@@ -236,7 +251,7 @@ A real bank graph would need verified configuration, service, process and vendor
 
 ## Agent tools
 
-The AI agent does not query the database or calculate anything itself. It only calls seven deterministic, read-only Python tools: `get_system_profile`, `get_recent_incidents`, `get_kri_history`, `get_controls`, `get_dependencies`, `run_loss_simulation` and `compare_baseline_and_stress`. Each returns a structured Pydantic result labelled as *observed synthetic data* or *modelled output*, or a typed `ToolError` (tools never raise). Simulation results separate the observed basis, the model assumptions and the simulated outputs.
+The AI agent does not query the database or calculate anything itself. Its ten deterministic, read-only investigation tools include the original `get_system_profile`, `get_recent_incidents`, `get_kri_history`, `get_controls`, `get_dependencies`, `run_loss_simulation` and `compare_baseline_and_stress`, plus `get_kri_monitoring`, `get_model_diagnostics` and `get_risk_workpaper`. Each returns a structured Pydantic result labelled as observed synthetic data, modelled output or a mixed-evidence workpaper, or a typed `ToolError` (tools never raise). Simulation results separate the observed basis, the model assumptions and the simulated outputs.
 
 ```python
 from risksignal.tools.context import ToolContext
@@ -298,6 +313,9 @@ RISKSIGNAL_LLM_PROVIDER=mock uvicorn risksignal.api.main:app --reload
 | `GET /systems/{system_id}/controls` | Controls and review status. |
 | `GET /systems/{system_id}/dependencies` | Vendors, processes, shared vendors and related systems. |
 | `GET /systems/{system_id}/kri?months=12` | KRI history grouped by KRI. |
+| `GET /systems/{system_id}/monitoring` | Past-only KRI review signals, data status and walk-forward flag workload. |
+| `GET /systems/{system_id}/model-diagnostics` | Training-only fit and synthetic temporal holdout diagnostics. |
+| `GET /systems/{system_id}/workpaper` | Source-linked draft RCSA evidence, questions and content fingerprint. |
 | `POST /simulations` | Baseline Monte Carlo loss simulation (`system_id`, `number_of_simulations`, `random_seed`). |
 | `GET /scenarios` | The predefined illustrative scenarios and their assumptions. |
 | `POST /scenarios/compare` | Baseline versus a predefined illustrative stress scenario (`scenario_id`, e.g. `SHARED_VENDOR_OUTAGE`). |
@@ -317,17 +335,16 @@ Errors use one JSON shape, `{"error": {"type", "message", "suggestions"}}`, and 
 
 ## Dashboard (Streamlit)
 
-A technical-demo dashboard with five sections, ordered left to right for the presentation. It talks **only to the FastAPI backend** and imports none of the engines:
+A focused analyst workspace with four navigation destinations. It talks **only to the FastAPI backend** and imports none of the engines:
 
-- **Introduction**, the goal, a detailed three-step workflow in readable cards, how Atlas Bank was generated, the engineering path through the project, and live portfolio counts and recent incidents. The former Overview tab is folded into this page.
-- **System Explorer**, profiles, incidents, KRI charts, controls, dependencies and a shared-exposure map.
-- **Scenario Analysis**, baseline estimates and stress comparisons with explanatory controls.
-- **Assistant**, the current investigation with its sectioned summary, tool activity log and simulation metadata.
-- **Way forward: AI assistant**, limitations, mathematical assumptions, institutional calibration, a proposed knowledge-assisted workflow and multi-agent evaluation.
+- **Risk Investigator** (default), a three-indicator snapshot, prominent investigation action, concise findings and ordered follow-up questions. System profiles, incidents, one selected KRI chart, controls, direct/indirect dependencies, tool activity, RCSA questions, diagnostics and review/export are supporting disclosures.
+- **Scenario Analysis**, optional baseline/stress comparisons. Three headline metrics, with distributions, assumptions and all other metrics expandable. No simulation runs just by opening a page.
+- **Introduction**, current approaches, need, goal and idea, available without database access.
+- **Way Forward**, practical steps for approved data, expert/regulatory review, real-task LLM evaluation and out-of-sample loss-model assessment.
 
 Losses use **synthetic monetary units**, not a specified real currency. The UI explains lowercase **λ** as the annual incident rate, **μ** as the mean of log-losses and **σ** as the standard deviation of log-losses. Custom multipliers change λ or σ, not every loss by that percentage.
 
-Displayed prose replaces long dashes and semicolons, including a display-only copy of evidence text. Raw API tool outputs, stored records, numeric results, identifiers, SQL, CSS and URLs remain unchanged. A banner on every page reminds the reader that the data are synthetic and the model is not calibrated.
+Displayed prose replaces long dashes and semicolons, including a display-only copy of evidence text. Raw API tool outputs, stored records, numeric results, identifiers, SQL, CSS and URLs remain unchanged. Synthetic-data and conditional-model notices remain visible without a large promotional banner.
 
 ```bash
 # 1. Generate the synthetic data (once)
@@ -340,13 +357,14 @@ uvicorn risksignal.api.main:app --reload
 streamlit run src/risksignal/ui/app.py
 ```
 
-- **Without an Anthropic key** the Introduction, System Explorer and Scenario Analysis work as normal. The Assistant shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
+ The Assistant shows a clear message that the live agent needs `ANTHROPIC_API_KEY`. For an offline demonstration of the whole dashboard, start the backend with the deterministic mock provider (`RISKSIGNAL_LLM_PROVIDER=mock`, PowerShell: `$env:RISKSIGNAL_LLM_PROVIDER="mock"`).
 - **With a key**, put `ANTHROPIC_API_KEY=...` in `.env` (git-ignored) or the environment before starting the backend.
+- **Without a key**, Scenario Analysis and supporting monitoring evidence work normally. Set `RISKSIGNAL_LLM_PROVIDER=mock` for scripted offline investigations and drafts, or configure a live provider for genuine LLM tool calling.
 - If the backend runs somewhere else, set `RISKSIGNAL_API_URL` (default `http://127.0.0.1:8000`) before starting Streamlit.
 
 The UI computes no risk figures: every number shown was returned by the API. See the notes on assumptions and limitations in the docs.
 
-**Visual design.** The dashboard uses a restrained editorial design system: an oversized serif display face (Instrument Serif, with Canela, Editorial New and Tiempos preferred where licensed) for page and section titles and key figures, a grotesk sans (Inter, after Neue Haas Grotesk and Helvetica Neue) for body text, controls and data, a white, black and neutral palette with a single warm accent (`#9A6848`) kept for calls to action, index numerals and active states, and hierarchy built from scale, spacing and hairline rules rather than cards or shadows. Tokens, the global stylesheet and the Plotly chart style live in [src/risksignal/ui/theme.py](src/risksignal/ui/theme.py). Base Streamlit theme settings are in [.streamlit/config.toml](.streamlit/config.toml) and are mirrored as `STREAMLIT_THEME_*` variables in `Dockerfile.ui`. The editorial layout helpers (page header, section header, ruled lists, footer) are in [src/risksignal/ui/components.py](src/risksignal/ui/components.py).
+**Visual design.** Independent Inter sans-serif typography, with Segoe UI/Arial fallbacks, replaces the old serif/institutional presentation. White and soft grey surfaces, navy `#183153`, blue `#2864A0`, dark text `#172B45` and subtle borders `#DFE5EC` provide hierarchy without decorative cards. Inter is open-licensed; no proprietary brand assets are used. Font downloads are optional for readability. Local theme tokens and Plotly styling live in [src/risksignal/ui/theme.py](src/risksignal/ui/theme.py), with base settings in [.streamlit/config.toml](.streamlit/config.toml). The local configuration is the presentation target; historical Docker/deployment material is not a readiness claim.
 
 ## Documentation
 
@@ -362,7 +380,8 @@ The UI computes no risk figures: every number shown was returned by the API. See
 - [docs/technical_review.md](docs/technical_review.md): internal technical review of the mathematics, architecture and agent (not an independent model validation), with remaining technical debt.
 - [docs/institutional_validation.md](docs/institutional_validation.md): roadmap of what a real Operational Risk team would need to do to evaluate this prototype seriously (data, domain, modelling, validation, agent, security). Contains no results.
 - [docs/research_extensions.md](docs/research_extensions.md): five research questions the prototype is built to make precise but does not answer (λ(t) from KRIs, tabular foundation models, dependency information, NLP signals, evidence-grounded agent). Contains no results.
-- [docs/demo_script.md](docs/demo_script.md): a 13-minute live demonstration script built around `PAYMENT_ENGINE_01`, with reference values (checked by a test), caveats, likely technical questions with honest answers, and a troubleshooting table.
+- [docs/demo_script.md](docs/demo_script.md): the investigator-first five-minute route, with an optional technical walkthrough, tested reference values and honest Q&A.
+- [docs/FINAL_SIMPLIFICATION_AND_AUDIT.md](docs/FINAL_SIMPLIFICATION_AND_AUDIT.md): feature reductions, local checks, mathematical checks and remaining limitations.
 - [docs/deployment.md](docs/deployment.md): deploying the API on Render (Docker, mock provider) and the dashboard on Streamlit Community Cloud, with exact settings, post-deployment checks and a record of what was and was not verified.
 
 ## Presentation Questions and Answers
@@ -395,7 +414,7 @@ This bank is grounded in the implementation and documentation in this repository
 **Q4. Why is the agent the main added value?**
 
 - **Presentation answer:** It can choose which evidence to gather for a question and turn the results into a reviewable summary; it does not replace the calculations.
-- **Technical detail:** The investigator chooses among seven typed, read-only tools and returns the answer with tool activity, outputs and warnings.
+- **Technical detail:** The investigator chooses among ten typed, read-only tools and returns the answer with tool activity, outputs and warnings.
 - **Caution:** Tool selection and wording still depend on the LLM; the number-grounding check is best-effort, not a correctness proof.
 - **Project evidence:** [investigator](src/risksignal/agent/investigator.py), [agent design](docs/agent_design.md).
 
@@ -413,11 +432,11 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** A model can technically be fit, but that would not make its results valid or informative for a bank.
 - **Project evidence:** [data generator](src/risksignal/data/generator.py), [research extensions](docs/research_extensions.md).
 
-**Q7. Why is this not a JPMorgan risk model?**
+**Q7. Why is this not a bank risk model?**
 
-- **Presentation answer:** It contains no JPMorgan data, taxonomy, model, process or validated parameters. “Atlas Bank” is fictional.
+- **Presentation answer:** It contains no real bank data, taxonomy, model, process or validated parameters. “Atlas Bank” is fictional.
 - **Technical detail:** Its estimates come from generated incidents, and its scenario adjustments are illustrative assumptions.
-- **Caution:** Do not imply endorsement, representativeness or any relationship to JPMorgan’s internal risk processes.
+- **Caution:** Do not imply endorsement, representativeness or any relationship to a real institution's internal risk processes.
 - **Project evidence:** [limitations](docs/limitations.md), [agent prompt](src/risksignal/agent/prompts.py).
 
 **Q8. What would you need from an institution to make it useful?**
@@ -778,13 +797,6 @@ This bank is grounded in the implementation and documentation in this repository
 - **Caution:** The current numeric warning is not a general hallucination-rate metric, and the repository reports no such evaluation results.
 - **Project evidence:** [investigator](src/risksignal/agent/investigator.py), [research extensions](docs/research_extensions.md).
 
-**Q19. Could this become a multi-agent system? Which agents?**
-
-- **Presentation answer:** It could be explored, but I would first show that a simple single-agent workflow fails on a measurable task.
-- **Technical detail:** Candidate roles might be evidence retrieval, quantitative analysis, dependency mapping and independent quality review, each with narrow tools and a shared audit trail.
-- **Caution:** These are design ideas only; multiple agents can add cost, latency and coordination errors, and none are implemented.
-- **Project evidence:** [agent design](docs/agent_design.md), [architecture](docs/architecture.md).
-
 ### CATEGORY 5: SOFTWARE ARCHITECTURE
 
 **Q1. Why FastAPI?**
@@ -954,7 +966,7 @@ This bank is grounded in the implementation and documentation in this repository
 
 - **Presentation answer:** Train or estimate only on the past and evaluate against later observations, repeating that process over time.
 - **Technical detail:** Use rolling-origin splits with a gap, preserve point-in-time feature availability, compare with simple baselines and report uncertainty.
-- **Caution:** RiskSignal has not been backtested; a random split would risk leakage and misrepresent future use.
+- **Caution:** RiskSignal now includes one training-only synthetic temporal holdout diagnostic, not real-data backtesting or independent validation. A random split would risk leakage and misrepresent future use.
 - **Project evidence:** [research extensions](docs/research_extensions.md), [limitations](docs/limitations.md).
 
 **Q7. What metrics would you use?**
@@ -1045,11 +1057,11 @@ This bank is grounded in the implementation and documentation in this repository
 
 ### CATEGORY 8: FUTURE RESEARCH
 
-**Q1. What would be your first research priority with real JPMorgan data?**
+**Q1. What would be your first research priority with real bank data?**
 
 - **Presentation answer:** First establish intended use, access permissions, definitions and data quality with the institution; only then reproduce a transparent baseline.
 - **Technical detail:** Build a point-in-time system-period panel and document loss, KRI, control and dependency semantics before model comparison.
-- **Caution:** No JPMorgan data are present; name the institution only as the hypothetical setting posed by the question, not as a participant or data source.
+- **Caution:** No real bank data are present; do not imply that any institution is a participant or data source.
 - **Project evidence:** [institutional validation roadmap](docs/institutional_validation.md), [limitations](docs/limitations.md).
 
 **Q2. What would you test first: Poisson vs Negative Binomial, severity tails, XGBoost vs TFM, or historical-case retrieval?**

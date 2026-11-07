@@ -1,138 +1,67 @@
-"""Limitations and research directions."""
+"""Practical next steps for an approved, analyst-reviewed real-data pilot."""
 
 import streamlit as st
 
-from risksignal.ui.components import (
-    banner,
-    page_header,
-    ruled_list,
-    section_header,
-)
-
 
 def render_way_forward() -> None:
-    banner()
-    page_header(
-        "05", "Research directions", "Way forward: AI assistant",
-        "From evidence and investigation questions to a more informed assistant. "
-        "The ideas below are future work, not capabilities or results claimed by this prototype.",
-    )
-    section_header(
-        "What the prototype cannot establish",
-        "Working code and reproducible calculations are not the same as a validated risk model.",
-    )
-    ruled_list([
-        ("Constructed evidence, not real-bank findings",
-         "Atlas Bank is fictional. Its payment-system story was deliberately built into the data, "
-         "and its losses were generated from Lognormal distributions. A good fit is not real-world validation."),
-        ("Simplified loss model",
-         "The baseline assumes constant Poisson frequency and independent Lognormal losses. Small samples and "
-         "parameter uncertainty limit the results. Controls and KRIs are evidence, not predictors in this model. "
-         "The graph exposes connections but does not simulate joint vendor failures or contagion."),
-        ("Investigation support, not institutional expertise",
-         "The current agent assembles evidence and mostly suggests investigation questions. It has no bank-specific "
-         "policy knowledge or expert judgement. Its number checks are best effort and do not verify every claim."),
-        ("Not ready for operational decisions",
-         "There is no predictive validation, regulatory capital claim, persistent case audit trail or production "
-         "access control. The live-model path still needs evaluation. The offline provider is a script, not an LLM."),
-    ])
+    st.title("Way Forward")
+    st.write("From a synthetic demonstration to a useful tool tested on one real Operational Risk task.")
+    st.caption("Proposed work, not capabilities or results achieved today.")
 
-    section_header(
-        "Two foundations for the next stage",
-        "Mathematical assumptions and institutional calibration must be examined together with risk specialists.",
+    st.subheader("1. Agree one real task with risk experts")
+    st.write(
+        "Work with Operational Risk analysts, system owners and model-validation specialists. "
+        "Choose a narrow question, such as reviewing recurring payment-system incidents and preparing "
+        "three evidence-backed follow-up questions. Agree what a correct and useful answer looks like."
     )
-    maths, calibration = st.columns(2, gap="large")
-    with maths:
-        st.subheader("Mathematical assumptions")
-        ruled_list([
-            ("Is Poisson appropriate?",
-             "Test whether counts are independent and stable, and whether their variance exceeds their mean."),
-            ("Negative Binomial and time-varying intensity",
-             "Compare a Negative Binomial for overdispersion and a rate λ(t) that changes over time "
-             "against the simple Poisson baseline, using out-of-sample evidence."),
-            ("Tails, dependence and uncertainty",
-             "Investigate severity tails, joint vendor events and parameter uncertainty only when enough "
-             "relevant data are available."),
-            ("Separate regulatory capital from research",
-             "If capital is the intended use, consult regulatory specialists on the applicable Basel standardised "
-             "approach. It is not a replacement probability distribution or an implemented feature here."),
-        ])
-    with calibration:
-        st.subheader("Institutional calibration")
-        ruled_list([
-            ("Real incidents and loss history",
-             "Agree loss definitions, currency, recoveries, observation windows and data quality. "
-             "Use approved real KRIs and control records."),
-            ("Verified system and vendor dependencies",
-             "Replace the fictional graph with maintained maps of systems, business services and external vendors."),
-            ("Institution-specific scenarios",
-             "Design and justify stress assumptions with domain experts rather than reuse demonstration multipliers."),
-            ("Backtesting and validation",
-             "Set the intended use and evaluation criteria first, then test stability, sensitivity and out-of-sample "
-             "performance with independent review and model governance."),
-        ])
 
-    section_header(
-        "From suggested questions to informed draft answers",
-        "Expert decisions would be reference evidence, not authority delegated to the agent. "
-        "A human analyst would still review and decide.",
+    st.subheader("2. Obtain approved real bank data")
+    st.write(
+        "With a bank partner's permission, use incident history, losses, KRIs, control-test results and "
+        "system/vendor dependencies. Check missing records, dates, shared IDs, loss definitions, currencies "
+        "and recoveries. Start with the minimum data needed, anonymised where appropriate."
     )
-    now, future = st.columns(2, gap="large")
-    with now:
-        st.subheader("Now")
-        for index, step in enumerate(("Evidence", "Tool-based agent", "Suggested investigation questions")):
-            if index:
-                st.markdown("↓")
-            with st.container(border=True):
-                st.markdown(f"**{step}**")
-        st.write(
-            "The agent can highlight an overdue control or shared vendor and suggest what to examine. "
-            "It cannot know whether a control is effective or why an incident occurred."
-        )
-    with future:
-        st.subheader("Proposed next step")
-        for index, step in enumerate((
-            "Evidence",
-            "Approved resolved cases, control documentation and past investigations",
-            "Documented expert decisions",
-            "Retrieval-assisted agent",
-            "Cited draft answer and human review",
-        )):
-            if index:
-                st.markdown("↓")
-            with st.container(border=True):
-                st.markdown(f"**{step}**")
-        st.write(
-            "Use institution-approved knowledge and source citations to draft more useful answers. "
-            "Evaluate incorrect answers, missing evidence, usefulness and analyst time before wider use."
-        )
+    st.caption("Data access is not assumed. Confidential records must not be uploaded to an unapproved LLM service.")
 
-    section_header(
-        "Could a multi-agent design help?",
-        "A potentially useful research direction, not a proven improvement and not implemented.",
+    st.subheader("3. Review regulations and internal rules")
+    st.write(
+        "Ask the bank's compliance, legal, information-security and model-risk teams which requirements apply "
+        "to its jurisdiction and use case. Agree privacy, confidentiality, data retention, access rights, "
+        "third-party/LLM approval, model governance and operational-resilience controls before connecting data."
     )
-    ruled_list([
-        ("Specialist roles",
-         "An evidence agent could retrieve approved sources, a graph agent could examine shared exposures, "
-         "a quantitative agent could call the simulation tools, and a control agent could review control evidence."),
-        ("Coordination and review",
-         "A lead agent could assemble a cited draft, with a separate evidence-checking role. "
-         "All roles would use restricted tools and a shared case record, with a human retaining final judgement."),
-        ("Prove the benefit before adding complexity",
-         "Compare against the existing single-agent workflow on the same tasks. Measure evidence coverage, errors, "
-         "analyst usefulness, latency and cost. More agents can repeat the same errors and increase overhead."),
-    ])
+    st.caption("This prototype is not a compliance assessment or a regulatory capital engine. "
+               "Applicable requirements must be confirmed by the institution's specialists.")
 
-    section_header("Practical development roadmap", "A proposed sequence for a governed pilot, not completed work.")
-    ruled_list([
-        ("1. Agree the use case and approved data",
-         "Define the analyst task, data access, success criteria and decision boundaries."),
-        ("2. Calibrate and validate a transparent baseline",
-         "Assess the mathematical assumptions and design scenarios with the institution."),
-        ("3. Add approved knowledge and evaluate the assistant",
-         "Test retrieval, citations, tool choice and answer quality against reviewed reference cases."),
-        ("4. Compare specialist agents where justified",
-         "Keep a multi-agent design only if it improves the measured outcome over the simpler baseline."),
-        ("5. Add operational controls",
-         "Saved cases, audit trails, analyst feedback, authentication, entitlements and approved hosting."),
-    ])
+    st.subheader("4. Fit and test a real-data loss model")
+    st.write(
+        "Estimate incident frequency and loss severity from the approved history, then check whether the "
+        "model's assumptions fit the data. Monte Carlo samples possible annual losses from that fitted model. "
+        "Simulation alone does not make a reliable predictor."
+    )
+    st.write(
+        "To assess real predictions, fit on earlier records and test on later records kept out of fitting. "
+        "Compare against simple baselines, check calibration and uncertainty, and obtain independent review. "
+        "The target is a probabilistic annual-loss range, not the exact date or cost of the next incident."
+    )
+    st.caption("Do not claim predictive validity unless the out-of-sample evidence supports it. "
+               "KRIs and dependencies do not automatically change today's loss model.")
+
+    st.subheader("5. Test the live LLM on the agreed analyst task")
+    st.write(
+        "Use an approved live LLM with read-only tools. On reviewed cases, compare its draft with the current "
+        "analyst workflow. Measure source correctness, important evidence missed, unsupported statements, "
+        "usefulness of next questions and review time. Keep case selection and assessment criteria agreed in advance."
+    )
+    st.write(
+        "Every answer stays a draft: an experienced analyst checks the evidence and decides the follow-up. "
+        "Start with a small supervised pilot and expand only if it improves the task without reducing quality."
+    )
+
+    st.subheader("What success would look like")
+    st.write(
+        "A reviewed investigation draft on a real task, with traceable sources, useful next questions and "
+        "measured quality and time results. Separately, an independently assessed loss model with honest "
+        "out-of-sample results, whether those results support prediction or show that more work is needed."
+    )
+    st.info("Today: synthetic data and a scripted offline demonstration. Live LLM quality, real-bank prediction "
+            "performance and regulatory suitability remain unverified.")

@@ -64,6 +64,9 @@ class ApiClient:
     def overview(self, recent_incidents: int = 10) -> dict[str, Any]:
         return self._request("GET", "/overview", params={"recent_incidents": recent_incidents})
 
+    def database(self, table: str, offset: int = 0, limit: int = 100) -> dict[str, Any]:
+        return self._request("GET", f"/database/{table}", params={"offset": offset, "limit": limit})
+
     def systems(self) -> dict[str, Any]:
         return self._request("GET", "/systems")
 
@@ -81,6 +84,15 @@ class ApiClient:
 
     def kri(self, system_id: str, months: int = 12) -> dict[str, Any]:
         return self._request("GET", f"/systems/{system_id}/kri", params={"months": months})
+
+    def monitoring(self, system_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/systems/{system_id}/monitoring")
+
+    def model_diagnostics(self, system_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/systems/{system_id}/model-diagnostics")
+
+    def workpaper(self, system_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/systems/{system_id}/workpaper")
 
     def scenarios(self) -> dict[str, Any]:
         return self._request("GET", "/scenarios")

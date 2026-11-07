@@ -1,6 +1,6 @@
 # Agent Tools
 
-The tool layer is the **only way the future AI agent can read data or obtain numbers**. This document explains why the layer exists, what each tool does, and the rules it enforces.
+The tool layer is the **only way the AI agent can read data or obtain numbers**. This document explains why the layer exists, what each tool does, and the rules it enforces.
 
 > The agent (see [agent_design.md](agent_design.md)) calls only these tools. All data are synthetic and all model results are illustrative. See [limitations.md](limitations.md).
 
@@ -36,19 +36,29 @@ All tools take a `ToolContext` as first argument (the database path, the "as of"
 | `get_dependencies(ctx, system_id)` | Vendors, supported processes, controls, shared vendors, related systems, upstream and downstream systems, and indirect vendors. Delegates to the graph module. | Observed synthetic data (structural) |
 | `run_loss_simulation(ctx, system_id, number_of_simulations=100000, random_seed=42)` | Baseline Monte Carlo simulation of annual aggregate loss. Delegates to the stochastic engine. | Modelled output |
 | `compare_baseline_and_stress(ctx, system_id, scenario_id, number_of_simulations=100000, random_seed=42)` | Baseline versus a **predefined** illustrative scenario (currently `SHARED_VENDOR_OUTAGE`), with absolute and percentage differences. Delegates to the scenario engine. | Modelled output |
+| `get_kri_monitoring(ctx, system_id)` | Past-only rolling median/MAD review signals, explicit data status, source references and walk-forward flag workload. Not appetite or predictive accuracy. | Observed synthetic data and descriptive rule |
+| `get_model_diagnostics(ctx, system_id)` | Training-only fit and a twelve-month synthetic holdout, pooling, conditional count interval, dispersion and individual-loss tail exceedances. | Modelled diagnostic output |
+| `get_risk_workpaper(ctx, system_id)` | Existing evidence plus monitoring/diagnostics and source-linked questions for RCSA preparation, with a reproducible fingerprint. No rating or sign-off. | Mixed evidence, nested provenance labels |
 
 Tools delegate rather than reimplement: simulation tools call `run_system_simulation` and `run_scenario_analysis` from the stochastic package, and the dependency tool calls the graph query functions. Tests check these calls with spies and compare results with direct calls.
 
-### Tool-layer functions that are deliberately NOT offered to the agent
+### Additional conversational tools and restricted custom assumptions
 
-The API and dashboard use four further functions of the same layer. They are not registered with the agent (a test checks the registry), because the agent has no need for them or must not use them:
+The conversational registry adds four portfolio functions to the ten investigation/workbench tools. Custom numeric scenario assumptions remain restricted to explicit human inputs through the API/dashboard:
 
-| Function | Used by | Why the agent does not get it |
+| Function | Used by | Agent access |
 |---|---|---|
-| `list_systems` | API, dashboard system selector | A person picks the system; the agent investigates the one it is asked about. |
-| `get_bank_overview` | API, dashboard Overview | Bank-wide counts are a display feature. |
-| `list_scenarios` | API, dashboard Scenario Lab | The agent already sees the available scenario IDs in its tool schema. |
-| `compare_baseline_and_custom_scenario` | API, dashboard "Advanced assumptions" | It accepts free numeric stress assumptions. Only a person may set those; the agent may only select predefined scenarios. |
+| `list_systems` | API, dashboard, conversational assistant | Conversational registry only |
+| `get_bank_overview` | API, dashboard, conversational assistant | Conversational registry only |
+| `get_portfolio_summary` | Conversational assistant | Conversational registry only |
+| `list_scenarios` | API, dashboard, conversational assistant | Conversational registry only |
+| `compare_baseline_and_custom_scenario` | API, dashboard "Advanced assumptions" | Not registered; only a person may supply free numeric stress assumptions |
+
+Model-facing views omit chart histograms and bulky walk-forward `history` fields,
+but retain latest calculations, summary statistics and source references. Full histories
+remain in the monitoring/workpaper API and JSON export. Workbench AI drafts must come
+from a completed run with matching source-workpaper fingerprint. This is a snapshot
+identity check, not semantic verification or an authenticated audit signature.
 
 ### What the simulation results contain
 
@@ -92,7 +102,7 @@ Window rules: incidents use the half-open window (`as_of_date` minus `months` mo
 
 ## 6. How the demo uses them
 
-For `PAYMENT_ENGINE_01` the agent is expected to call, in order: `get_system_profile`, `get_recent_incidents`, `get_kri_history`, `get_controls`, `get_dependencies`, `run_loss_simulation`, and optionally `compare_baseline_and_stress`. It then writes its summary using only what those results contain.
+For a broad `PAYMENT_ENGINE_01` investigation, the default offline script calls `get_system_profile`, `get_recent_incidents`, `get_kri_monitoring`, `get_controls` and `get_dependencies`. A financial-loss question additionally calls `run_loss_simulation`; an explicit stress request also calls `compare_baseline_and_stress`. The live LLM chooses from the same read-only tools, subject to the prompt and argument validation. Findings and follow-up questions cite returned record IDs. `get_kri_history` remains available for descriptive window comparisons.
 
 ## 7. Limitations and assumptions
 

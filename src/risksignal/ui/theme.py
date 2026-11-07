@@ -1,12 +1,10 @@
-"""RiskSignal editorial design system.
+"""RiskSignal visual system.
 
 One place for the visual language of the dashboard: colour and type tokens, the global
 stylesheet injected into Streamlit, and the Plotly template used by every chart.
 
-Principles: white, black and neutral surfaces; a warm brown accent used only for small details
-(CTA text, arrows, index numerals, active states); a refined serif for display typography and a
-disciplined grotesk for everything functional; hierarchy built from scale, spacing and thin
-rules rather than boxes, shadows or colour.
+Principles: neutral surfaces, a restrained navy accent, readable sans-serif typography and
+clear hierarchy. Colour and decoration are reserved for actions and meaningful status.
 """
 
 import plotly.graph_objects as go
@@ -16,23 +14,21 @@ import streamlit as st
 # ----------------------------------------------------------------------------- tokens
 
 BACKGROUND = "#FFFFFF"
-SURFACE = "#FAF9F6"
-TEXT = "#090909"
-TEXT_SECONDARY = "#454545"
-TEXT_MUTED = "#8F8F8A"
-DIVIDER = "#D8D6D1"
-BORDER_STRONG = "#171717"
-ACCENT = "#9A6848"
-ACCENT_SECONDARY = "#A97552"
+SURFACE = "#F5F7FA"
+TEXT = "#172B45"
+TEXT_SECONDARY = "#52647A"
+TEXT_MUTED = "#65758B"
+DIVIDER = "#DFE5EC"
+BORDER_STRONG = "#CBD5E1"
+ACCENT = "#183153"
+ACCENT_SECONDARY = "#2864A0"
 # Semantic colours, deliberately desaturated; used only where a status must be distinguished.
-NEGATIVE = "#8C3B2E"
-POSITIVE = "#4F6B4A"
+NEGATIVE = "#B42318"
+POSITIVE = "#067647"
 
-SERIF = '"Canela", "Editorial New", "Tiempos Headline", "Instrument Serif", "Cormorant Garamond", serif'
-SANS = '"Neue Haas Grotesk Text", "Helvetica Neue", "Suisse Intl", "Inter", Arial, sans-serif'
+SANS = '"Inter", "Segoe UI", Arial, sans-serif'
 FONT_IMPORT = (
-    "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1"
-    "&family=Inter:wght@400;500;600;700&display=swap"
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
 )
 
 # ----------------------------------------------------------------------------- stylesheet
@@ -52,14 +48,13 @@ _CSS = """
   --rs-accent-2: __ACCENT_SECONDARY__;
   --rs-negative: __NEGATIVE__;
   --rs-positive: __POSITIVE__;
-  --rs-serif: __SERIF__;
   --rs-sans: __SANS__;
-  --rs-pad: clamp(1.25rem, 4.4vw, 4.5rem);
-  --rs-section: clamp(3.5rem, 7vw, 7rem);
-  --rs-h1: clamp(2.875rem, 1.6rem + 5.2vw, 7.25rem);
-  --rs-h2: clamp(2.375rem, 1.5rem + 3.4vw, 5rem);
-  --rs-h3: clamp(2.25rem, 1.6rem + 2.2vw, 3.5rem);
-  --rs-figure: clamp(2.5rem, 1.9rem + 1.8vw, 3.75rem);
+  --rs-pad: clamp(1.25rem, 3vw, 3rem);
+  --rs-section: clamp(2rem, 4vw, 3.5rem);
+  --rs-h1: clamp(2rem, 1.5rem + 1.8vw, 3rem);
+  --rs-h2: clamp(1.5rem, 1.25rem + 0.8vw, 1.875rem);
+  --rs-h3: clamp(1.125rem, 1rem + 0.35vw, 1.375rem);
+  --rs-figure: clamp(1.5rem, 1.25rem + 0.8vw, 1.875rem);
 }
 @media (min-width: 1680px) { :root { --rs-pad: 5.5rem; } }
 
@@ -72,8 +67,8 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
   text-rendering: optimizeLegibility;
 }
 [data-testid="stMainBlockContainer"] {
-  max-width: 1440px;
-  padding: calc(4.5rem + clamp(1.25rem, 2.5vw, 2rem)) var(--rs-pad) 0;
+  max-width: 1180px;
+  padding: 5rem var(--rs-pad) 2rem;
 }
 [data-testid="stDecoration"] { display: none; }
 ::selection { background: var(--rs-text); color: var(--rs-bg); }
@@ -82,13 +77,14 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
 [data-testid="stHeader"] {
   background: var(--rs-bg);
   border-bottom: 1px solid var(--rs-divider);
-  height: 4.5rem;
+  height: 4rem;
 }
 [data-testid="stHeader"]::before {
   content: "RiskSignal";
-  font-family: var(--rs-serif);
-  font-size: 1.875rem;
-  letter-spacing: -0.03em;
+  font-family: var(--rs-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1;
   color: var(--rs-text);
   padding-left: var(--rs-pad);
@@ -99,12 +95,12 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
 /* sidebar toggle becomes a hairline hamburger at the far right of the masthead */
 [data-testid="stExpandSidebarButton"] {
   position: fixed !important;
-  top: 1.35rem;
+  top: 1.05rem;
   right: var(--rs-pad);
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--rs-strong) !important;
-  border-radius: 999px !important;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--rs-divider) !important;
+  border-radius: 0.5rem !important;
   background: var(--rs-bg) !important;
   z-index: 1000;
 }
@@ -140,22 +136,22 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
 [data-testid="stTopNavLink"][aria-current="page"] span,
 [data-testid="stTopNavLink"][aria-current="page"] p { color: var(--rs-text); }
 
-/* ---------- display typography (serif) */
+/* ---------- headings */
 h1, h2, h3, h4,
 [data-testid="stHeading"] h1, [data-testid="stHeading"] h2, [data-testid="stHeading"] h3 {
-  font-family: var(--rs-serif) !important;
-  font-weight: 400 !important;
+  font-family: var(--rs-sans) !important;
+  font-weight: 600 !important;
   color: var(--rs-text);
-  letter-spacing: -0.032em;
+  letter-spacing: -0.02em;
 }
 [data-testid="stHeading"] h1, h1 {
   font-size: var(--rs-h1) !important;
-  line-height: 0.94 !important;
-  padding: 0 0 0.25rem;
-  letter-spacing: -0.038em;
+  line-height: 1.12 !important;
+  padding: 0 0 0.35rem;
+  letter-spacing: -0.025em;
 }
-[data-testid="stHeading"] h2, h2 { font-size: var(--rs-h2) !important; line-height: 0.98 !important; padding: 0; }
-[data-testid="stHeading"] h3, h3 { font-size: var(--rs-h3) !important; line-height: 1.0 !important; padding: 0; }
+[data-testid="stHeading"] h2, h2 { font-size: var(--rs-h2) !important; line-height: 1.2 !important; padding: 0; }
+[data-testid="stHeading"] h3, h3 { font-size: var(--rs-h3) !important; line-height: 1.3 !important; padding: 0; }
 [data-testid="stHeaderActionElements"] { display: none; }
 
 /* ---------- body typography (sans) */
@@ -184,7 +180,7 @@ h1, h2, h3, h4,
   opacity: 1 !important;
 }
 
-/* ---------- editorial primitives */
+/* ---------- layout primitives */
 .rs-eyebrow {
   display: flex;
   align-items: center;
@@ -199,7 +195,7 @@ h1, h2, h3, h4,
 }
 .rs-eyebrow .rs-index,
 .rs-index {
-  font-family: var(--rs-serif);
+  font-family: var(--rs-sans);
   font-size: 1.5rem;
   font-weight: 400;
   letter-spacing: -0.02em;
@@ -210,8 +206,8 @@ h1, h2, h3, h4,
 .rs-eyebrow .rs-line { width: 2.5rem; height: 1px; background: var(--rs-strong); }
 .rs-lead {
   font-family: var(--rs-sans);
-  font-size: clamp(1.0625rem, 0.95rem + 0.35vw, 1.25rem) !important;
-  line-height: 1.45 !important;
+  font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem) !important;
+  line-height: 1.55 !important;
   color: var(--rs-text-2) !important;
   margin: 0 0 0.75rem;
   max-width: 34rem;
@@ -279,7 +275,7 @@ h1, h2, h3, h4,
   margin-top: 1.5rem;
 }
 .rs-answer-head .rs-title {
-  font-family: var(--rs-serif);
+  font-family: var(--rs-sans);
   font-size: clamp(1.75rem, 1.4rem + 1vw, 2.5rem);
   letter-spacing: -0.03em;
   line-height: 1;
@@ -349,11 +345,11 @@ h1, h2, h3, h4,
 }
 [data-testid="stMetricValue"], [data-testid="stMetricValue"] div,
 [data-testid="stMetricValue"] [data-testid="stMarkdownContainer"] p {
-  font-family: var(--rs-serif) !important;
+  font-family: var(--rs-sans) !important;
   font-size: var(--rs-figure) !important;
-  font-weight: 400 !important;
-  line-height: 1.02 !important;
-  letter-spacing: -0.035em;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em;
   color: var(--rs-text) !important;
   font-variant-numeric: lining-nums;
 }
@@ -373,15 +369,15 @@ h1, h2, h3, h4,
 }
 [data-testid="stMetricDelta"] svg { color: var(--rs-accent) !important; fill: var(--rs-accent) !important; }
 
-/* ---------- buttons: pill, hairline border, brown label + arrow */
+/* ---------- buttons */
 button[data-testid^="stBaseButton"] {
-  border-radius: 999px !important;
-  border: 1px solid var(--rs-strong) !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid var(--rs-divider) !important;
   background: transparent !important;
-  color: var(--rs-accent) !important;
+  color: var(--rs-text) !important;
   box-shadow: none !important;
-  min-height: 3rem;
-  padding: 0.65rem 1.5rem !important;
+  min-height: 2.5rem;
+  padding: 0.55rem 1rem !important;
   transition: background-color 160ms ease, color 160ms ease;
 }
 button[data-testid^="stBaseButton"] p {
@@ -391,9 +387,15 @@ button[data-testid^="stBaseButton"] p {
   letter-spacing: 0;
   color: inherit !important;
 }
-button[data-testid="stBaseButton-primary"] p::after { content: "\\2192"; margin-left: 0.6em; display: inline-block; transition: transform 160ms ease; }
 button[data-testid^="stBaseButton"]:hover { background: var(--rs-surface) !important; color: var(--rs-text) !important; }
-button[data-testid="stBaseButton-primary"]:hover p::after { transform: translateX(0.25em); }
+button[data-testid="stBaseButton-primary"] {
+  background: var(--rs-accent) !important;
+  border-color: var(--rs-accent) !important;
+  color: #FFFFFF !important;
+}
+button[data-testid="stBaseButton-primary"] p { color: #FFFFFF !important; }
+button[data-testid="stBaseButton-primary"]:hover { background: var(--rs-accent-2) !important; color: #FFFFFF !important; }
+button[data-testid="stBaseButton-primary"]:hover p { color: #FFFFFF !important; }
 button[data-testid^="stBaseButton"]:focus-visible { outline: 2px solid var(--rs-accent); outline-offset: 3px; }
 [data-testid="stHeader"] button[data-testid^="stBaseButton"],
 [data-testid="stSidebar"] button[data-testid^="stBaseButton-header"],
@@ -418,7 +420,7 @@ button[data-testid="stBaseButton-headerNoPadding"] {
 [data-baseweb="textarea"], [data-testid="stNumberInputContainer"],
 [data-testid="stSelectbox"] [role="group"], [data-testid="stMultiSelect"] [role="group"],
 [data-testid="stTextArea"] [data-testid="stTextAreaRootElement"], [data-testid="stTextInputRootElement"] {
-  border-radius: 0 !important;
+  border-radius: 0.5rem !important;
   background: var(--rs-bg) !important;
   border-color: var(--rs-divider) !important;
 }
@@ -450,7 +452,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   text-transform: none !important;
 }
 
-/* ---------- tabs: text with a hairline, brown active marker */
+/* ---------- tabs: text with a hairline, navy active marker */
 [data-testid="stTabs"] [role="tablist"], [data-baseweb="tab-list"] {
   gap: clamp(1.5rem, 3vw, 2.75rem) !important;
   border-bottom: 1px solid var(--rs-divider);
@@ -532,7 +534,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 /* ---------- sidebar */
 [data-testid="stSidebar"] { background: var(--rs-surface); border-right: 1px solid var(--rs-divider); }
 [data-testid="stSidebar"] [data-testid="stAlertContainer"] { padding-top: 0.15rem !important; padding-bottom: 0.15rem !important; }
-.rs-sidebar-mark { font-family: var(--rs-serif) !important; font-size: 2rem !important; letter-spacing: -0.03em; line-height: 1 !important; color: var(--rs-text) !important; margin: 0 0 1.5rem; }
+.rs-sidebar-mark { font-family: var(--rs-sans) !important; font-size: 1.5rem !important; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2 !important; color: var(--rs-text) !important; margin: 0 0 1.5rem; }
 
 /* ---------- footer */
 .st-key-rs_footer {
@@ -540,7 +542,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   padding: clamp(2.5rem, 5vw, 4rem) 0 clamp(2.5rem, 5vw, 4rem);
   border-top: 1px solid var(--rs-strong);
 }
-.rs-footer-mark { font-family: var(--rs-serif) !important; font-size: clamp(2.5rem, 1.8rem + 2vw, 4rem) !important; letter-spacing: -0.035em; line-height: 0.95 !important; margin: 0 0 1rem; color: var(--rs-text) !important; }
+.rs-footer-mark { font-family: var(--rs-sans) !important; font-size: 1.5rem !important; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2 !important; margin: 0 0 1rem; color: var(--rs-text) !important; }
 .rs-footer-note { font-size: 0.875rem !important; color: var(--rs-text-2) !important; max-width: 26rem; }
 .st-key-rs_footer [data-testid="stPageLink"] a { padding: 0; background: transparent !important; }
 .st-key-rs_footer [data-testid="stPageLink"] p { font-size: 0.9375rem !important; color: var(--rs-text) !important; font-weight: 500; }
@@ -605,7 +607,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 [class*="st-key-assistant_starter_"] button p::after { content: "\\2192"; color: var(--rs-accent); margin-left: 0.6em; }
 [class*="st-key-assistant_starter_"] button:hover { background: transparent !important; color: var(--rs-accent) !important; }
 [data-testid="stBottom"] > div, [data-testid="stBottomBlockContainer"] { background: var(--rs-bg) !important; }
-[data-testid="stBottomBlockContainer"] { max-width: 1440px; padding: 1rem var(--rs-pad) 1.5rem !important; }
+[data-testid="stBottomBlockContainer"] { max-width: 1360px; padding: 1rem var(--rs-pad) 1.5rem !important; }
 [data-testid="stChatInput"] {
   border: 1px solid var(--rs-strong) !important;
   border-radius: 0 !important;
@@ -640,7 +642,7 @@ def _stylesheet() -> str:
         "__FONT_IMPORT__": FONT_IMPORT, "__BACKGROUND__": BACKGROUND, "__SURFACE__": SURFACE, "__TEXT__": TEXT,
         "__TEXT_SECONDARY__": TEXT_SECONDARY, "__TEXT_MUTED__": TEXT_MUTED, "__DIVIDER__": DIVIDER,
         "__BORDER_STRONG__": BORDER_STRONG, "__ACCENT__": ACCENT, "__ACCENT_SECONDARY__": ACCENT_SECONDARY,
-        "__NEGATIVE__": NEGATIVE, "__POSITIVE__": POSITIVE, "__SERIF__": SERIF, "__SANS__": SANS,
+        "__NEGATIVE__": NEGATIVE, "__POSITIVE__": POSITIVE, "__SANS__": SANS,
     }
     css = _CSS
     for placeholder, value in tokens.items():
@@ -658,12 +660,11 @@ def apply_theme() -> None:
 
 # ----------------------------------------------------------------------------- charts
 
-CHART_SANS = "Inter, Helvetica Neue, Arial, sans-serif"
-CHART_SERIF = "Instrument Serif, Cormorant Garamond, serif"
+CHART_SANS = "Inter, Segoe UI, Arial, sans-serif"
 # Applied as explicit layout properties (not only as a template) so that no host theme can override it.
 PLOTLY_LAYOUT: dict = {
     "font": {"family": CHART_SANS, "size": 13, "color": TEXT_SECONDARY},
-    "title": {"font": {"family": CHART_SERIF, "size": 26, "color": TEXT}, "x": 0, "xanchor": "left",
+    "title": {"font": {"family": CHART_SANS, "size": 20, "color": TEXT}, "x": 0, "xanchor": "left",
               "xref": "paper", "y": 0.97, "yanchor": "top"},
     "paper_bgcolor": BACKGROUND,
     "plot_bgcolor": BACKGROUND,
@@ -686,7 +687,7 @@ pio.templates["risksignal"] = PLOTLY_TEMPLATE
 
 
 def style_figure(figure: go.Figure, **layout: object) -> go.Figure:
-    """Apply the editorial chart style, then any figure-specific layout on top."""
+    """Apply the minimal chart style, then any figure-specific layout on top."""
     figure.update_layout(template=PLOTLY_TEMPLATE, **PLOTLY_LAYOUT)
     figure.update_layout(**layout)
     return figure

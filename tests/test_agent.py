@@ -47,7 +47,8 @@ from risksignal.tools.simulation_tools import run_loss_simulation
 FOCAL = "PAYMENT_ENGINE_01"
 SRC = Path(__file__).resolve().parents[1] / "src" / "risksignal"
 ALL_TOOL_NAMES = {"get_system_profile", "get_recent_incidents", "get_kri_history", "get_controls",
-                  "get_dependencies", "run_loss_simulation", "compare_baseline_and_stress"}
+                  "get_dependencies", "run_loss_simulation", "compare_baseline_and_stress",
+                  "get_kri_monitoring", "get_model_diagnostics", "get_risk_workpaper"}
 
 
 @pytest.fixture(scope="module")
@@ -62,7 +63,7 @@ def registry(ctx: ToolContext) -> ToolRegistry:
 
 @pytest.fixture(scope="module")
 def full_run(registry: ToolRegistry) -> tuple[InvestigationResult, MockProvider]:
-    provider = investigation_script(FOCAL)
+    provider = investigation_script(FOCAL, include_simulation=True)
     return Investigator(provider, registry).investigate("Investigate PAYMENT_ENGINE_01."), provider
 
 
@@ -82,9 +83,9 @@ def find_key(value: Any, key: str) -> bool:
 # ----------------------------------------------------------------- tool registry
 
 
-def test_registry_publishes_exactly_the_seven_tools(registry: ToolRegistry) -> None:
+def test_registry_publishes_investigation_and_workbench_tools(registry: ToolRegistry) -> None:
     specs = registry.specs()
-    assert {s.name for s in specs} == ALL_TOOL_NAMES and len(specs) == 7
+    assert {s.name for s in specs} == ALL_TOOL_NAMES and len(specs) == 10
     for spec in specs:
         assert spec.description and spec.input_schema["type"] == "object"
         assert "system_id" in spec.input_schema["required"]
@@ -159,7 +160,7 @@ def test_investigation_calls_the_expected_tools_and_records_them(full_run: tuple
     result, _ = full_run
     assert result.status == "completed" and result.llm_calls == 3 and result.provider == "mock"
     assert [a.tool_name for a in result.tool_activity] == [
-        "get_system_profile", "get_recent_incidents", "get_kri_history", "get_controls",
+        "get_system_profile", "get_recent_incidents", "get_kri_monitoring", "get_controls",
         "get_dependencies", "run_loss_simulation"]  # no stress scenario: it was not requested
     assert [a.step for a in result.tool_activity] == [1, 2, 3, 4, 5, 6]
     assert all(a.status == "completed" and a.error_type is None for a in result.tool_activity)
@@ -167,6 +168,29 @@ def test_investigation_calls_the_expected_tools_and_records_them(full_run: tuple
     assert result.tool_activity[5].tool_input["random_seed"] == 42
     for a in result.tool_activity:
         assert a.started_at.tzinfo is not None and a.duration_ms >= 0 and a.output["ok"] is True
+
+
+@pytest.mark.parametrize("question,simulation_tool", [
+    (f"Investigate {FOCAL}.", None),
+    (f"Simulate annual losses for {FOCAL}.", "run_loss_simulation"),
+    (f"Investigate {FOCAL} with stress.", "compare_baseline_and_stress"),
+])
+def test_simulation_is_optional_and_findings_are_capped_and_source_linked(
+    registry: ToolRegistry, question: str, simulation_tool: str | None,
+) -> None:
+    result = Investigator(provider_for_question(question), registry).investigate(question)
+    names = [activity.tool_name for activity in result.tool_activity]
+    assert result.status == "completed" and result.ungrounded_numbers == []
+    if simulation_tool:
+        assert simulation_tool in names
+    else:
+        assert not {"run_loss_simulation", "compare_baseline_and_stress"} & set(names)
+    for heading, following in (("Key Findings", "Next Investigations"), ("Next Investigations", "Limitations")):
+        body = result.final_answer.split(heading + "\n")[1].split("\n" + following)[0].split("\nModel assumptions")[0]
+        items = [line for line in body.splitlines() if line.startswith("- ")]
+        assert 1 <= len(items) <= 3
+        assert all("(#supporting-evidence)" in line for line in items)
+    assert "vendors:V04" in result.final_answer
 
 
 def test_activity_log_is_concise_and_ui_ready(full_run: tuple[InvestigationResult, MockProvider]) -> None:
@@ -177,7 +201,7 @@ def test_activity_log_is_concise_and_ui_ready(full_run: tuple[InvestigationResul
     assert all(len(line) <= 160 for line in log)
 
 
-def test_model_receives_tool_results_system_prompt_and_all_seven_tools(
+def test_model_receives_tool_results_system_prompt_and_all_read_only_tools(
     full_run: tuple[InvestigationResult, MockProvider]
 ) -> None:
     _, provider = full_run
@@ -187,7 +211,7 @@ def test_model_receives_tool_results_system_prompt_and_all_seven_tools(
     seen = results_by_tool(provider.calls[1]["messages"])
     assert seen["get_system_profile"]["system"]["system_id"] == FOCAL  # tool output fed back to the model
     assert set(results_by_tool(provider.calls[2]["messages"])) == {
-        "get_system_profile", "get_recent_incidents", "get_kri_history", "get_controls",
+        "get_system_profile", "get_recent_incidents", "get_kri_monitoring", "get_controls",
         "get_dependencies", "run_loss_simulation"}
 
 
@@ -195,14 +219,14 @@ def test_answer_is_sectioned_and_every_number_comes_from_a_tool(
     full_run: tuple[InvestigationResult, MockProvider], ctx: ToolContext
 ) -> None:
     result, _ = full_run
-    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Connected exposures",
-                    "Suggested investigation questions", "Limitations"):
+    for heading in ("Investigation Summary", "Key Findings", "Model assumptions", "Simulation results",
+                    "Next Investigations", "Limitations"):
         assert heading in result.final_answer
     direct = run_loss_simulation(ctx, FOCAL).simulation_results.metrics  # same call, made independently
     assert f"P95 {direct.p95:,.0f}" in result.final_answer
     assert f"ES99 {direct.expected_shortfall_99:,.0f}" in result.final_answer
     assert result.ungrounded_numbers == [] and result.warnings == []
-    assert "synthetic" in result.final_answer.lower() and "not forecasts" in result.final_answer
+    assert "synthetic" in result.final_answer.lower() and "not a forecast" in result.final_answer
 
 
 def test_stress_comparison_is_only_run_when_the_plan_requests_it(registry: ToolRegistry) -> None:
@@ -371,8 +395,8 @@ def test_mock_provider_is_deterministic(registry: ToolRegistry) -> None:
 @pytest.mark.parametrize("phrase", [
     "Operational Risk investigation assistant", "do not make final risk decisions", "synthetic",
     "Never invent incidents, controls, vendors", "Never calculate quantitative values yourself",
-    "NOT forecasts", "JPMorgan", "Observed evidence", "Model assumptions", "Simulation results",
-    "Connected exposures", "Suggested investigation questions", "Limitations", "cannot change any records",
+    "NOT forecasts", "JPMorgan", "Investigation Summary", "Model assumptions", "Simulation results",
+    "Key Findings", "Next Investigations", "Limitations", "cannot change any records",
     "Do not call any system safe, unsafe",
 ])
 def test_system_prompt_contains_the_required_rules(phrase: str) -> None:
@@ -489,7 +513,7 @@ def test_cli_offline_mode_runs_without_an_api_key(capsys: pytest.CaptureFixture[
     monkeypatch.setattr("risksignal.agent.investigator.build_default_registry", lambda: build_default_registry(ctx))
     assert main(["--mock", "Investigate PAYMENT_ENGINE_01."]) == 0
     output = capsys.readouterr().out
-    assert "Tool activity:" in output and "Observed evidence" in output and "Provider: mock" in output
+    assert "Tool activity:" in output and "Investigation Summary" in output and "Provider: mock" in output
 
 
 def test_cli_without_a_key_explains_what_to_do(capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:

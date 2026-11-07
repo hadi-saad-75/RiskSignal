@@ -6,7 +6,7 @@ RiskSignal is a **research prototype**. This document states plainly what it is 
 
 1. **The dataset is synthetic.** Atlas Bank is fictional. All systems, vendors, controls, incidents, losses and KRIs are generated. Some relationships are deliberately constructed to make the demonstration readable, so findings are properties of the constructed data, not discoveries about the real world.
 2. **The model is illustrative.** The Poisson frequency and Lognormal severity parameters, and any stress scenario multipliers, are chosen or estimated only to demonstrate the mechanics.
-3. **There is no claim of predictive validity.** The prototype has not been validated or backtested and must not be used to forecast losses.
+3. **There is no claim of predictive validity.** The prototype has not been independently validated or backtested on real data and must not be used to forecast losses. Risk Investigator includes one synthetic temporal holdout diagnostic, not evidence of real-world performance.
 4. **There is no institution-specific calibration.** Nothing is fitted to a real institution's loss history, controls or technology landscape.
 5. **There is no regulatory capital claim.** Outputs such as P99 or Expected Shortfall are not capital figures and do not follow any regulatory methodology.
 6. **There is no JPMorgan data.** No data, taxonomy, process or model from JPMorgan or any other real bank is used or implied.
@@ -23,6 +23,9 @@ RiskSignal is a **research prototype**. This document states plainly what it is 
 - **Small samples.** A few hundred synthetic incidents spread over about twenty systems give unstable estimates. P99 and Expected Shortfall at 99% are especially noisy.
 - **Controls** are recorded as evidence. Their effect on frequency or severity is not modelled.
 - **KRIs** are displayed as evidence. They are not used to predict incidents.
+- **KRI monitoring** uses an illustrative past-only median/MAD rule, not approved appetite limits or a trained incident predictor. Zero-MAD increases, missing/stale/gapped/insufficient histories and generator-specific non-applicability are explicit. Flag rates measure review workload, not precision or recall.
+- **Temporal diagnostics** reuse the existing model on training rows only, reserving twelve months of synthetic history. Conditional count reference intervals exclude parameter uncertainty; severity-tail exceedances in small synthetic samples do not validate the distribution.
+- **RCSA workpapers** prepare evidence/questions only. Review status is not control effectiveness, and the dataset cannot establish inherent/residual ratings. Human notes are session-local until exported. A content hash is not an immutable audit log or authenticated sign-off.
 - **Stress scenarios** are simple predefined assumption changes, not scenarios designed with subject matter experts. Baseline and stress are simulated from common random numbers, which reduces but does not remove sampling noise in the reported differences.
 - **No part of the prototype has been validated.** Passing tests show the code implements the stated mathematics, not that the model describes any real institution. See [technical_review.md](technical_review.md), section 7.
 
@@ -30,6 +33,7 @@ RiskSignal is a **research prototype**. This document states plainly what it is 
 
 - A language model can write fluent text that is wrong. The design reduces this risk by forbidding the model from producing numbers and requiring that facts come from tool results, but human review remains essential.
 - Answers depend on the quality of tool outputs and the provided data, which are synthetic.
+- Workbench drafts require a completed tool call with a matching evidence fingerprint. This checks the source snapshot, not semantic correctness. A correct number can still be attributed to the wrong entity or cause. Live-model quality, adversarial robustness, cost and latency remain unevaluated.
 
 ## Future work requiring institutional expertise and data
 

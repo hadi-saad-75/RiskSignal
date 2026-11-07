@@ -4,7 +4,7 @@ A short live technical demonstration of RiskSignal for senior Operational Risk p
 
 > **Read this first.** Everything on screen is **synthetic** (a fictional "Atlas Bank") and every model parameter is **illustrative**. The `PAYMENT_ENGINE_01` story is **constructed** by the data generator so that the demonstration is readable. Nothing here is a finding about a real institution, a forecast, or a validated model. Say so early and plainly; it is the point of the project, not an apology (see [limitations.md](limitations.md) and [technical_review.md](technical_review.md), section 7).
 
-**Length:** about 13 minutes in full; about 7 minutes if you skip the steps marked *(optional)*. Timings below are suggestions.
+**Length:** five minutes for the main route below. The numbered technical walkthrough is optional preparation, not the main presentation.
 
 ---
 
@@ -40,15 +40,24 @@ Open `http://localhost:8501`. **With Docker:** `docker compose up --build` (set 
 
 ### 1.2 Live model or offline mock: decide, and be honest about it
 
-- **Live:** the sidebar shows `AI provider: anthropic (ready)`. Wording differs on every run, and the first run in front of an audience is a risk. **Run it once beforehand.** The live path has not been exercised in development (no API key was available), so check that it works with your key and model name (`ANTHROPIC_MODEL` if needed). Expect a wait of several seconds while it calls the model repeatedly.
-- **Offline mock:** the sidebar shows `AI provider: mock (ready)`. The "agent" is then a **deterministic script**, not a language model. It requests the same tools and writes the summary from the tool results. The tool trace, the structure and the numbers are real; the choice of tools and the wording are scripted. **Say this out loud** if you use it: *"This is the offline provider, so the language model is replaced by a script. The live version calls Anthropic; everything else you will see is identical."*
+- **Live:** the sidebar shows `Language model: anthropic (configured)`. Wording differs on every run, and the first run in front of an audience is a risk. **Run it once beforehand.** The live path has not been exercised in development (no API key was available), so check that it works with your key and model name (`ANTHROPIC_MODEL` if needed). Expect a wait of several seconds while it calls the model repeatedly.
+- **Offline mock:** the sidebar shows `Language model: mock (configured)`. The "agent" is then a **deterministic script**, not a language model. It requests read-only tools and writes the summary from their results. The tool trace and numbers are computed; the choice of tools and wording are scripted. **Say this out loud**: *"This is the offline provider, so a script replaces the language model. The live version can select tools and draft answers with Anthropic, but its quality still needs evaluation."*
 - **Do not** present mock output as an AI result.
 
 ### 1.3 Browser and screen
 
-The dashboard opens on the **Introduction** page at `/`, including the detailed workflow, how Atlas Bank was generated, how the software layers were built and the live portfolio snapshot formerly on Overview. Follow the top navigation from left to right: **Introduction → System Explorer → Scenario Analysis → Assistant → Way forward: AI assistant**. This moves from the problem and portfolio context to evidence, quantitative assumptions, the integrated investigation and future work. Pre-open `/system-explorer`, `/scenario-lab`, `/assistant` and `/way-forward` if you want quick transitions. **Way forward: AI assistant** contains the limitations and future-work discussion, without a conversational preview. Zoom the browser so the back row can read the numbers. Refreshing a tab resets its state.
+The dashboard opens on **Risk Investigator** at `/`. The only other page is **Scenario Analysis** at `/scenario-lab`. Stay in the investigator for the main demonstration. Select `PAYMENT_ENGINE_01` and use **Refresh evidence** to clear the rehearsal answer.
 
-On the **System Explorer** page, before you present the KRIs, set *Months of history* to **24**: click the slider and press the right-arrow key 12 times (it starts at 12).
+### Five-minute demonstration
+
+1. **0:00-0:40 - Purpose.** "RiskSignal helps Operational Risk analysts connect relevant evidence and identify what should be investigated next." Say the records are synthetic and identify the provider honestly.
+2. **0:40-1:10 - Notice.** Show the three-indicator context for `PAYMENT_ENGINE_01`. Failed deployment rate is 10.51 and flagged unusual; the other two indicators are within baseline.
+3. **1:10-2:40 - Investigate.** Click **Investigate system**. Read the short summary and the three findings. Explain the ordered questions: control review evidence, recent incident reports, shared-supplier contingency evidence. No cause or control failure is inferred.
+4. **2:40-3:50 - Check evidence.** Follow the C002 source link, expand **Controls**, then **Incidents** or **Vendors and connected systems**. Explain why that record justifies the follow-up.
+5. **3:50-4:40 - Optional financial what-if.** Run **Scenario Analysis** with the defaults. Read P95 896,435 baseline versus 2,276,896 stress in synthetic units. These are outcomes under assumptions, not forecasts. If time is short, skip this step.
+6. **4:40-5:00 - Close.** The analyst requests missing evidence and discusses action with the responsible people. Approved real data and evaluation of live LLM evidence selection are the next research steps.
+
+The consolidated workspace retains KRI history, source-linked RCSA questions, temporal diagnostics, reviewer notes and JSON export under collapsed sections. These are review aids, not control-effectiveness findings, approved appetite limits, real-data backtesting or risk sign-off. See the [implementation history](platform_upgrade.md).
 
 ### 1.4 Reference values for the default data (check your screen against these)
 
@@ -92,27 +101,27 @@ All loss figures are in **synthetic monetary units**, not specified as dollars o
 
 ### Step 1. The problem (under one minute)
 
-**Screen:** Introduction page. Point out the goal, detailed workflow cards and synthetic-data notice.
+**Screen:** Risk Investigator. Point out its purpose, synthetic-data notice and active provider.
 
 **Say (about 45 seconds):**
 > "Operational Risk information is fragmented. Incidents live in one place, controls in another, key risk indicators in a third, and the map of which systems depend on which vendors in a fourth. An analyst investigating one system has to assemble all of that by hand, and the connections between systems are the easiest thing to miss. RiskSignal is a research prototype that brings those signals into one analyst-led investigation. Everything I’ll show uses synthetic data and illustrative assumptions—not a forecast or a real-bank finding."
 
-**Show:** the goal, detailed workflow cards and synthetic-data notice. Scroll to **Atlas Bank at a glance** in the Introduction and point out the scope and recent incidents. No scores, nothing predicted. Then open **System Explorer** to start the live investigation.
+**Show:** the short explanation and three monitoring indicators. No invented scores or predicted events.
 
 ### Step 2. Open `PAYMENT_ENGINE_01`: observed data (about 2 minutes)
 
-**Screen:** System Explorer, system `PAYMENT_ENGINE_01`. Label: *"Observed synthetic data: nothing on this page is modelled or predicted."*
+**Screen:** Risk Investigator supporting evidence for `PAYMENT_ENGINE_01`. Everything here is observed synthetic data, not a prediction.
 
-1. **Profile tab:** critical system, International Payments.
-2. **Incidents tab** (12 months): 5 incidents. Read the descriptions: two deployment-related, two Keystone Payment Rails events, one manual configuration error. Note the keyword caveat under the table (the data have no cause field; "deployment" is a text match).
-3. **KRIs tab:** set the window to **24 months** now (slider, right arrow ×12). Use the table under the charts, not a single point: failed deployment rate +84.7%, control exceptions +47.1% against the previous 24 months. **Also say what does not move:** near misses are slightly down; over the last 12 months control exceptions are flat. "Higher is less favourable for these indicators, and it is descriptive only: nothing is projected."
-4. **Controls tab:** C002 Pre-Release Regression Testing is overdue (420 days since its last review); C004 Vendor Performance Review is due. **Say:** "An overdue review is a reason to ask a question, not proof the control failed."
+1. **System details:** critical inventory classification, International Payments. Criticality is not assigned by Monte Carlo.
+2. **Incidents** (12 months): 5 incidents. Two narratives mention deployments, two mention Keystone Payment Rails, one describes manual configuration. There is no separate cause field.
+3. **KRI history:** inspect one indicator, optionally set **24 months** and show its descriptive window summary. Failed deployment rate +84.7% and control exceptions +47.1% compare window averages, not predictions. Near misses are slightly down; over 12 months control exceptions are flat.
+4. **Controls:** C002 Pre-Release Regression Testing is overdue (420 days since its last review); C004 Vendor Performance Review is due. "An overdue review is a reason to ask a question, not proof the control failed."
 
 > Watch-out: do not link C002 to the deployment incidents as cause and effect. You may say "an analyst would want to ask whether they are related".
 
 ### Step 3. Dependencies: why `PAYMENT_ENGINE_02` deserves a look (about 1.5 minutes)
 
-**Screen:** the *Dependencies and related systems* tab; the shared-exposure map.
+**Screen:** expand **Vendors and connected systems**. Tables come first; use **Show dependency map** only if helpful.
 
 **Say:**
 > "The map reads left to right: this system, its vendors and processes, then other systems sharing them. Keystone Payment Rails, V04, is also used by `PAYMENT_ENGINE_02`. A system-by-system view would not link the two. In the data, a Keystone service degradation hit both systems on the same day, 24 November 2025. That is a **shared exposure**: a reason to look at the second system, not evidence that one failure causes the other."
@@ -123,7 +132,7 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 4. Scenario Analysis: the model, in plain words (about 1.5 minutes)
 
-**Screen:** Scenario Analysis, `PAYMENT_ENGINE_01`. Show *Baseline parameter estimates* (λ 3.80, μ 10.114, σ 1.478) and open "Parameter interpretation".
+**Screen:** Scenario Analysis, `PAYMENT_ENGINE_01`. Run the comparison, then expand **Model details and all results** for baseline estimates (λ 3.80, μ 10.114, σ 1.478). No simulation runs simply by opening the page.
 
 **Say (plain first):**
 - **Poisson frequency:** "We do not know how many incidents next year brings. We model the count as random with an average of about 3.8 a year, which is 19 incidents over five years."
@@ -136,41 +145,38 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 5. Run the baseline (about 1 minute)
 
-**Do:** leave the defaults (100,000 simulations, seed 42) and click **Run baseline and stress comparison**. The page shows both runs together; for now talk only about the **baseline** column and the blue distribution.
+**Do:** leave the defaults (100,000 simulations, seed 42) and click **Run baseline and stress comparison**. The page shows both runs together. Discuss the baseline column first; the navy distribution is under **Loss distribution**.
 
 **Say:** "Mean about 278 thousand, but median about 164 thousand: the mean sits above the median because of the long tail. P95 is about 896 thousand, Expected Shortfall 95% about 1.5 million. The seed makes it reproducible: same seed, same numbers, every time." *(Read the numbers off the screen; they match the table in 1.4.)*
 
-*(Optional)* Open **Advanced assumptions**, tick "Use my own numbers instead of the predefined scenario", set **both multipliers to 1.0** (they start at 1.5 and 1.2) and run: the stress then equals the baseline exactly, a sanity check that the machinery adds nothing by itself.
+*(Optional)* Open **Advanced assumptions**, tick **Specify custom assumptions**, set **both multipliers to 1.0** and run: stress then equals baseline exactly.
 
 ### Step 6. Run the shared-vendor stress scenario (about 1.5 minutes)
 
-**Screen:** the same results, now the red *stress* column and the distribution overlay. Show the assumptions table above the button: λ ×1.8, μ +0.2, σ ×1.1, and open "Notes on this scenario's assumptions".
+**Screen:** the same results, now the stress column and optional blue distribution overlay. **Model details and all results** contains the assumptions: λ ×1.8, μ +0.2, σ ×1.1.
 
 **Say:**
 > "This is an illustrative scenario: a year in which the shared vendor misbehaves. I assumed 1.8 times as many incidents, each somewhat more costly, with a heavier tail. P95 goes from about 896 thousand to about 2.28 million, plus 154 percent. **That is the arithmetic of my assumptions, not a finding and not a forecast.** The multipliers are not calibrated to anything. In real use they would come from expert workshops, and that is exactly what a real team would add. Note also that both runs are simulated from the same underlying random numbers, year by year, so the difference comes from the assumptions rather than from sampling luck. And this scenario does not use the dependency graph: it is applied to one system alone."
 
 **If someone asks about precision:** the Monte Carlo error of these percentages is of the order of a few percentage points at 100,000 years ([technical_review.md](technical_review.md), section 3).
 
-### Step 7. The Assistant (about 2 minutes)
+### Step 7. Risk Investigator and AI assistant (about 2 minutes)
 
-**Screen:** select **Assistant** in the top navigation. `PAYMENT_ENGINE_01` is selected and the request is pre-filled ("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies, run a baseline loss simulation, and identify questions that an Operational Risk analyst should investigate.").
+**Screen:** select **Risk Investigator** in the top navigation. `PAYMENT_ENGINE_01` is selected, a compact monitoring snapshot is visible, and the request asks for signals, incidents, controls, dependencies and next steps.
 
-**Say:** "This is an early version of the assistant I would like to build with a real team. You can ask it anything, but it decides which deterministic tools to call; it cannot read the database or calculate anything itself, and it cannot change any records."
+**Say:** "The workspace starts with a few relevant monitoring cues and passes them as context. The live language model can call approved read-only evidence tools; the offline mock provider uses scripted responses and is not a live LLM. Neither mode changes records or makes a risk decision."
 
-**Do:** click **Investigate this system**. *(If you are using the offline provider, say so now.)* Then walk through the report's numbered sections:
+**Do:** click **Investigate system**. Then read the summary, key findings and suggested next steps before opening supporting evidence:
 
-1. **Observed evidence:** "all of this came from tool calls on the synthetic data."
-2. **Model assumptions:** where λ, μ, σ came from.
-3. **Simulation results:** "the same baseline numbers you just saw in Scenario Analysis: same tool, same seed." (True when the agent uses the default settings, as the offline provider always does; a live model could choose others, and its tool log would show it.)
-4. **Connected exposures:** the shared vendors.
-5. **Suggested investigation questions:** "questions for an analyst, for example *should control C002 be retested?*, *does the shared vendor create concentration risk?*, *does `PAYMENT_ENGINE_02` have similar exposure?* It does not decide anything." (The wording of a live model's questions will differ.)
-6. **Limitations.**
+1. Identify one finding and the evidence category behind it.
+2. Expand **Retrieved evidence and tool activity** to trace the call and its source output.
+3. Expand **Controls** for the record, or **Advanced checks and review questions** for optional RCSA prompts.
 
-*(Optional)* Tick the stress checkbox and run again to add the `SHARED_VENDOR_OUTAGE` comparison; the agent can only choose predefined scenarios, never invent numbers.
+*(Optional)* Select the shared vendor outage scenario before investigating to include a baseline-versus-stress comparison. Quantitative results remain supporting evidence, conditional on illustrative assumptions.
 
 ### Step 8. Evidence: how it stays honest (about 1.5 minutes)
 
-**Screen:** under the report, **Tool activity log** and **Simulation metadata**.
+**Screen:** under the findings, expand **Retrieved evidence and tool activity**, or **Simulation results** after an explicit simulation request.
 
 **Say:**
 > "Every step is recorded: which tool, with what input, whether it worked, how long it took. These log lines are written by code, not by the model. Open one: here is the exact input to the simulation tool and the exact output the agent received. The model never sees a database or a calculator; every number in the answer should be traceable to one of these outputs. Below, the simulation metadata is read straight from the tool output, not from the model's text. And after each run the application scans the answer for numbers that match no tool output and flags them: a figure with no match in any tool output would raise a warning here."
@@ -179,7 +185,7 @@ Mention in passing that the system also shares V02 with two other systems and a 
 
 ### Step 9. Limitations (about 1 minute)
 
-**Screen:** the banner, the answer's *Limitations* section, then `docs/limitations.md` (or the "What should NOT be interpreted as validated" section of `technical_review.md`).
+**Screen:** synthetic-data notice, **Complete agent response and limitations**, then [limitations.md](limitations.md) if more detail is needed.
 
 **Say:**
 > "Three things. The data are synthetic, and the story was built into them. The parameters are illustrative: estimated from 19 incidents, with no allowance for estimation uncertainty, which in reality dominates the Monte Carlo noise. And I make no claim of predictive validity: nothing here has been backtested, calibrated, or validated, no regulatory capital claim, no data from any real bank. Passing tests mean the code implements the stated mathematics, not that the model describes reality. I did an internal technical review and found real defects, including that my own stress comparison was not coupled the way I had claimed; those are fixed and documented, along with what remains."
@@ -257,7 +263,7 @@ First fix the intended use. Then data mapping and quality checks, then a baselin
 |---|---|
 | Red message "Cannot reach the RiskSignal API" | The API is not running. Start `uvicorn risksignal.api.main:app` (terminal 1) and refresh. |
 | "Database: missing" in the sidebar, or the API reports `degraded` | Run `python -m risksignal.data.generator`, then restart the API. |
-| The Assistant says the language-model provider is not configured | No `ANTHROPIC_API_KEY`. Either set it and restart the API, or restart the API with `RISKSIGNAL_LLM_PROVIDER=mock` and say so. The other pages never need a key. |
+| Risk Investigator says the language-model provider is not configured | No `ANTHROPIC_API_KEY`. Either set it and restart the API, or restart the API with `RISKSIGNAL_LLM_PROVIDER=mock` and say so. Monitoring and the other analytical pages do not need a key. |
 | The live agent is slow or fails | Fall back to the offline provider, or show a run you did beforehand. From a terminal: `python -m risksignal.agent.investigator --mock "Investigate PAYMENT_ENGINE_01."` prints the tool activity and answer. |
 | The live agent shows a warning about numbers it could not match | Do not hide it. That is the check working; open the tool details and show whether the number is a rounding of a tool value or a real discrepancy. |
 | Port 8000 or 8501 already in use | Start on another port (`--port 8001`, `--server.port 8502`) and set `RISKSIGNAL_API_URL` for the dashboard. |

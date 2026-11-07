@@ -62,6 +62,39 @@ def test_health(client: TestClient) -> None:
     }
 
 
+@pytest.mark.parametrize("table", [
+    "systems", "processes", "vendors", "controls", "incidents", "kri_observations", "dependencies",
+])
+def test_database_browser_returns_exact_source_rows(client: TestClient, ctx: ToolContext, table: str) -> None:
+    from risksignal.data.schemas import TABLE_MODELS
+
+    columns = list(TABLE_MODELS[table].model_fields)
+    expected = [dict(row) for row in ctx.query(
+        f"SELECT {','.join(columns)} FROM {table} ORDER BY {','.join(columns)} LIMIT 3 OFFSET 1"
+    )]
+    body = client.get(f"/database/{table}", params={"offset": 1, "limit": 3}).json()
+    assert body["rows"] == expected
+    assert body["columns"] == columns
+    assert body["total_rows"] == ctx.query(f"SELECT COUNT(*) AS n FROM {table}")[0]["n"]
+    assert body["offset"] == 1 and body["limit"] == 3 and "Synthetic" in body["notice"]
+
+
+@pytest.mark.parametrize("path", [
+    "/database/sqlite_master", "/database/incidents;DROP%20TABLE%20systems",
+    "/database/systems?limit=201", "/database/systems?offset=-1", "/database/systems?limit=0",
+])
+def test_database_browser_rejects_invalid_requests(client: TestClient, path: str) -> None:
+    assert_error(client.get(path), 422, "validation_error")
+    assert client.get("/systems").status_code == 200
+
+
+def test_database_browser_empty_page_and_missing_database(client: TestClient, tmp_path: Path) -> None:
+    assert client.get("/database/systems?offset=100000").json()["rows"] == []
+    missing = make_client(ToolContext(db_path=tmp_path / "missing.db"))
+    assert_error(missing.get("/database/systems"), 503, "data_unavailable")
+    assert not (tmp_path / "missing.db").exists()
+
+
 def test_health_reports_a_missing_database_as_degraded(tmp_path: Path) -> None:
     missing = ToolContext(db_path=tmp_path / "missing.db")
     body = make_client(missing).get("/health").json()
@@ -86,9 +119,12 @@ def test_interactive_docs_and_openapi_schema_work(client: TestClient) -> None:
     assert spec["info"]["title"] == "RiskSignal API" and spec["info"]["version"] == __version__
     assert "synthetic" in spec["info"]["description"].lower() and "not forecasts" in spec["info"]["description"]
     expected = {
+        ("get", "/database/{table}"),
         ("get", "/health"), ("get", "/overview"), ("get", "/systems"), ("get", "/systems/{system_id}"),
         ("get", "/systems/{system_id}/incidents"), ("get", "/systems/{system_id}/controls"),
         ("get", "/systems/{system_id}/dependencies"), ("get", "/systems/{system_id}/kri"),
+        ("get", "/systems/{system_id}/monitoring"), ("get", "/systems/{system_id}/model-diagnostics"),
+        ("get", "/systems/{system_id}/workpaper"),
         ("post", "/simulations"), ("get", "/scenarios"), ("post", "/scenarios/compare"),
         ("post", "/scenarios/compare-custom"), ("post", "/agent/investigate"), ("post", "/agent/chat"),
     }
@@ -381,14 +417,13 @@ def test_agent_investigation_with_the_mock_provider(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "completed" and body["provider"] == "mock" and body["llm_calls"] == 3
-    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Connected exposures",
-                    "Suggested investigation questions", "Limitations"):
+    for heading in ("Investigation Summary", "Key Findings", "Next Investigations", "Limitations"):
         assert heading in body["final_response"]
     assert body["activity_log"][0] == f"Retrieved system profile for {FOCAL}"
-    assert body["activity_log"][-1] == "Ran 100,000 year Monte Carlo simulation (seed 42)"
+    assert "dependencies" in body["activity_log"][-1].lower()
     assert [a["tool_name"] for a in body["tool_activity"]] == [
-        "get_system_profile", "get_recent_incidents", "get_kri_history", "get_controls",
-        "get_dependencies", "run_loss_simulation"]
+        "get_system_profile", "get_recent_incidents", "get_kri_monitoring", "get_controls",
+        "get_dependencies"]
     first = body["tool_activity"][0]
     assert first["status"] == "completed" and first["tool_input"] == {"system_id": FOCAL} and first["started_at"]
     assert body["warnings"] == [] and body["ungrounded_numbers"] == [] and "synthetic" in body["disclaimer"]

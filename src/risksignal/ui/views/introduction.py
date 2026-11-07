@@ -1,141 +1,146 @@
-"""Presentation-style introduction to the RiskSignal demonstration."""
+"""Short, evidence-led introduction to the RiskSignal demonstration."""
 
 from typing import Any
 
 import streamlit as st
 
-from risksignal.ui.components import banner, eyebrow, lead, ruled_list, section_header
-from risksignal.ui.formatting import LOSS_UNIT_NOTICE
-from risksignal.ui.views.overview import render_portfolio_snapshot
+from risksignal.ui.api_client import ApiRequestError, ApiUnavailableError
+from risksignal.ui.charts import dependency_figure
+from risksignal.ui.components import (
+    START_API_HELP,
+    banner,
+    eyebrow,
+    get_api_client,
+    label,
+    lead,
+    ruled_list,
+    section_header,
+    show_request_error,
+)
+from risksignal.ui.formatting import LOSS_UNIT_NOTICE, label_for
+
+SAMPLE_SYSTEM = "PAYMENT_ENGINE_01"
+MARKET_EXAMPLES = (
+    "This mix also appears in public role descriptions. "
+    "[A Man Group enterprise-risk analyst role](https://builtin.com/job/risk-analyst-enterprise-risk/7644567) "
+    "mentions risk and control records, issue and vendor tracking, reports, and workflow improvement; it names "
+    "Excel, Power BI and Power Automate. "
+    "[A Bank of America risk-process role](https://careers.bankofamerica.com/en-us/job-detail/26027282/"
+    "risk-process-analyst-multiple-locations-esomprank-y3ga2stumv-4) describes supporting process and control "
+    "testing, analysis and reporting. These are examples, not a survey of every team."
+)
 
 
 def render_introduction(pages: dict[str, Any]) -> None:
     banner()
-    eyebrow("01", "The idea")
+    eyebrow("01", "The work today")
     st.title("Operational risk, connected.")
     lead(
-        "Incidents, key risk indicators, controls and technology dependencies often sit in separate places. "
-        "RiskSignal brings them into one investigation so an analyst can see the evidence in context."
+        "Analysts bring together information about incidents, indicators, controls and suppliers to understand "
+        "what happened and what deserves a closer look."
     )
-    st.markdown(
-        "**The goal:** help an Operational Risk team move from separate records to a connected, "
-        "traceable investigation. Where analysts currently assemble evidence manually, RiskSignal "
-        "brings incidents, KRIs, control reviews and shared dependencies into one workflow, lets them "
-        "compare explicit loss scenarios, and prepares an evidence-linked summary with questions for "
-        "human review. The intended benefit is less manual collation and a more consistent basis for "
-        "deciding what to investigate next, not automated risk decisions."
+    st.write(
+        "That work can include keeping risk and control records up to date, following issues through to closure, "
+        "checking supplier information, reviewing indicator data, and preparing reports for managers. Some roles "
+        "also ask for better dashboards and workflow automation."
     )
+    st.markdown(MARKET_EXAMPLES)
     st.caption(
-        "These benefits are proposed, not measured. A pilot would compare analyst time, evidence "
-        "coverage and review quality against the team's existing process."
+        "Job descriptions tell us what a role is responsible for, not how many hours each task takes or whether "
+        "every team still relies on manual searches. This prototype does not claim that current work is slow or "
+        "promise time savings. It asks a practical question: can connected evidence make an investigation easier "
+        "to start and review?"
     )
-    st.caption("Demo data: fictional Atlas Bank · 20 systems · 10 processes · 8 vendors · 40 controls")
+
+    section_header(
+        "The goal: move from a signal to supported next steps",
+        "RiskSignal is a research prototype for helping an analyst find relevant evidence, not for making a risk decision.",
+        index="02",
+    )
+    investigation, recommendations = st.columns(2, gap="large")
+    with investigation, st.container(border=True):
+        st.markdown(":material/search: **Objective 1 · Intelligent investigation**")
+        st.subheader("Connect the evidence")
+        st.write(
+            "Start with a system or a risk signal. Bring together related incident, indicator, control and "
+            "supplier records so the analyst can examine them in one place."
+        )
+    with recommendations, st.container(border=True):
+        st.markdown(":material/fact_check: **Objective 2 · Evidence-backed recommendations**")
+        st.subheader("Show why it matters")
+        st.write(
+            "Show which records support a finding and suggest a useful follow-up question. The analyst checks "
+            "the evidence, adds context and decides what to do next."
+        )
+
+    section_header("A simple analyst workflow")
+    ruled_list([
+        ("1. Notice", "See a recent incident or indicator that may deserve attention."),
+        ("2. Investigate", "Ask RiskSignal to retrieve and connect relevant records for that system."),
+        ("3. Review", "Check the supporting sources and choose the next step as a human analyst."),
+    ])
+
+    section_header(
+        "Atlas Bank: a small sample",
+        "A fictional example of the information the prototype can bring together. All records shown are synthetic.",
+        index="05",
+    )
+    _render_atlas_preview()
+    st.caption(
+        "Sample environment: 20 systems · 10 business processes · 8 suppliers · 40 controls · five years of "
+        "synthetic observations. A shared connection is a reason to investigate, not proof of cause."
+    )
+    st.info(
+        "**Research prototype:** no real bank data, no forecast and no production decision. "
+        "Loss simulations use illustrative assumptions. The analyst remains responsible for conclusions."
+    )
+    st.caption(LOSS_UNIT_NOTICE)
     st.page_link(
         pages["System Explorer"],
         label="Start the live demo",
         icon=":material/arrow_forward:",
     )
 
-    section_header(
-        "A short, analyst-led walkthrough",
-        "One fictional payment system provides a concrete thread through the evidence, dependency map and model.",
-        index="02",
-    )
-    evidence, exposure, assumptions = st.columns(3, gap="large")
-    with evidence, st.container(border=True):
-        st.markdown(":material/fact_check: **01 / Evidence**")
-        st.subheader("Gather evidence")
-        st.write("Review incidents, KRI trends and control-review status for one system.")
-        st.divider()
-        st.markdown("**What happened?**")
-        st.write("Bring the system's observations into a single view before interpreting them.")
-    with exposure, st.container(border=True):
-        st.markdown(":material/account_tree: **02 / Connections**")
-        st.subheader("Connect exposure")
-        st.write("Trace shared vendors and related systems, a connection is a lead, not causation.")
-        st.divider()
-        st.markdown("**Where else should we look?**")
-        st.write("Follow the dependency map to identify systems that share the same vendor.")
-    with assumptions, st.container(border=True):
-        st.markdown(":material/query_stats: **03 / Scenarios**")
-        st.subheader("Explore assumptions")
-        st.write("Compare a baseline with a clearly stated stress scenario, not a forecast.")
-        st.divider()
-        st.markdown("**What changes under stress?**")
-        st.write("Inspect the incident-rate and severity assumptions behind the simulated losses.")
 
-    section_header(
-        "How Atlas Bank was built",
-        "A fictional banking environment, created in Python to exercise the workflow without confidential data.",
-        index="03",
-    )
-    structure, generation = st.columns(2, gap="large")
-    with structure:
-        ruled_list([
-            ("1. Define a small banking ecosystem",
-             "Write the systems, business processes and vendors by hand, then connect systems to their "
-             "processes, external vendors and other systems. Add a control inventory and review dates."),
-            ("2. Generate five years of observations",
-             "Use seeded random draws for background incident counts, dates, categories and financial losses. "
-             "Background counts use Poisson draws and losses use Lognormal draws. "
-             "Generate monthly KRIs with noise and selected trends from October 2021 to September 2026."),
-        ])
-    with generation:
-        ruled_list([
-            ("3. Construct a readable payment-system example",
-             "Add recent deployment and vendor incidents, an overdue regression-testing review and a vendor "
-             "shared by the two payment engines. Other systems also have overdue controls or drifting indicators. "
-             "These relationships are designed examples, not discoveries."),
-            ("4. Validate, save and reproduce",
-             "Check identifiers, references, dates and non-negative values, then save readable CSV tables "
-             "and a SQLite database. The default random seed is 42, making the same dataset reproducible."),
-        ])
-    st.caption(LOSS_UNIT_NOTICE)
-    st.caption(
-        "The KRIs have no planted link to future incidents. Fitting a Lognormal to losses generated from "
-        "Lognormal distributions does not establish that real bank losses follow that model."
-    )
+def _render_atlas_preview() -> None:
+    client = get_api_client()
+    try:
+        profile = client.profile(SAMPLE_SYSTEM)
+        dependencies = client.dependencies(SAMPLE_SYSTEM)
+        incidents = client.incidents(SAMPLE_SYSTEM, 12)
+    except ApiUnavailableError as error:
+        st.error(f"{error} {START_API_HELP}")
+        return
+    except ApiRequestError as error:
+        show_request_error(error)
+        return
 
-    section_header(
-        "How RiskSignal was engineered",
-        "The implementation path through the codebase, from the data foundation to a demonstrable application.",
-        index="04",
-    )
-    ruled_list([
-        ("1. Define the scope and domain",
-         "Specify the analyst questions, data entities and research boundaries before building the demonstration."),
-        ("2. Build the synthetic data foundation",
-         "Implement typed data schemas, a seeded generator, integrity checks and CSV plus SQLite storage."),
-        ("3. Implement and test the mathematical core",
-         "Estimate incident frequency and severity, simulate annual aggregate losses, calculate tail metrics "
-         "and compare baseline with stress using common random numbers."),
-        ("4. Add dependency reasoning and deterministic tools",
-         "Build a NetworkX graph and typed, read-only tools for retrieving evidence and running the model."),
-        ("5. Connect the investigation agent",
-         "Expose only the approved tools to the model, record its tool calls and check reported numbers "
-         "against tool results. Provide an offline scripted provider for repeatable tests."),
-        ("6. Expose, present and verify",
-         "Wrap the tools in FastAPI, build the Streamlit interface, test the layers and document "
-         "the model, limitations and deployment setup. Docker packaging is provided, not claimed as runtime-verified."),
-    ])
+    details, map_column = st.columns([5, 7], gap="large")
+    with details, st.container(border=True):
+        label("Sample system")
+        st.subheader(profile["system"]["name"])
+        st.caption(f"{profile['system']['system_id']} · {profile['system']['criticality']} criticality")
+        st.markdown(f"**Business process**  \n{profile['primary_process']['name']}")
+        st.caption(
+            f"{profile['metadata']['total_incidents_recorded']} recorded incidents · "
+            f"{profile['metadata']['number_of_controls']} recorded controls"
+        )
+        st.markdown("**Recent synthetic incidents**")
+        for incident in incidents["incidents"][:2]:
+            st.markdown(f"**{incident['date']} · {label_for(incident['category'])}**")
+            st.write(incident["description"])
 
-    st.info(
-        "**What this is:** a research prototype demonstrating an investigation workflow. "
-        "**What it is not:** a validated model, a prediction, or a production decision tool. "
-        "All Atlas Bank data are synthetic, the model assumptions are illustrative."
-    )
-
-    section_header(
-        "Atlas Bank at a glance",
-        "Live portfolio context for the demonstration, before we investigate one payment system.",
-        index="05",
-    )
-    render_portfolio_snapshot()
-
-    explorer, scenario, assistant = st.columns(3, gap="large")
-    with explorer:
-        st.page_link(pages["System Explorer"], label="System evidence", icon=":material/account_tree:")
-    with scenario:
-        st.page_link(pages["Scenario Analysis"], label="Scenario analysis", icon=":material/monitoring:")
-    with assistant:
-        st.page_link(pages["Assistant"], label="Integrated investigation", icon=":material/assistant:")
+    with map_column:
+        figure = dependency_figure(SAMPLE_SYSTEM, dependencies)
+        figure.update_layout(
+            title={"text": "Systems, suppliers and shared processes"},
+            height=390,
+            margin={"l": 8, "r": 8, "t": 64, "b": 12},
+        )
+        st.plotly_chart(
+            figure,
+            width="stretch",
+            key="atlas_preview_map",
+            theme=None,
+            alt="A sample map of one system, its suppliers, business process and related systems",
+        )

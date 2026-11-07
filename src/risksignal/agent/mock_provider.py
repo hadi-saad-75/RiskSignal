@@ -167,6 +167,79 @@ def compose_summary(results: dict[str, dict[str, Any]]) -> str:
                        for title, lines in sections if lines)
 
 
+def compose_investigation(results: dict[str, dict[str, Any]]) -> str:
+    """Concise scripted review priorities, never live reasoning or risk ratings."""
+    profile = results.get("get_system_profile")
+    if not profile:
+        return compose_summary(results)
+    system_id = profile["system"]["system_id"]
+
+    def cite(kind: str, identifier: str) -> str:
+        ref = f"{kind}:{identifier}"
+        return f"[{ref}](#supporting-evidence)"
+
+    findings: list[str] = []
+    priorities: list[str] = []
+    controls = results.get("get_controls", {})
+    overdue = [c for c in controls.get("controls", []) if c["review_status"] == "overdue"]
+    if overdue:
+        control = overdue[0]
+        source = cite("controls", control["control_id"])
+        findings.append(f"{control['name']} is recorded as overdue for review. {source}")
+        priorities.append(f"Check the review and test evidence for {control['name']}. "
+                          f"The overdue record justifies follow-up, not a conclusion that the control failed. {source}")
+    incidents = results.get("get_recent_incidents")
+    if incidents and incidents["incidents"]:
+        source = ", ".join(cite("incidents", i["incident_id"]) for i in incidents["incidents"][-2:])
+        findings.append(f"{incidents['counts']['total']} incidents were recorded in the last "
+                        f"{incidents['months']} months. Recent records: {source}")
+        priorities.append(f"Review the recent incident reports and ask for cause and follow-up evidence. "
+                          f"The narratives alone do not establish why the incidents happened. {source}")
+    deps = results.get("get_dependencies", {})
+    if deps.get("shared_vendors"):
+        narratives = " ".join(i["description"] for i in incidents["incidents"]) if incidents else ""
+        shared = next((s for s in deps["shared_vendors"] if s["vendor"]["name"] in narratives),
+                      deps["shared_vendors"][0])
+        source = cite("vendors", shared["vendor"]["vendor_id"])
+        others = ", ".join(o["system_id"] for o in shared["other_systems"])
+        findings.append(f"{shared['vendor']['name']} is also used by {others}. {source}")
+        priorities.append(f"Check contingency plans and related-system evidence for "
+                          f"{shared['vendor']['name']}. A shared supplier is an exposure to review, "
+                          f"not proof of simultaneous failure. {source}")
+    monitoring = results.get("get_kri_monitoring", {})
+    for series in monitoring.get("series", []):
+        latest = series["latest"]
+        if len(findings) < 3 and (series["data_status"] not in ("current", "not_applicable") or
+                                (latest and latest["signal"] in ("unusual_increase", "flat_baseline_increase"))):
+            source = cite("systems", system_id)
+            name = series["kri_name"].replace("_", " ")
+            signal = latest["signal"].replace("_", " ") if latest else "no observation"
+            findings.append(f"{name}: {signal}, data status {series['data_status']}. {source}")
+            priorities.append(f"Check the definition, history and business context of {name}. "
+                              f"The monitoring cue is not an incident prediction. {source}")
+    if not findings:
+        findings.append(f"No specific concern was established from the returned records. {cite('systems', system_id)}")
+        priorities.append("Confirm whether additional incident, control or supplier evidence is available "
+                          "before drawing a conclusion.")
+    sections = [
+        ("Investigation Summary", [
+            f"Review of {system_id}, supporting {profile['primary_process']['name']}. "
+            "The synthetic records below identify questions for an analyst, not a risk verdict."
+        ]),
+        ("Key Findings", findings[:3]),
+        ("Next Investigations", priorities[:3]),
+        ("Model assumptions", _assumption_lines(results)),
+        ("Simulation results", _simulation_lines(results)),
+        ("Limitations", [
+            "All records are synthetic. Review dates do not establish control effectiveness and "
+            "connections do not establish causes. Any simulation is illustrative, not a forecast."
+        ]),
+    ]
+    return "\n\n".join(title + "\n" + "\n".join(
+        line if title == "Investigation Summary" else "- " + line for line in lines
+    ) for title, lines in sections if lines)
+
+
 def _failure_summary(results: dict[str, dict[str, Any]]) -> str:
     errors = [r for r in results.values() if r.get("ok") is False]
     lines = [f"{e['tool_name']}: {e['message']}" for e in errors]
@@ -180,7 +253,9 @@ def _failure_summary(results: dict[str, dict[str, Any]]) -> str:
 # --------------------------------------------------------------------------- ready-made plan
 
 
-def investigation_script(system_id: str, include_stress: bool = False) -> MockProvider:
+def investigation_script(
+    system_id: str, include_stress: bool = False, include_simulation: bool = False,
+) -> MockProvider:
     """A scripted provider that investigates ``system_id`` like a careful analyst would.
 
     Turn 1 asks for the system profile. Turn 2 either stops (if the profile failed) or asks for
@@ -192,12 +267,13 @@ def investigation_script(system_id: str, include_stress: bool = False) -> MockPr
             return LLMResponse(text=_failure_summary(results_by_tool(messages)))
         calls = [
             tool_request("c2", "get_recent_incidents", system_id=system_id, months=12),
-            tool_request("c3", "get_kri_history", system_id=system_id, months=12),
+            tool_request("c3", "get_kri_monitoring", system_id=system_id),
             tool_request("c4", "get_controls", system_id=system_id),
             tool_request("c5", "get_dependencies", system_id=system_id),
-            tool_request("c6", "run_loss_simulation", system_id=system_id,
-                         number_of_simulations=100_000, random_seed=42),
         ]
+        if include_stress or include_simulation:
+            calls.append(tool_request("c6", "run_loss_simulation", system_id=system_id,
+                                      number_of_simulations=100_000, random_seed=42))
         if include_stress:
             calls.append(tool_request("c7", "compare_baseline_and_stress", system_id=system_id,
                                       scenario_id="SHARED_VENDOR_OUTAGE",
@@ -207,9 +283,9 @@ def investigation_script(system_id: str, include_stress: bool = False) -> MockPr
     def third_turn(messages: list[LLMMessage]) -> LLMResponse:
         results = results_by_tool(messages)
         if any(r.get("ok") is False for r in results.values()):
-            return LLMResponse(text=_failure_summary(results) + "\n\n" + compose_summary(
+            return LLMResponse(text=_failure_summary(results) + "\n\n" + compose_investigation(
                 {k: v for k, v in results.items() if v.get("ok") is not False}))
-        return LLMResponse(text=compose_summary(results))
+        return LLMResponse(text=compose_investigation(results))
 
     first = LLMResponse(tool_calls=[tool_request("c1", "get_system_profile", system_id=system_id)],
                         stop_reason="tool_use")
@@ -233,4 +309,5 @@ def provider_for_question(question: str, include_stress: bool | None = None) -> 
         return MockProvider([LLMResponse(
             text="Please name the system to investigate, for example PAYMENT_ENGINE_01.")])
     stress = _STRESS_WORDS.search(question) is not None if include_stress is None else include_stress
-    return investigation_script(match.group(0), include_stress=stress)
+    simulate = bool(re.search(r"\b(loss(?:es)?|simulation|monte carlo)\b", question, re.IGNORECASE))
+    return investigation_script(match.group(0), include_stress=stress, include_simulation=simulate)

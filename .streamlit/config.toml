@@ -1,38 +1,37 @@
-# RiskSignal editorial theme. Base tokens only; the full design system (typography scale,
-# rules, buttons, editorial layouts) is injected by src/risksignal/ui/theme.py.
+# RiskSignal neutral fintech theme. Detailed component styling is in src/risksignal/ui/theme.py.
 
 [theme]
 base = "light"
-primaryColor = "#171717"
+primaryColor = "#183153"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#FAF9F6"
-textColor = "#090909"
-linkColor = "#9A6848"
+secondaryBackgroundColor = "#F5F7FA"
+textColor = "#172B45"
+linkColor = "#2864A0"
 linkUnderline = false
-borderColor = "#D8D6D1"
+borderColor = "#DFE5EC"
 showWidgetBorder = true
 showSidebarBorder = true
-baseRadius = "none"
-buttonRadius = "full"
+baseRadius = "small"
+buttonRadius = "small"
 baseFontSize = 16
-font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, Helvetica Neue, Arial, sans-serif"
-headingFont = "Instrument Serif:https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap, Cormorant Garamond, serif"
-headingFontWeights = [400, 400, 400, 400, 400, 400]
-metricValueFontWeight = 400
-dataframeBorderColor = "#D8D6D1"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+metricValueFontWeight = 600
+dataframeBorderColor = "#DFE5EC"
 dataframeHeaderBackgroundColor = "#FFFFFF"
-dataframeHeaderTextColor = "#454545"
-chartCategoricalColors = ["#171717", "#9A6848", "#8F8F8A", "#A97552", "#454545", "#D8D6D1"]
-redColor = "#8C3B2E"
-greenColor = "#4F6B4A"
-yellowColor = "#9A6848"
-blueColor = "#454545"
-orangeColor = "#A97552"
-violetColor = "#454545"
-grayColor = "#8F8F8A"
+dataframeHeaderTextColor = "#475569"
+chartCategoricalColors = ["#183153", "#2864A0", "#65758B", "#52647A", "#CBD5E1"]
+redColor = "#B42318"
+greenColor = "#067647"
+yellowColor = "#A16207"
+blueColor = "#2563EB"
+orangeColor = "#C2410C"
+violetColor = "#6D28D9"
+grayColor = "#64748B"
 
 [theme.sidebar]
-backgroundColor = "#FAF9F6"
+backgroundColor = "#F5F7FA"
 secondaryBackgroundColor = "#FFFFFF"
 
 [client]

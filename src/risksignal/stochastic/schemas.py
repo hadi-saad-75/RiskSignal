@@ -7,6 +7,7 @@ only summary statistics and an optional compact histogram are.
 """
 
 from typing import Literal
+import datetime as dt
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,6 +29,33 @@ SeverityDataSource = Literal["system", "category", "bank_wide"]
 
 class _Model(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
+
+
+class TemporalDiagnostics(_Model):
+    model_config = ConfigDict(frozen=True, extra="forbid", allow_inf_nan=False)
+
+    system_id: str
+    as_of_date: dt.date
+    status: Literal["evaluated", "not_estimable"]
+    policy_version: str = "temporal-holdout-v1"
+    training_start: dt.date
+    training_end_inclusive: dt.date
+    holdout_end_inclusive: dt.date
+    training_incidents: int
+    holdout_incidents: int
+    holdout_positive_losses: int
+    frequency_method: FrequencyMethod | None = None
+    severity_source: SeverityDataSource | None = None
+    severity_training_losses: int | None = None
+    annual_frequency: float | None = None
+    severity_mu: float | None = None
+    severity_sigma: float | None = None
+    expected_holdout_count: float | None = None
+    count_reference_interval_95: tuple[int, int] | None = None
+    monthly_count_variance_to_mean: float | None = None
+    severity_p95: float | None = None
+    holdout_losses_above_p95: int | None = None
+    limitations: list[str]
 
 
 class FrequencyEstimate(_Model):

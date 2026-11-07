@@ -17,6 +17,9 @@ LOSS_UNIT_NOTICE = (
 )
 
 SECTION_HEADINGS = (
+    "Investigation Summary",
+    "Key Findings",
+    "Next Investigations",
     "Observed evidence",
     "Model assumptions",
     "Simulation results",

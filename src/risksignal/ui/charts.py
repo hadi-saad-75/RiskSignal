@@ -18,9 +18,16 @@ from risksignal.ui.theme import (
 
 NODE_COLORS = {"focus": TEXT, "vendor": ACCENT, "process": TEXT_MUTED, "related": BACKGROUND}
 EDGE_COLORS = {"vendor": ACCENT_SECONDARY, "process": DIVIDER}
-BASELINE_COLOR = BORDER_STRONG
-STRESS_COLOR = ACCENT
-_FILLS = {BASELINE_COLOR: "rgba(23, 23, 23, 0.05)", STRESS_COLOR: "rgba(154, 104, 72, 0.10)"}
+BASELINE_COLOR = ACCENT
+STRESS_COLOR = ACCENT_SECONDARY
+_FILLS = {BASELINE_COLOR: "rgba(24, 49, 83, 0.05)", STRESS_COLOR: "rgba(40, 100, 160, 0.10)"}
+KRI_UNITS = {
+    "failed_deployment_rate": "% of deployments",
+    "system_downtime_minutes": "Minutes",
+    "near_miss_count": "Count",
+    "control_exception_count": "Count",
+    "vendor_incident_count": "Count",
+}
 
 
 def kri_figure(series: dict[str, Any]) -> go.Figure:
@@ -35,7 +42,10 @@ def kri_figure(series: dict[str, Any]) -> go.Figure:
                      annotation_text="window mean", annotation_position="top left",
                      annotation_font={"color": ACCENT, "size": 12})
     return style_figure(figure, title={"text": label_for(series["kri_name"])}, height=300,
-                        margin={"l": 8, "r": 8, "t": 56, "b": 8}, showlegend=False, yaxis={"rangemode": "tozero"})
+                        margin={"l": 8, "r": 8, "t": 56, "b": 8}, showlegend=False,
+                        xaxis={"title": {"text": "Month"}},
+                        yaxis={"title": {"text": KRI_UNITS.get(series["kri_name"], "Recorded value")},
+                               "rangemode": "tozero"})
 
 
 def _density(histogram: dict[str, Any]) -> tuple[list[float], list[float]]:

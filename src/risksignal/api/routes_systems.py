@@ -9,9 +9,11 @@ from risksignal.api.dependencies import get_tool_context, unwrap_tool_result
 from risksignal.api.schemas import ERROR_RESPONSES
 from risksignal.tools.context import MAX_MONTHS, ToolContext
 from risksignal.tools.control_tools import get_controls
+from risksignal.tools.database_tools import DatabasePage, DatabaseTable, browse_database
 from risksignal.tools.graph_tools import get_dependencies
 from risksignal.tools.incident_tools import get_recent_incidents
 from risksignal.tools.kri_tools import get_kri_history
+from risksignal.tools.monitoring_tools import get_kri_monitoring
 from risksignal.tools.schemas import (
     BankOverviewResult,
     ControlsResult,
@@ -22,11 +24,25 @@ from risksignal.tools.schemas import (
     SystemProfileResult,
 )
 from risksignal.tools.system_tools import get_bank_overview, get_system_profile, list_systems
+from risksignal.tools.validation_tools import get_model_diagnostics
+from risksignal.tools.workbench_schemas import KriMonitoringResult, ModelDiagnosticsResult, RiskWorkpaperResult
+from risksignal.tools.workpaper_tools import get_risk_workpaper
 
 router = APIRouter(prefix="/systems", tags=["systems"], responses=ERROR_RESPONSES)
 overview_router = APIRouter(tags=["overview"], responses=ERROR_RESPONSES)
 
 Months = Query(12, ge=1, le=MAX_MONTHS, description="How many months back from the end of the data.")
+
+
+@overview_router.get("/database/{table}", response_model=DatabasePage, summary="Browse synthetic source records")
+def database_page(
+    table: DatabaseTable,
+    offset: int = Query(0, ge=0, le=2**31 - 1),
+    limit: int = Query(100, ge=1, le=200),
+    ctx: ToolContext = Depends(get_tool_context),
+) -> DatabasePage:
+    """Read one page of a whitelisted source table. No SQL or write operations are accepted."""
+    return unwrap_tool_result(browse_database(ctx, table, offset, limit))
 
 
 @overview_router.get("/overview", response_model=BankOverviewResult, summary="Bank overview")
@@ -76,3 +92,21 @@ def system_kri(
 ) -> KriHistoryResult:
     """Recent monthly KRI observations grouped by KRI."""
     return unwrap_tool_result(get_kri_history(ctx, system_id, months))
+
+
+@router.get("/{system_id}/monitoring", response_model=KriMonitoringResult, summary="Past-only KRI monitoring")
+def system_monitoring(system_id: str, ctx: ToolContext = Depends(get_tool_context)) -> KriMonitoringResult:
+    """Illustrative robust review signals, data-quality states and walk-forward alert workload."""
+    return unwrap_tool_result(get_kri_monitoring(ctx, system_id))
+
+
+@router.get("/{system_id}/model-diagnostics", response_model=ModelDiagnosticsResult, summary="Temporal model diagnostics")
+def system_model_diagnostics(system_id: str, ctx: ToolContext = Depends(get_tool_context)) -> ModelDiagnosticsResult:
+    """Training-only frequency-severity fit assessed against the last twelve months of synthetic history."""
+    return unwrap_tool_result(get_model_diagnostics(ctx, system_id))
+
+
+@router.get("/{system_id}/workpaper", response_model=RiskWorkpaperResult, summary="Draft RCSA evidence workpaper")
+def system_workpaper(system_id: str, ctx: ToolContext = Depends(get_tool_context)) -> RiskWorkpaperResult:
+    """Source-linked evidence, model diagnostics and questions for a human reviewer. No sign-off."""
+    return unwrap_tool_result(get_risk_workpaper(ctx, system_id))

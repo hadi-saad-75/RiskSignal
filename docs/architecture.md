@@ -44,6 +44,21 @@ Each arrow means "is used by the next layer". Dependencies point one way: lower 
 | FastAPI | `risksignal.api` | A thin REST layer exposing the tools and the agent. |
 | Streamlit | `risksignal.ui` | A simple dashboard calling the API. Presentation only. |
 
+### Analyst workbench extension
+
+The existing layers are preserved. Statistical temporal evaluation lives in
+[`stochastic/diagnostics.py`](../src/risksignal/stochastic/diagnostics.py), with a thin
+read-only tool adapter. Descriptive KRI monitoring and a workpaper aggregator reuse
+the tool context and existing incident/control/dependency functions. The API exposes
+three additional system endpoints, and the Streamlit workbench calls only its HTTP
+client. Both AI registries expose the same new tools.
+
+Workpapers contain separately labelled observed and modelled evidence, method versions,
+source references and a content fingerprint. Session-local review notes are exported
+alongside the source evidence, never written back to the bank tables. This is not a
+transactional editable risk register or persistent case-audit service. See the
+[implementation and evaluation report](platform_upgrade.md).
+
 ## Design principles
 
 - **One-way dependencies.** The stochastic engine does not import the agent, the LLM or the UI. It can be tested with no network and no API key.

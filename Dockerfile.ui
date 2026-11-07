@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-RUN pip install "streamlit>=1.40,<2" "plotly>=6.0,<8" "httpx>=0.27,<1"
+RUN pip install "streamlit>=1.65,<2" "plotly>=6.0,<8" "httpx>=0.27,<1"
 
 COPY src/risksignal/__init__.py src/risksignal/__init__.py
 COPY src/risksignal/text.py src/risksignal/text.py

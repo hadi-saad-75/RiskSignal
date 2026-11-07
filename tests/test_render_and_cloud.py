@@ -30,8 +30,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "deploy" / "streamlit_cloud" / "streamlit_app.py"
 REQUIREMENTS = ROOT / "deploy" / "streamlit_cloud" / "requirements.txt"
 SECRET = "RISKSIGNAL_API_URL"
-LANDING_TITLE = "Operational risk, connected."
-BANNER = "Research prototype based on synthetic Atlas Bank data, results are not calibrated to observed losses."
+LANDING_TITLE = "Risk Investigator"
+BANNER = "Research prototype. Synthetic Atlas Bank data only."
 
 
 def find_sh() -> str | None:
@@ -215,10 +215,10 @@ def test_secret_is_read_from_st_secrets_and_the_dashboard_runs(api_client: ApiCl
     monkeypatch.delenv(SECRET, raising=False)
     at = run_entrypoint({SECRET: "http://testserver/"}, api_client)
     assert not at.exception
-    assert at.title[0].value == LANDING_TITLE and BANNER in texts(at.warning)
+    assert at.title[0].value == LANDING_TITLE and BANNER in texts(at.caption)
     assert os.environ[SECRET] == "http://testserver"  # trailing slash removed, value passed to the dashboard's API client
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
-    assert "Start the live demo" in texts(at.get("page_link"))
+    assert not at.get("page_link")
 
 
 def test_the_dashboard_client_targets_the_secret_url_without_a_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -234,7 +234,7 @@ def test_every_rerun_executes_the_dashboard_again(api_client: ApiClient, monkeyp
     at = run_entrypoint({SECRET: "http://testserver"}, api_client)
     assert at.title[0].value == LANDING_TITLE
     at.run()  # a second script run (a Streamlit rerun) must render the page again, not an empty app
-    assert not at.exception and at.title[0].value == LANDING_TITLE and BANNER in texts(at.warning)
+    assert not at.exception and at.title[0].value == LANDING_TITLE and BANNER in texts(at.caption)
 
 
 def test_a_missing_secret_gives_a_clear_message_not_a_crash(monkeypatch: pytest.MonkeyPatch) -> None:

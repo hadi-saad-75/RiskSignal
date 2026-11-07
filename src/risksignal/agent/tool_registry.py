@@ -21,14 +21,17 @@ from risksignal.tools.control_tools import get_controls
 from risksignal.tools.graph_tools import get_dependencies
 from risksignal.tools.incident_tools import get_recent_incidents
 from risksignal.tools.kri_tools import get_kri_history
+from risksignal.tools.monitoring_tools import get_kri_monitoring
 from risksignal.tools.schemas import ToolError
 from risksignal.tools.simulation_tools import compare_baseline_and_stress, list_scenarios, run_loss_simulation
 from risksignal.tools.system_tools import get_bank_overview, get_portfolio_summary, get_system_profile, list_systems
+from risksignal.tools.validation_tools import get_model_diagnostics
+from risksignal.tools.workpaper_tools import get_risk_workpaper
 
 logger = logging.getLogger(__name__)
 
 # Bulky chart data the model does not need in order to reason or write.
-_OMITTED_FROM_MODEL_VIEW = {"histogram", "baseline_histogram", "stress_histogram"}
+_OMITTED_FROM_MODEL_VIEW = {"histogram", "baseline_histogram", "stress_histogram", "history"}
 _MAX_LOG_MESSAGE = 160
 
 
@@ -57,7 +60,7 @@ class ToolOutcome:
 
 
 def model_view(result: BaseModel) -> dict[str, Any]:
-    """The tool result as plain JSON-able data, without chart histograms."""
+    """JSON evidence without chart histograms or bulky walk-forward calculation histories."""
 
     def strip(value: Any) -> Any:
         if isinstance(value, dict):
@@ -131,9 +134,36 @@ def _summary_scenarios(args: dict[str, Any], r: Any) -> str:
     return f"Listed predefined stress scenarios ({len(r.scenarios)} found)"
 
 
+def _summary_monitoring(args: dict[str, Any], r: Any) -> str:
+    return f"Checked past-only KRI monitoring for {r.system_id} ({len(r.series)} indicators)"
+
+
+def _summary_diagnostics(args: dict[str, Any], r: Any) -> str:
+    return f"Checked temporal model diagnostics for {r.system_id} ({r.status})"
+
+
+def _summary_workpaper(args: dict[str, Any], r: Any) -> str:
+    return f"Prepared draft RCSA evidence for {r.system_id} ({len(r.review_questions)} human-review questions)"
+
+
 def _definitions() -> list[ToolDefinition]:
     scenarios = sorted(PREDEFINED_SCENARIOS)
     return [
+        ToolDefinition(
+            "get_kri_monitoring",
+            "Past-only rolling median/MAD KRI review signals, missing/stale history and walk-forward flag rates. "
+            "Illustrative rule, not approved appetite, prediction, precision or recall.",
+            _schema({"system_id": _SYSTEM_ID}, ["system_id"]), get_kri_monitoring, _summary_monitoring),
+        ToolDefinition(
+            "get_model_diagnostics",
+            "Training-only frequency-severity fit and last twelve-month holdout counts and tail exceedances. "
+            "Reports pooling and sample limitations. Synthetic diagnostics, not predictive validation or capital.",
+            _schema({"system_id": _SYSTEM_ID}, ["system_id"]), get_model_diagnostics, _summary_diagnostics),
+        ToolDefinition(
+            "get_risk_workpaper",
+            "Prepare a draft RCSA evidence pack with source-linked controls, incidents, dependencies, monitoring, "
+            "model diagnostics and review questions. No effectiveness scores, residual ratings, approval or closure.",
+            _schema({"system_id": _SYSTEM_ID}, ["system_id"]), get_risk_workpaper, _summary_workpaper),
         ToolDefinition(
             "get_system_profile",
             "Get a system's details: name, description, criticality, primary business process and basic "
@@ -290,10 +320,10 @@ def _bind(definitions: list[ToolDefinition], ctx: ToolContext | None) -> ToolReg
 
 
 def build_default_registry(ctx: ToolContext | None = None) -> ToolRegistry:
-    """The seven RiskSignal tools bound to a database context (default: the Atlas Bank database)."""
+    """Read-only investigation and workbench tools bound to a database context."""
     return _bind(_definitions(), ctx)
 
 
 def build_chat_registry(ctx: ToolContext | None = None) -> ToolRegistry:
-    """The seven investigation tools plus the bank-wide tools used by the conversational assistant."""
+    """Investigation and workbench tools plus the bank-wide conversational tools."""
     return _bind(_definitions() + _portfolio_definitions(), ctx)

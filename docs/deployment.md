@@ -13,7 +13,7 @@ browser  ->  Streamlit Community Cloud (dashboard)  --HTTPS-->  Render (FastAPI 
 
 The dashboard calls the API from Streamlit's **server**, not from the visitor's browser, so no CORS configuration is needed. The dashboard imports none of the backend code; it needs only Streamlit, Plotly and httpx.
 
-> **All data are synthetic and the public deployment uses the deterministic mock agent.** With the mock provider the Assistant is a script that calls the same tools a language model would and writes the summary from their results. It is not a language model, and the dashboard shows `AI provider: mock (ready)` in the sidebar. Say so when you show it. The live Anthropic provider is deliberately **not** enabled (see section 5).
+> **All data are synthetic and the public deployment uses the deterministic mock agent.** With the mock provider Risk Investigator uses scripted responses and deterministic tools. It is not a language model; the sidebar identifies the active language-model provider. Say so when you show it. The live Anthropic provider is deliberately **not** enabled (see section 5).
 
 ---
 
@@ -130,7 +130,7 @@ Expected: the simulation returns `"data_kind":"modelled_output"` with the same f
 | Introduction | `UI` | text-led opening, detailed three-step workflow cards, data construction, engineering roadmap and live portfolio snapshot with recent incidents. The former Overview tab is merged here |
 | System Explorer | `UI/system-explorer` | `PAYMENT_ENGINE_01` profile, incidents, KRIs, controls, shared-exposure map |
 | Scenario Analysis | `UI/scenario-lab` | estimated λ, μ, σ; running the simulation shows baseline and stress figures matching the API |
-| Assistant | `UI/assistant` | **Investigate this system** produces six sections and a tool activity log |
+| Risk Investigator | `UI/risk-investigator` | Monitoring context, evidence-led findings and expandable support |
 | Way forward: AI assistant | `UI/way-forward` | limitations, mathematical assumptions, institutional calibration and the proposed knowledge-assisted and multi-agent roadmap, with no conversational preview |
 
 If the sidebar shows `API not reachable`, wait a minute for the Render service to wake and reload.

@@ -14,4 +14,4 @@ Simple workflow animation, 16:9 at 1280 x 720. Total duration: 12 seconds. Three
 - No repository/code UI, terminal output, test counts, or credentials are part of the animation.
 - Incident/KRI/control/vendor labels and Monte Carlo values are taken from an executed offline investigation and seeded simulation on the generated synthetic data. The histogram explicitly identifies its P99 range and does not imply a forecast.
 - The graph and stochastic model support the workflow; the AI investigation agent remains the main focus.
-- The animation is stored as `docs/media/risksignal_vscode_walkthrough.gif`.
+- MP4 is optional; the required deliverable is `docs/media/risksignal_vscode_walkthrough.gif`.

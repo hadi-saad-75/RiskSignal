@@ -1,4 +1,4 @@
-"""Current investigation page and reusable conversational preview."""
+"""Unified AI investigation page and reusable conversational preview."""
 
 from html import escape
 from typing import Any
@@ -8,13 +8,11 @@ import streamlit as st
 from risksignal.ui.api_client import ApiClient
 from risksignal.ui.components import (
     LLM_HELP,
-    banner,
     call_api,
     get_api_client,
     html,
     is_structured,
     label,
-    page_header,
     render_answer,
     section_header,
 )
@@ -34,19 +32,19 @@ STARTERS = (
 
 
 def render_assistant() -> None:
-    banner()
-    page_header(
-        "04", "Assistant", "RiskSignal Assistant",
-        "A language model selects among deterministic tools for retrieving system profiles, incidents, key "
-        "risk indicators, controls, dependencies, and simulation results. It summarises the returned evidence "
-        "and may suggest questions for further review. The model cannot modify records or make risk decisions. "
-        "Reported quantitative claims are checked against the tool outputs, unmatched values are flagged.",
-        intro_below=True,
-    )
+    st.title("Risk Investigator")
+    st.caption("AI Operational Risk Investigator")
+    st.write("Investigate operational risk signals across incidents, controls, indicators and system dependencies.")
+    st.caption("Research prototype. Synthetic Atlas Bank data only. The analyst makes the decision.")
     client = get_api_client()
-    health = call_api(client.health)
-    if health is not None and not health["llm_configured"]:
-        st.info(f"The language-model provider is not configured. {LLM_HELP}")
+    health = st.session_state.get("app_health") or call_api(client.health)
+    if health is not None:
+        if not health["llm_configured"]:
+            st.info(f"The language-model provider is not configured. {LLM_HELP}")
+        elif health["llm_provider"] == "mock":
+            st.caption("Scripted offline provider, not live LLM tool calling.")
+        else:
+            st.caption("Live LLM provider active. Tool calls retrieve evidence only. They do not modify records.")
 
     render_investigation(client)
 

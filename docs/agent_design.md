@@ -21,7 +21,9 @@ A general chatbot answers from what its language model "knows" and from the conv
 | Leaves no record of how an answer arose | Records every tool call: name, input, status, time and result |
 | Cannot change anything either, but nothing prevents it from claiming to | Read-only by construction: no tool writes or modifies records |
 
-What the agent does is **decide which tools to call**. For "Investigate PAYMENT_ENGINE_01" it would normally look at the system profile, recent incidents, recent KRIs, controls, dependencies and a baseline simulation. It runs the stress comparison only if the user asks for it or the evidence makes it relevant, and it does not call tools the question does not need. A narrow question such as "What incidents affected this system?" needs one tool.
+The live agent can **select read-only tools**. A broad investigation normally retrieves profile, incidents, past-only monitoring, controls and dependencies. A baseline simulation is optional for a financial-loss question; stress comparison requires relevant explicit assumptions. The offline provider follows a deterministic script rather than choosing tools with an LLM.
+
+Substantial investigations use **Investigation Summary**, **Key Findings** and **Next Investigations**: two or three summary sentences, at most three source-linked findings and three ordered questions with reasons. The UI caps excess items while preserving the complete response. Legacy conversational headings remain supported.
 
 ## 2. How an investigation runs
 
@@ -39,12 +41,18 @@ analyst question
       +-- no  --> final answer + tool activity log + warnings
 ```
 
-1. The question and the system prompt go to the language model, together with the list of seven tools and their input schemas.
+1. The question and the system prompt go to the language model, together with ten investigation/workbench tools and their input schemas. The conversational registry adds four portfolio tools.
 2. If the model asks for tools, the registry validates the arguments, runs the real Python tools and sends the JSON results back.
 3. This repeats until the model writes its final answer, or a step limit (10 model turns) stops it.
 4. The result contains the answer, a tool activity log, warnings, and the structured output of every tool.
 
 The agent is a short, plain loop. No agent framework is used.
+
+The Risk Investigator workspace includes a compact monitoring snapshot as investigation
+context and keeps full histories, temporal diagnostics, RCSA preparation and review/export
+tools in expandable sections. The agent still has read-only access. Optional evidence drafts
+require a completed run using the displayed evidence fingerprint, and human review is still
+required for every substantive conclusion. The mock provider is a script, not a live LLM.
 
 ## 3. Why calculations stay outside the language model
 

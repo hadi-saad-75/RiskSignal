@@ -139,7 +139,7 @@ def test_simulation_metadata_is_extracted_from_the_tool_output(api: ApiClient) -
     response = api.investigate("Investigate PAYMENT_ENGINE_01 with the stress scenario.")
     meta = extract_simulation_metadata(response["tool_activity"])
     assert meta["tool"] == "compare_baseline_and_stress" and meta["stress_metrics"]["p95"] > meta["baseline_metrics"]["p95"]
-    plain = extract_simulation_metadata(api.investigate("Investigate PAYMENT_ENGINE_01.")["tool_activity"])
+    plain = extract_simulation_metadata(api.investigate("Investigate PAYMENT_ENGINE_01 and simulate annual losses.")["tool_activity"])
     assert plain["tool"] == "run_loss_simulation" and plain["stress_metrics"] is None and plain["random_seed"] == 42
     assert extract_simulation_metadata([]) is None
     assert extract_simulation_metadata([{"tool_name": "get_controls", "status": "completed", "output": {"ok": True}}]) is None
@@ -153,6 +153,11 @@ def test_kri_figure(api: ApiClient) -> None:
     figure = kri_figure(series)
     assert len(figure.data[0].x) == 12 and list(figure.data[0].y) == [p["value"] for p in series["observations"]]
     assert figure.layout.shapes[0].y0 == series["window_mean"]
+    assert figure.layout.xaxis.title.text == "Month"
+    assert figure.layout.yaxis.title.text == "Count"
+    for name, unit in (("failed_deployment_rate", "% of deployments"), ("system_downtime_minutes", "Minutes")):
+        selected = next(s for s in api.kri(FOCAL, 12)["series"] if s["kri_name"] == name)
+        assert kri_figure(selected).layout.yaxis.title.text == unit
 
 
 def test_distribution_figure_draws_a_proper_density(api: ApiClient) -> None:
@@ -255,7 +260,8 @@ def test_overview_page(api: ApiClient) -> None:
     frame = at.dataframe[0].value
     assert len(frame) == 5 and {"Date", "System", "Category", "Severity", "Loss"} == set(frame.columns)
     assert "risk score" not in (texts(at.markdown) + texts(at.subheader) + texts(at.caption)).lower()
-    assert "not JPMorgan data" in texts(at.markdown)
+    assert "fictional Atlas Bank data" in texts(at.markdown)
+    assert "JPMorgan" not in texts(at.markdown)
     assert LOSS_UNIT_NOTICE in texts(at.caption)
 
 
@@ -302,28 +308,27 @@ def test_scenario_lab_shows_estimates_notice_and_runs_baseline_and_stress(api: A
     at = run_view(api, "scenario_lab", "render_scenario_lab")
     assert not at.exception
     assert SIMULATION_NOTICE in texts(at.info)
-    values = metric_values(at)
-    assert {"λ: expected incidents per year", "μ: log-severity location", "σ: log-severity spread"} <= set(values)
-    assert float(values["λ: expected incidents per year"]) > 0
-    assert any("Parameter interpretation" == e.label for e in at.expander)
+    assert not at.metric
+    assert any("Advanced assumptions" == e.label for e in at.expander)
     assert LOSS_UNIT_NOTICE in texts(at.caption)
-    assert "not of annual loss" in texts(at.markdown)
     assert "not every loss by 20%" in texts(at.markdown)
     assert "50% more expected incidents" in next(w.help for w in at.number_input if w.label == "λ multiplier")
     assert at.selectbox[1].value == "SHARED_VENDOR_OUTAGE"
-    assert not any("P95 under stress" in label for label in values)
+    assert not any("P95 under stress" in label for label in metric_values(at))
 
     at.button[0].click().run()
     assert not at.exception
     values = metric_values(at)
-    assert {"Mean annual loss under stress", "Median annual loss under stress", "P95 under stress", "P99 under stress",
-            "Expected Shortfall 95% under stress", "Expected Shortfall 99% under stress"} <= set(values)
+    assert {"λ: expected incidents per year", "μ: log-severity location", "σ: log-severity spread"} <= set(values)
     expected = api.compare(FOCAL, "SHARED_VENDOR_OUTAGE", 100_000, 42)["simulation_results"]
-    assert values["P95 under stress"] == format_amount(expected["stress_metrics"]["p95"])
+    headline = at.dataframe[0].value
+    assert headline.loc[headline["Metric"] == "P95", "Stress"].iloc[0] == format_amount(expected["stress_metrics"]["p95"])
+    assert not at.get("plotly_chart")
+    at.session_state["lab_distribution"] = True
+    at.run()
     assert len(at.get("plotly_chart")) == 1
-    assert texts(at.info).count(SIMULATION_NOTICE) >= 2  # shown again next to the results
     table = next(d.value for d in at.dataframe if "Baseline" in d.value.columns)
-    assert list(table["Metric"])[:3] == ["Mean annual loss", "Median annual loss", "P95"]
+    assert list(table["Metric"]) == ["Mean annual loss", "P95", "Expected Shortfall 95%"]
 
 
 def test_scenario_lab_advanced_assumptions_use_the_custom_endpoint(api: ApiClient) -> None:
@@ -335,7 +340,7 @@ def test_scenario_lab_advanced_assumptions_use_the_custom_endpoint(api: ApiClien
     number["σ multiplier"].set_value(1.0)
     at.button[0].click().run()
     assert not at.exception
-    assert "User-defined scenario" in texts(at.markdown) and "user-supplied" in texts(at.markdown)
+    assert "user-supplied" in texts(at.caption).lower()
     parameters = next(t.value for t in at.table if "Parameter" in t.value.columns and "Stress" in t.value.columns)
     baseline_lambda = float(parameters["Baseline"].iloc[0])
     assert float(parameters["Stress"].iloc[0]) == pytest.approx(2 * baseline_lambda, rel=0.01)
@@ -353,9 +358,9 @@ def test_scenario_lab_inputs_are_limited_and_disabled_until_chosen(api: ApiClien
 def test_scenario_lab_new_system_clears_stale_results(api: ApiClient) -> None:
     at = run_view(api, "scenario_lab", "render_scenario_lab")
     at.button[0].click().run()
-    assert "P95 under stress" in metric_values(at)
+    assert at.dataframe
     at.selectbox[0].select("PAYMENT_ENGINE_02").run()
-    assert not at.exception and "P95 under stress" not in metric_values(at)
+    assert not at.exception and not at.dataframe
 
 
 # ----------------------------------------------------------------- Assistant page: investigation section
@@ -364,29 +369,136 @@ def test_scenario_lab_new_system_clears_stale_results(api: ApiClient) -> None:
 def test_investigation_runs_an_investigation_with_the_mock_llm(api: ApiClient) -> None:
     at = run_view(api, "assistant", "render_assistant")
     assert not at.exception
-    assert at.text_area[0].value.startswith("Investigate PAYMENT_ENGINE_01. Review recent incidents, KRIs, controls and dependencies")
-    assert "identify questions that an Operational Risk analyst should investigate." in at.text_area[0].value
-    assert at.button[0].label == "Investigate this system"
+    assert at.text_area[0].value.startswith("Investigate PAYMENT_ENGINE_01. Review current monitoring signals")
+    assert "suggest next steps." in at.text_area[0].value
+    snapshot_labels = {
+        "Failed deployment rate", "Near miss count", "Control exception count",
+        "System downtime minutes", "Vendor incident count",
+    }
+    assert 1 <= sum(metric.label in snapshot_labels for metric in at.metric) <= 3
+    assert at.button(key="agent_investigate").label == "Investigate system"
 
-    at.button[0].click().run()
+    at.button(key="agent_investigate").click().run()
     assert not at.exception
+    assert "Operational monitoring context for PAYMENT_ENGINE_01" in at.session_state["agent_response"]["question"]
     shown = texts(at.markdown)
-    for heading in ("Observed evidence", "Model assumptions", "Simulation results", "Suggested investigation questions"):
-        assert f'<span class="rs-title">{heading}</span>' in shown, heading  # each section has its own numbered heading
+    for heading in ("Investigation Summary", "Key Findings", "Next Investigations"):
+        assert heading in texts(at.subheader)
+    assert "Simulation results" not in [e.label for e in at.expander]
+    at.session_state["evidence_tools"] = True
+    at.run()
+    shown = texts(at.markdown)
     assert "Retrieved system profile for PAYMENT_ENGINE_01" in shown
-    assert "Ran 100,000 year Monte Carlo simulation (seed 42)" in shown
-    assert any("Simulation metadata" in s.value for s in at.subheader)
-    assert metric_values(at)["Simulations / seed"] == "100,000 / 42"
-    assert "Details: get_system_profile" in [e.label for e in at.expander]
-    assert not at.warning[1:] or "numbers" not in texts(at.warning)  # nothing flagged for the honest mock answer
+    assert "Ran 100,000 year Monte Carlo simulation (seed 42)" not in shown
+    assert any("system_id" in element.value for element in at.json)
+    expander_labels = [e.label for e in at.expander]
+    assert expander_labels.index("Retrieved evidence and tool activity") < expander_labels.index(
+        "Review notes and evidence export"
+    )
+    assert "Scripted offline" in texts(at.caption)
+    assert not at.warning[1:] or "numbers" not in texts(at.warning)
+
+
+def test_investigation_blank_request_clears_previous_answer(api: ApiClient) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    at.button(key="agent_investigate").click().run()
+    assert at.session_state["agent_response"]
+    at.text_area(key=f"agent_question_{FOCAL}").set_value("  ").run()
+    at.button(key="agent_investigate").click().run()
+    assert "Enter an investigation question" in texts(at.error)
+    assert "Investigation Summary" not in texts(at.subheader)
+
+
+def test_failed_investigation_does_not_show_old_findings(api: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    at = run_view(api, "assistant", "render_assistant")
+    at.button(key="agent_investigate").click().run()
+
+    def fail(*args: Any, **kwargs: Any) -> None:
+        raise ApiRequestError(503, "llm_unavailable", "Provider unavailable for this check.")
+
+    monkeypatch.setattr(ApiClient, "investigate", fail)
+    at.button(key="agent_investigate").click().run()
+    assert not at.exception
+    assert "Provider unavailable" in texts(at.error)
+    assert "Investigation Summary" not in texts(at.subheader)
+
+
+def test_main_views_do_not_run_simulations_on_open(api: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    def unexpected(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("Opening a view must not run a simulation.")
+
+    monkeypatch.setattr(ApiClient, "simulate", unexpected)
+    for module, function in (("assistant", "render_assistant"), ("scenario_lab", "render_scenario_lab")):
+        at = run_view(api, module, function)
+        assert not at.exception and not at.get("plotly_chart")
+
+
+def test_scenario_changed_inputs_warn_and_failed_rerun_clears_results(
+    api: ApiClient, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    at = run_view(api, "scenario_lab", "render_scenario_lab")
+    at.button[0].click().run()
+    next(n for n in at.number_input if n.label == "Random seed").set_value(43).run()
+    assert "Settings have changed" in texts(at.warning)
+
+    def fail(*args: Any, **kwargs: Any) -> None:
+        raise ApiRequestError(400, "invalid_input", "Simulation rejected for this check.")
+
+    monkeypatch.setattr(ApiClient, "compare", fail)
+    at.button[0].click().run()
+    assert not at.exception and not at.dataframe
+    assert "Simulation rejected" in texts(at.error)
+
+
+def test_numbered_agent_items_are_capped_without_losing_full_response(api: ApiClient) -> None:
+    from risksignal.ui.views.investigation import _bullets
+
+    assert _bullets("1. First\n   source\n2) Second\n3. Third\n4. Fourth") == [
+        "- First\n   source", "- Second", "- Third", "- Fourth",
+    ]
+    response = api.investigate(f"Investigate {FOCAL}.")
+    response["final_response"] = (
+        "Investigation Summary\nOne sentence. Two sentences. Three sentences. Fourth sentence.\n"
+        "Key Findings\n1. First\n2. Second\n3. Third\n4. Hidden finding\n"
+        "Next Investigations\n1. Review first\n2. Review second\n3. Review third\n4. Hidden priority"
+    )
+    at = AppTest.from_string(
+        "import streamlit as st\nfrom risksignal.ui.views.investigation import _show\n"
+        "_show(st.session_state['response'], 'Test response')"
+    )
+    at.session_state["response"] = response
+    at.run()
+    assert not at.exception
+    # The complete response is retained only in disclosure, not discarded.
+    main = " | ".join(e.value for e in at.markdown if "Hidden finding" not in e.value)
+    assert "Fourth sentence" not in main
+    assert sum("**" in e.value for e in at.markdown) == 3
+    assert "Hidden priority" in texts(at.expander[0].markdown)
+
+
+def test_malformed_agent_output_is_reported_and_preserved_in_disclosure(api: ApiClient) -> None:
+    response = api.investigate(f"Investigate {FOCAL}.")
+    response["final_response"] = "Unstructured answer\n" + "\n".join(f"- Finding {i}" for i in range(10))
+    at = AppTest.from_string(
+        "import streamlit as st\nfrom risksignal.ui.views.investigation import _show\n"
+        "_show(st.session_state['response'], 'Test response')"
+    )
+    at.session_state["response"] = response
+    at.run()
+    assert not at.exception
+    assert "did not return the expected investigation sections" in texts(at.warning)
+    assert not at.subheader
+    assert "Finding 9" in texts(at.expander[0].markdown)
 
 
 def test_investigation_custom_question_and_stress_option(api: ApiClient) -> None:
     at = run_view(api, "assistant", "render_assistant")
     at.text_area[0].set_value("What controls protect PAYMENT_ENGINE_01?")
     at.checkbox[0].check()
-    at.button[0].click().run()
-    assert not at.exception and "Request: What controls protect PAYMENT_ENGINE_01? Also compare" in texts(at.caption)
+    at.button(key="agent_investigate").click().run()
+    assert not at.exception and "Request: What controls protect PAYMENT_ENGINE_01?" in texts(at.caption)
+    at.session_state["evidence_tools"] = True
+    at.run()
     assert "Compared baseline and stress scenario SHARED_VENDOR_OUTAGE" in texts(at.markdown)
 
 
@@ -407,7 +519,7 @@ def test_investigation_explains_a_missing_api_key_without_crashing(ctx: ToolCont
     assert not at.exception
     assert "language-model provider is not configured" in texts(at.info) and "ANTHROPIC_API_KEY" in texts(at.info)
 
-    at.button[0].click().run()
+    at.button(key="agent_investigate").click().run()
     assert not at.exception
     assert "language model is unavailable" in texts(at.error) and "ANTHROPIC_API_KEY" in texts(at.error)
     assert "do not require a language-model API key" in texts(at.info) and "RISKSIGNAL_LLM_PROVIDER=mock" in texts(at.info)
@@ -419,10 +531,10 @@ def test_investigation_explains_a_missing_api_key_without_crashing(ctx: ToolCont
 def test_investigation_with_an_unknown_system_in_the_request(api: ApiClient) -> None:
     at = run_view(api, "assistant", "render_assistant")
     at.text_area[0].set_value("Investigate PAYMENT_ENGINE_99.")
-    at.button[0].click().run()
+    at.button(key="agent_investigate").click().run()
     assert not at.exception
     assert any(a in texts(at.markdown) for a in ("could not complete the investigation",))
-    assert "Failed:" in texts(at.markdown) and "get_system_profile failed (unknown_system)" in texts(at.markdown)
+    assert "get_system_profile failed (unknown_system)" in texts(at.error)
 
 
 def test_investigation_shows_warnings_for_unmatched_numbers(ctx: ToolContext) -> None:
@@ -431,7 +543,7 @@ def test_investigation_shows_warnings_for_unmatched_numbers(ctx: ToolContext) ->
 
     liar = MockProvider([LLMResponse(text="Simulation results\n- P95 annual loss is 1,234,567.")])
     at = run_view(make_api(ctx, provider_factory=lambda q: liar), "assistant", "render_assistant")
-    at.button[0].click().run()
+    at.button(key="agent_investigate").click().run()
     assert not at.exception and "1,234,567" in texts(at.warning) and "could not be matched" in texts(at.warning)
 
 
@@ -448,22 +560,19 @@ def test_app_entry_point_runs_with_navigation_and_sidebar(api: ApiClient) -> Non
     at.session_state["api_client"] = api
     at.run()
     assert not at.exception
-    assert at.title[0].value == "Operational risk, connected."
-    assert BANNER_TEXT in texts(at.warning)
-    assert "Start the live demo" in texts(at.get("page_link"))
+    assert at.title[0].value == "Risk Investigator"
+    assert not at.get("page_link")
     assert "API ok" in texts(at.sidebar.success) and "Language model: mock (configured)" in texts(at.sidebar.caption)
     content = texts(at.markdown) + texts(at.caption) + texts(at.info) + texts(at.subheader)
-    for phrase in ("How Atlas Bank was built", "How RiskSignal was engineered", "seed is 42",
-                   "Poisson draws", "Lognormal draws", "SQLite", "NetworkX", "FastAPI"):
+    for phrase in (
+        "AI Operational Risk Investigator", "System context", "Supporting Evidence",
+    ):
         assert phrase in content
-    assert not at.get("image")
-    for phrase in ("Gather evidence", "Connect exposure", "Explore assumptions", "Atlas Bank at a glance"):
-        assert phrase in content
-    for phrase in ("less manual collation", "not automated risk decisions",
-                   "benefits are proposed, not measured", "team's existing process"):
-        assert phrase in content
-    assert metric_values(at)["Systems in scope"] == "20"
-    assert len(at.dataframe[0].value) == 5
+    assert not at.get("plotly_chart")
+    assert not any(phrase in content for phrase in (
+        "How Atlas Bank was built", "How RiskSignal was engineered",
+        "SQLite", "NetworkX", "FastAPI",
+    ))
     assert not any(phrase in content for phrase in (
         "Read at your own pace", "Present from left to right", "Evidence supports judgement",
     ))
@@ -473,21 +582,24 @@ def test_intro_remains_readable_without_the_backend() -> None:
     at = AppTest.from_file(str(SRC / "ui" / "app.py"), default_timeout=60)
     at.session_state["api_client"] = unreachable_api()
     at.run()
-    assert not at.exception and at.title[0].value == "Operational risk, connected."
-    assert "How Atlas Bank was built" in texts(at.subheader)
+    assert not at.exception and at.title[0].value == "Risk Investigator"
     assert "API unavailable" in texts(at.sidebar.error)
     assert "Cannot reach the RiskSignal API" in texts(at.error)
-    assert "Start the live demo" in texts(at.get("page_link"))
+    assert not at.get("page_link")
 
 
 def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient) -> None:
     at = run_view(api, "way_forward", "render_way_forward")
-    assert not at.exception and at.title[0].value == "Way forward: AI assistant"
+    assert not at.exception and at.title[0].value == "Way Forward"
     content = texts(at.markdown) + texts(at.subheader)
-    for phrase in ("Mathematical assumptions", "Institutional calibration", "Negative Binomial", "λ(t)",
-                   "Basel standardised", "Backtesting and validation", "Documented expert decisions",
-                   "multi-agent", "not implemented", "latency and cost"):
+    for phrase in (
+        "Agree one real task", "approved real bank data", "regulations and internal rules",
+        "Fit and test a real-data loss model", "Test the live LLM", "What success would look like",
+        "kept out of fitting", "source correctness", "review time", "independent review",
+    ):
         assert phrase in content
+    assert "multi-agent" not in content.lower()
+    assert "Basel standardised" not in content
     assert "Conversational preview" not in content
     assert "Offline mock provider" not in texts(at.info)
     assert not at.chat_input
@@ -503,7 +615,9 @@ def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient)
 ])
 def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module: str, function: str) -> None:
     at = run_view(api, module, function)
-    if module in ("assistant", "scenario_lab"):
+    if module == "assistant":
+        at.button(key="agent_investigate").click().run()
+    elif module == "scenario_lab":
         at.button[0].click().run()
     assert not at.exception
     visible = " ".join(
@@ -519,14 +633,73 @@ def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module:
 
 def test_app_defines_the_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    titles = ("System Explorer", "Scenario Analysis", "Assistant", "Way forward: AI assistant")
-    for title in ("Introduction", *titles):
+    titles = ("Introduction", "Risk Investigator", "Scenario Analysis", "Way Forward")
+    for title in titles:
         assert f'title="{title}"' in source
     assert "set_page_config" in source
     positions = [source.index(f'title="{title}"') for title in titles]
     assert positions == sorted(positions)
-    assert "navigation_pages = [introduction, *pages.values()]" in source
+    assert "default=True" in source
+    assert source.count("st.Page(") == 4
+    assert 'title="Database"' not in source
+    assert "render_risk_workbench" not in source
+    assert "Risk workbench" not in source
     assert 'title="Overview"' not in source
+
+
+def test_introduction_explains_approach_need_goal_and_idea_without_api() -> None:
+    at = AppTest.from_string(
+        "from risksignal.ui.views.product_context import render_introduction\nrender_introduction()"
+    ).run()
+    assert not at.exception
+    assert at.title[0].value == "Introduction" and not at.expander
+    assert [heading.value for heading in at.subheader] == ["Current approach", "The need", "The goal", "The idea"]
+    assert "LLM" in texts(at.markdown)
+    assert "offline mock follows a script" in texts(at.caption)
+
+
+def test_database_is_scrollable_with_table_selection_and_pages(
+    api: ApiClient, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+    original = ApiClient.database
+
+    def counted(client: ApiClient, table: str, offset: int = 0, limit: int = 100) -> dict:
+        calls.append((table, offset, limit))
+        return original(client, table, offset, limit)
+
+    monkeypatch.setattr(ApiClient, "database", counted)
+    at = AppTest.from_string(
+        "import streamlit as st\nfrom risksignal.ui.views.product_context import render_database\n"
+        "render_database(st.session_state['api_client'])"
+    )
+    at.session_state["api_client"] = api
+    at.run()
+    assert not at.exception and len(at.dataframe[0].value) == 20
+    assert calls == [("systems", 0, 100)] and not at.expander
+    assert list(at.dataframe[0].value.columns) == api.database("systems")["columns"]
+    at.selectbox(key="database_table").select("kri_observations").run()
+    first = at.dataframe[0].value.to_dict("records")
+    assert len(first) == 100
+    at.number_input(key="database_page_kri_observations").set_value(2).run()
+    assert at.dataframe[0].value.to_dict("records") == api.database("kri_observations", 100)["rows"]
+    assert "Showing 101-200" in texts(at.caption)
+    at.number_input(key="database_page_kri_observations").set_value(10000).run()
+    assert not at.exception and not at.dataframe and "No records on this page" in texts(at.info)
+
+
+def test_database_api_failure_is_explicit(api: ApiClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail(*args: Any, **kwargs: Any) -> None:
+        raise ApiRequestError(503, "data_unavailable", "Database unavailable for this check.")
+
+    monkeypatch.setattr(ApiClient, "database", fail)
+    at = AppTest.from_string(
+        "import streamlit as st\nfrom risksignal.ui.views.product_context import render_database\n"
+        "render_database(st.session_state['api_client'])"
+    )
+    at.session_state["api_client"] = api
+    at.run()
+    assert not at.exception and "Database unavailable" in texts(at.error) and not at.dataframe
 
 
 # ----------------------------------------------------------------- structure
