@@ -18,29 +18,19 @@ PAGE_SIZE = 100
 
 
 def render_introduction() -> None:
-    st.title("Introduction")
-    st.caption("RiskSignal: evidence-led Operational Risk investigation.")
+    st.markdown("**RiskSignal, operational risk connected.**")
+    st.caption("Evidence-led investigation for operational risk analysts.")
     with st.container():
-        st.subheader("Current approach")
-        st.write(
-            "Analysts can review incident records, control registers, indicator reports and dependency maps. "
-            "Spreadsheets, reporting dashboards and loss simulations help organise and analyse this information. "
-            "These are useful tools, but connecting the evidence for one investigation still requires analyst judgement."
-        )
-        st.caption("A simple overview of common approaches, not a claim that every institution works this way.")
-        st.subheader("The need")
-        st.write("When a signal looks unusual, the analyst needs to find the relevant records, understand their "
-                 "connections and decide what evidence is missing.")
-        st.subheader("The goal")
-        st.write("Connect relevant evidence and help analysts decide what to investigate next. "
-                 "The analyst remains responsible for conclusions and action.")
-        st.subheader("The idea")
-        st.write("Use an LLM as the investigation interface: it can select approved read-only tools and organise "
-                 "their evidence into findings and follow-up questions. Python retrieves records and calculates "
-                 "numbers. Monte Carlo supports the optional question: what annual losses could result under "
-                 "stated assumptions?")
-        st.caption("Today: synthetic Atlas Bank records. The offline mock follows a script, not live LLM reasoning. "
-                   "Live LLM quality and real-data predictive performance have not been evaluated.")
+        need, goal, idea = st.columns(3)
+        with need:
+            st.subheader("The need")
+            st.write("Find relevant records, connections and missing evidence when a signal looks unusual.")
+        with goal:
+            st.subheader("The goal")
+            st.write("Connect evidence and help analysts decide what to investigate next.")
+        with idea:
+            st.subheader("The idea")
+            st.write("Use an LLM interface with approved tools. Python retrieves records and calculates numbers.")
 
 
 def render_database(client: ApiClient) -> None:
