@@ -656,6 +656,8 @@ def test_introduction_explains_approach_need_goal_and_idea_without_api() -> None
     assert [heading.value for heading in at.subheader] == ["Current approach", "The need", "The goal", "The idea"]
     assert "LLM" in texts(at.markdown)
     assert "offline mock follows a script" in texts(at.caption)
+    assert "help analysts decide what to investigate next" in texts(at.markdown)
+    assert "three" not in texts(at.markdown)
 
 
 def test_database_is_scrollable_with_table_selection_and_pages(

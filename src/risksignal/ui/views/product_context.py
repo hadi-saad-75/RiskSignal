@@ -32,7 +32,7 @@ def render_introduction() -> None:
         st.write("When a signal looks unusual, the analyst needs to find the relevant records, understand their "
                  "connections and decide what evidence is missing.")
         st.subheader("The goal")
-        st.write("Connect relevant evidence and identify up to three justified next investigations. "
+        st.write("Connect relevant evidence and help analysts decide what to investigate next. "
                  "The analyst remains responsible for conclusions and action.")
         st.subheader("The idea")
         st.write("Use an LLM as the investigation interface: it can select approved read-only tools and organise "

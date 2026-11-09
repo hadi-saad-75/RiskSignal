@@ -137,7 +137,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 1. Open **Risk Investigator** at `/`, with `PAYMENT_ENGINE_01` selected.
 2. Notice the unusual failed-deployment indicator, then click **Investigate system**.
-3. Read the summary and three justified next investigations. Follow a source link and expand one incident, control or shared supplier.
+3. Read the summary and justified next investigations. Follow a source link and expand one incident, control or shared supplier.
 4. Optionally run **Scenario Analysis** at `/scenario-lab`: compare annual losses under stated assumptions, not forecasts.
 5. Close with the limits: synthetic records, a scripted offline provider unless a live LLM is configured, and an analyst who remains responsible for decisions.
 

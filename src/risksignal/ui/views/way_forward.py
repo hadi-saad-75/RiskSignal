@@ -12,7 +12,7 @@ def render_way_forward() -> None:
     st.write(
         "Work with Operational Risk analysts, system owners and model-validation specialists. "
         "Choose a narrow question, such as reviewing recurring payment-system incidents and preparing "
-        "three evidence-backed follow-up questions. Agree what a correct and useful answer looks like."
+        "evidence-backed follow-up questions. Agree what a correct and useful answer looks like."
     )
 
     st.subheader("2. Obtain approved real bank data")
