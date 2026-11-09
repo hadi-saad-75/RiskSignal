@@ -811,6 +811,30 @@ h1, [data-testid="stHeading"] h1 { padding-bottom: 0 !important; }
 @media (min-width: 1100px) {
   html { font-size: 17px; }
 }
+/* ---------- risk investigator only: two panes that fit one screen */
+.st-key-rs_investigator h1 { font-size: clamp(1.75rem, 1.4rem + 1vw, 2.375rem) !important; margin: 0; }
+.st-key-rs_investigator [data-testid="stMarkdownContainer"] p { font-size: 0.9375rem; line-height: 1.45; }
+.st-key-rs_investigator [data-testid="stCaptionContainer"] p { font-size: 0.8125rem !important; line-height: 1.4; }
+.st-key-rs_investigator [data-testid="stVerticalBlock"] { gap: 0.55rem; }
+.st-key-rs_investigator > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"]:first-child {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rs-divider);
+  margin-bottom: 0.25rem;
+}
+.st-key-rs_investigator h1 { line-height: 1.2 !important; padding-bottom: 0.2rem !important; }
+.st-key-rs_investigator [data-testid="stHeading"] h3 { font-size: 1.125rem !important; padding-bottom: 0.5rem !important; margin: 0.25rem 0 0.3rem !important; line-height: 1.3 !important; }
+.st-key-rs_investigator [data-testid="stCaptionContainer"] { margin-top: 0.25rem; }
+.st-key-rs_investigator [data-testid="stMetricLabel"], .st-key-rs_investigator [data-testid="stMetricLabel"] p {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: 0.75rem !important;
+}
+.st-key-rs_investigator [data-testid="stMetricValue"], .st-key-rs_investigator [data-testid="stMetricValue"] div,
+.st-key-rs_investigator [data-testid="stMetricValue"] p { font-size: 1.5rem !important; }
+.st-key-rs_investigator [data-testid="stMetricDelta"] { font-size: 0.75rem !important; }
+.st-key-rs_investigator [data-testid="stExpanderDetails"] { max-height: calc(100vh - 17rem); }
+
 /* ---------- responsive */
 @media (max-width: 640px) {
   [data-testid="stHeader"]::before { font-size: 1.5rem; padding-right: 1rem; }

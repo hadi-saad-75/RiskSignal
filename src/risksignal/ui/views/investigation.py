@@ -35,11 +35,24 @@ def default_question(system_id: str) -> str:
 
 
 def render_investigation(client: ApiClient) -> None:
-    controls, action = st.columns([5, 1], vertical_alignment="bottom")
+    left, right = st.columns([5, 7], gap="medium")
+    with left:
+        selected = _select_system(client)
+        if selected is not None:
+            _investigation_controls(client, *selected)
+    with right:
+        if selected is not None:
+            st.subheader("Supporting Evidence", anchor="supporting-evidence")
+            response = st.session_state.get(RESPONSE_KEY)
+            render_workbench_support(client, selected[1], response if response else None)
+
+
+def _select_system(client: ApiClient) -> tuple[str, dict[str, Any]] | None:
+    controls, action = st.columns([3, 1], vertical_alignment="bottom")
     with controls:
         system_id = system_selector(client, "agent")
     if system_id is None:
-        return
+        return None
     with action:
         refresh = st.button("Refresh evidence", key="workbench_refresh", width="stretch")
     if refresh:
@@ -48,22 +61,13 @@ def render_investigation(client: ApiClient) -> None:
         st.session_state.pop("system_inventory", None)
     workpaper = load_workpaper(client, system_id, refresh=refresh)
     if workpaper is None:
-        return
-
+        return None
     previous_system = st.session_state.get(RESPONSE_SYSTEM_KEY)
     if st.session_state.get(RESPONSE_KEY) and previous_system != system_id:
         st.session_state.pop(RESPONSE_KEY, None)
         st.session_state.pop(REQUEST_KEY, None)
     st.session_state[RESPONSE_SYSTEM_KEY] = system_id
-
-    left, right = st.columns([5, 7], gap="medium")
-    with left:
-        _investigation_controls(client, system_id, workpaper)
-    with right:
-        st.subheader("Supporting Evidence", anchor="supporting-evidence")
-        response = st.session_state.get(RESPONSE_KEY)
-        render_workbench_support(client, workpaper, response if response else None)
-
+    return system_id, workpaper
 
 def _investigation_controls(client: ApiClient, system_id: str, workpaper: dict[str, Any]) -> None:
     render_monitoring_snapshot(workpaper)

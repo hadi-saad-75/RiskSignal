@@ -33,24 +33,27 @@ STARTERS = (
 
 
 def render_assistant() -> None:
-    st.title("Risk Investigator")
-    st.caption("AI Operational Risk Investigator")
-    st.write("Investigate operational risk signals across incidents, controls, indicators and system dependencies.")
-    st.caption("Research prototype. Synthetic Atlas Bank data only. The analyst makes the decision.")
-    client = get_api_client()
-    health = st.session_state.get("app_health") or call_api(client.health)
-    if health is not None:
-        if not health["llm_configured"]:
-            st.info(f"The language-model provider is not configured. {LLM_HELP}")
-        elif health["llm_provider"] == "mock":
-            st.caption("Scripted offline provider, not live LLM tool calling.")
-        else:
-            st.caption("Live LLM provider active. Tool calls retrieve evidence only. They do not modify records.")
-
     with st.container(key="rs_investigator"):
+        title, notes = st.columns([2, 3], gap="medium", vertical_alignment="bottom")
+        with title:
+            st.title("Risk Investigator")
+            st.caption("AI Operational Risk Investigator")
+        with notes:
+            st.write("Investigate operational risk signals across incidents, controls, indicators and system "
+                     "dependencies.")
+            st.caption("Research prototype. Synthetic Atlas Bank data only. The analyst makes the decision.")
+            client = get_api_client()
+            health = st.session_state.get("app_health") or call_api(client.health)
+            if health is not None:
+                if not health["llm_configured"]:
+                    st.info(f"The language-model provider is not configured. {LLM_HELP}")
+                elif health["llm_provider"] == "mock":
+                    st.caption("Scripted offline provider, not live LLM tool calling.")
+                else:
+                    st.caption("Live LLM provider active. Tool calls retrieve evidence only. "
+                               "They do not modify records.")
         render_investigation(client)
     credits_footer()
-
 
 # --------------------------------------------------------------------------- chat (in development)
 
