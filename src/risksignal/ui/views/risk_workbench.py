@@ -72,32 +72,31 @@ def monitoring_context(workpaper: dict[str, Any]) -> str:
 
 
 def render_monitoring_snapshot(workpaper: dict[str, Any]) -> None:
-    with st.container(border=True, key="rs_monitoring_snapshot"):
-        st.subheader("System context")
-        st.caption(
-            "Latest indicator observations. Review prompts, not forecasts or approved risk limits."
+    st.subheader("System context")
+    st.caption(
+        "Latest indicator observations. Review prompts, not forecasts or approved risk limits."
+    )
+    series = _ordered_snapshot(workpaper)
+    if not series:
+        st.info("No applicable monitoring observations are available for this system.")
+        return
+    columns = st.columns(len(series), gap="medium")
+    for column, item in zip(columns, series):
+        latest = item["latest"]
+        signal = label_for(latest["signal"]) if latest else label_for(item["data_status"])
+        if item["data_status"] != "current":
+            signal += f", {label_for(item['data_status'])} data"
+        column.metric(
+            label_for(item["kri_name"]),
+            format_decimal(latest["value"]) if latest else "No observation",
+            delta=signal,
+            delta_color="off",
+            help=(
+                f"Latest observation: {latest['date']}. Past-only monitoring status."
+                if latest else "No current observation. Missing data are not evidence of low risk."
+            ),
         )
-        series = _ordered_snapshot(workpaper)
-        if not series:
-            st.info("No applicable monitoring observations are available for this system.")
-            return
-        columns = st.columns(len(series), gap="medium")
-        for column, item in zip(columns, series):
-            latest = item["latest"]
-            signal = label_for(latest["signal"]) if latest else label_for(item["data_status"])
-            if item["data_status"] != "current":
-                signal += f", {label_for(item['data_status'])} data"
-            column.metric(
-                label_for(item["kri_name"]),
-                format_decimal(latest["value"]) if latest else "No observation",
-                delta=signal,
-                delta_color="off",
-                help=(
-                    f"Latest observation: {latest['date']}. Past-only monitoring status."
-                    if latest else "No current observation. Missing data are not evidence of low risk."
-                ),
-            )
-        st.caption(f"Monitoring snapshot date: {workpaper['as_of_date']}.")
+    st.caption(f"Monitoring snapshot date: {workpaper['as_of_date']}.")
 
 
 def render_workbench_support(

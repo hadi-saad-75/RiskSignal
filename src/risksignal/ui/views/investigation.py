@@ -35,14 +35,13 @@ def default_question(system_id: str) -> str:
 
 
 def render_investigation(client: ApiClient) -> None:
-    with st.container(border=True, key="rs_system_selection"):
-        controls, action = st.columns([5, 1], vertical_alignment="bottom")
-        with controls:
-            system_id = system_selector(client, "agent")
-        if system_id is None:
-            return
-        with action:
-            refresh = st.button("Refresh evidence", key="workbench_refresh", width="stretch")
+    controls, action = st.columns([5, 1], vertical_alignment="bottom")
+    with controls:
+        system_id = system_selector(client, "agent")
+    if system_id is None:
+        return
+    with action:
+        refresh = st.button("Refresh evidence", key="workbench_refresh", width="stretch")
     if refresh:
         st.session_state.pop(RESPONSE_KEY, None)
         st.session_state.pop(REQUEST_KEY, None)
@@ -58,16 +57,15 @@ def render_investigation(client: ApiClient) -> None:
     st.session_state[RESPONSE_SYSTEM_KEY] = system_id
 
     render_monitoring_snapshot(workpaper)
-    with st.container(border=True, key="rs_investigation_prompt"):
-        with st.expander("Ask a specific question or include a stress scenario"):
-            question = st.text_area(
-                "What should the agent investigate?",
-                value=default_question(system_id),
-                key=f"agent_question_{system_id}",
-                height=100,
-            )
-            include_stress = st.checkbox("Compare with the shared vendor outage scenario")
-        run = st.button("Investigate system", type="primary", key="agent_investigate", width="stretch")
+    with st.expander("Ask a specific question or include a stress scenario"):
+        question = st.text_area(
+            "What should the agent investigate?",
+            value=default_question(system_id),
+            key=f"agent_question_{system_id}",
+            height=100,
+        )
+        include_stress = st.checkbox("Compare with the shared vendor outage scenario")
+    run = st.button("Investigate system", type="primary", key="agent_investigate")
 
     if run:
         st.session_state.pop(RESPONSE_KEY, None)
@@ -84,8 +82,7 @@ def render_investigation(client: ApiClient) -> None:
 
     response = st.session_state.get(RESPONSE_KEY)
     if response:
-        with st.container(border=True, key="rs_investigation_result"):
-            _show(response, st.session_state.get(REQUEST_KEY, response["question"]))
+        _show(response, st.session_state.get(REQUEST_KEY, response["question"]))
     else:
         st.caption("The agent will connect the selected system's signals with incidents, controls, dependencies "
                    "and relevant quantitative evidence.")
