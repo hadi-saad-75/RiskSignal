@@ -280,8 +280,6 @@ def test_evidence_panels_are_lazy_and_remain_available(api: ApiClient, panel: st
     else:
         assert at.dataframe
     if panel == "dependencies":
-        at.session_state["evidence_dependencies"] = True
-        at.checkbox(key="evidence_dependency_map").check().run()
         assert not at.exception and len(at.get("plotly_chart")) == 1
 
 

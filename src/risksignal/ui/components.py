@@ -147,6 +147,11 @@ def footer(pages: Sequence[Any]) -> None:
         html(f'<p class="rs-footer-legal">{escape(BANNER_TEXT)} Fictional Atlas Bank data only.</p>')
 
 
+def credits_footer() -> None:
+    st.divider()
+    st.caption("Created by Hadi Saad. Mock test only: the data are synthetic and there is no live LLM.")
+
+
 def simulation_notice() -> None:
     st.info(SIMULATION_NOTICE)
 

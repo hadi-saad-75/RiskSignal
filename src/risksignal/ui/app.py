@@ -25,7 +25,7 @@ def main() -> None:
     apply_theme()
     sidebar_status()
     navigation = st.navigation([
-        st.Page(render_introduction, title="Introduction", url_path="introduction"),
+        st.Page(render_introduction, title="Overview", url_path="introduction"),
         st.Page(render_assistant, title="Risk Investigator", default=True),
         st.Page(render_scenario_lab, title="Scenario Analysis", url_path="scenario-lab"),
         st.Page(render_way_forward, title="Way Forward", url_path="way-forward"),

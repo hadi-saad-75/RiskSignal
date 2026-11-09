@@ -311,13 +311,18 @@ def test_scenario_lab_shows_estimates_notice_and_runs_baseline_and_stress(api: A
     assert not at.metric
     assert any("Advanced assumptions" == e.label for e in at.expander)
     assert LOSS_UNIT_NOTICE in texts(at.caption)
-    assert "not every loss by 20%" in texts(at.markdown)
-    assert "50% more expected incidents" in next(w.help for w in at.number_input if w.label == "λ multiplier")
+    assert "ILLUSTRATIVE ONLY" in texts(at.markdown)
+    assert "exp(0.2) = 1.221" in texts(at.markdown)
     assert at.selectbox[1].value == "SHARED_VENDOR_OUTAGE"
     assert not any("P95 under stress" in label for label in metric_values(at))
 
     at.button[0].click().run()
     assert not at.exception
+    assumptions = texts(at.markdown)
+    assert "Controls, KRIs and dependencies between systems do not enter the model" in assumptions
+    assert "No causal link between a vendor event" in assumptions
+    assert "bell-shaped with mean" not in assumptions
+    assert "Created by Hadi Saad" in texts(at.caption)
     values = metric_values(at)
     assert {"λ: expected incidents per year", "μ: log-severity location", "σ: log-severity spread"} <= set(values)
     expected = api.compare(FOCAL, "SHARED_VENDOR_OUTAGE", 100_000, 42)["simulation_results"]
@@ -594,14 +599,17 @@ def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient)
     content = texts(at.markdown) + texts(at.subheader)
     for phrase in (
         "Agree one real task", "approved real bank data", "regulations and internal rules",
-        "Fit and test a real-data loss model", "Test the live LLM", "What success would look like",
+        "Fit and test a real-data loss model", "Test the live LLM",
         "kept out of fitting", "source correctness", "review time", "independent review",
     ):
         assert phrase in content
     assert "multi-agent" not in content.lower()
     assert "Basel standardised" not in content
     assert "Conversational preview" not in content
+    assert "What success would look like" not in content
     assert "Offline mock provider" not in texts(at.info)
+    assert "Created by Hadi Saad" in texts(at.caption)
+    assert "there is no live LLM" in texts(at.caption)
     assert not at.chat_input
     assert not at.button
 
@@ -633,7 +641,7 @@ def test_visible_prose_avoids_long_dashes_and_semicolons(api: ApiClient, module:
 
 def test_app_defines_the_pages() -> None:
     source = (SRC / "ui" / "app.py").read_text(encoding="utf-8")
-    titles = ("Introduction", "Risk Investigator", "Scenario Analysis", "Way Forward")
+    titles = ("Overview", "Risk Investigator", "Scenario Analysis", "Way Forward")
     for title in titles:
         assert f'title="{title}"' in source
     assert "set_page_config" in source
@@ -644,7 +652,7 @@ def test_app_defines_the_pages() -> None:
     assert 'title="Database"' not in source
     assert "render_risk_workbench" not in source
     assert "Risk workbench" not in source
-    assert 'title="Overview"' not in source
+    assert 'url_path="introduction"' in source
 
 
 def test_introduction_explains_approach_need_goal_and_idea_without_api() -> None:
@@ -652,10 +660,12 @@ def test_introduction_explains_approach_need_goal_and_idea_without_api() -> None
         "from risksignal.ui.views.product_context import render_introduction\nrender_introduction()"
     ).run()
     assert not at.exception
-    assert at.title[0].value == "Introduction" and not at.expander
+    assert at.title[0].value == "Overview" and not at.expander
     assert [heading.value for heading in at.subheader] == ["Current approach", "The need", "The goal", "The idea"]
     assert "LLM" in texts(at.markdown)
+    assert "The data are synthetic Atlas Bank records" in texts(at.caption)
     assert "offline mock follows a script" in texts(at.caption)
+    assert "Created by Hadi Saad" in texts(at.caption)
     assert "help analysts decide what to investigate next" in texts(at.markdown)
     assert "three" not in texts(at.markdown)
 

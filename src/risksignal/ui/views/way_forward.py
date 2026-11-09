@@ -2,6 +2,8 @@
 
 import streamlit as st
 
+from risksignal.ui.components import credits_footer
+
 
 def render_way_forward() -> None:
     with st.container(key="rs_wf_hero"):
@@ -63,12 +65,4 @@ def render_way_forward() -> None:
             "Start with a small supervised pilot and expand only if it improves the task without reducing quality."
         )
 
-    with st.container(border=True, key="rs_wf_success"):
-        st.subheader("What success would look like")
-        st.write(
-            "A reviewed investigation draft on a real task, with traceable sources, useful next questions and "
-            "measured quality and time results. Separately, an independently assessed loss model with honest "
-            "out-of-sample results, whether those results support prediction or show that more work is needed."
-        )
-    st.info("Today: synthetic data and a scripted offline demonstration. Live LLM quality, real-bank prediction "
-            "performance and regulatory suitability remain unverified.")
+    credits_footer()

@@ -3,7 +3,7 @@
 import streamlit as st
 
 from risksignal.ui.api_client import ApiClient
-from risksignal.ui.components import call_api, get_api_client
+from risksignal.ui.components import call_api, credits_footer, get_api_client
 
 TABLES = {
     "systems": ("Systems", "The technology inventory: names, criticality and primary business process."),
@@ -19,7 +19,7 @@ PAGE_SIZE = 100
 
 def render_introduction() -> None:
     with st.container(key="rs_intro_hero"):
-        st.title("Introduction")
+        st.title("Overview")
         st.caption("RiskSignal: evidence-led Operational Risk investigation.")
     with st.container(border=True, key="rs_intro_current"):
         st.markdown(":material/dataset:")
@@ -49,8 +49,9 @@ def render_introduction() -> None:
                  "numbers. Monte Carlo supports the optional question: what annual losses could result under "
                  "stated assumptions?")
     with st.container(key="rs_note"):
-        st.caption("Today: synthetic Atlas Bank records. The offline mock follows a script, not live LLM reasoning. "
+        st.caption("The data are synthetic Atlas Bank records. The offline mock follows a script, not live LLM reasoning. "
                    "Live LLM quality and real-data predictive performance have not been evaluated.")
+    credits_footer()
 
 
 def render_database(client: ApiClient) -> None:

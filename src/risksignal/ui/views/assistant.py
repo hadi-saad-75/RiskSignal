@@ -9,6 +9,7 @@ from risksignal.ui.api_client import ApiClient
 from risksignal.ui.components import (
     LLM_HELP,
     call_api,
+    credits_footer,
     get_api_client,
     html,
     is_structured,
@@ -48,6 +49,7 @@ def render_assistant() -> None:
 
     with st.container(key="rs_investigator"):
         render_investigation(client)
+    credits_footer()
 
 
 # --------------------------------------------------------------------------- chat (in development)

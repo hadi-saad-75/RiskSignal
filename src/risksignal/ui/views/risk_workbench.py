@@ -105,58 +105,76 @@ def render_workbench_support(
     investigation: dict[str, Any] | None = None,
 ) -> None:
     st.caption(f"Evidence as of {workpaper['as_of_date']}. Use Refresh evidence to reload this session's snapshot.")
-    with st.expander("System details", key="evidence_profile", on_change="rerun") as panel:
-        if panel.open:
-            profile = workpaper["profile"]
-            st.write(profile["system"]["description"])
-            st.caption(f"Inventory criticality: {profile['system']['criticality']}. "
-                       "This is a recorded classification, not a simulation result.")
-            st.write(f"Primary process: {profile['primary_process']['name']}")
-            st.json(profile, expanded=False)
-    with st.expander("Incidents", key="evidence_incidents", on_change="rerun") as panel:
-        if panel.open:
-            months = st.slider("Incident history (months)", 3, 60, 12, key="evidence_incident_months")
-            incidents = workpaper["incidents"] if months == 12 else call_api(client.incidents, workpaper["system_id"], months)
-            if incidents is None:
-                return
-            st.caption(f"Window: after {incidents['window_start_exclusive']} through {incidents['window_end_inclusive']}.")
-            st.dataframe([
-                {"ID": i["incident_id"], "Date": i["date"], "Category": label_for(i["category"]),
-                 "Description": i["description"], "Loss (synthetic units)": i["financial_loss"],
-                 "Recorded severity": i["severity"]}
-                for i in incidents["incidents"]
-            ], hide_index=True, alt="Recent synthetic incidents")
-    with st.expander("KRI history", key="evidence_kris", on_change="rerun") as panel:
-        if panel.open:
-            _monitoring(workpaper["monitoring"], client, workpaper["system_id"])
-    with st.expander("Controls", key="evidence_controls", on_change="rerun") as panel:
-        if panel.open:
-            st.caption("A review status is not evidence that a control works or has failed.")
-            st.dataframe([
-                {"ID": c["control_id"], "Control": c["name"], "Review status": c["review_status"],
-                 "Last review": c["last_review_date"]}
-                for c in workpaper["controls"]["controls"]
-            ], hide_index=True, alt="Controls and their recorded review dates")
-            st.json(workpaper["controls"], expanded=False)
-    with st.expander("Vendors and connected systems", key="evidence_dependencies", on_change="rerun") as panel:
-        if panel.open:
-            _dependencies(workpaper["dependencies"])
-    if investigation:
-        if extract_simulation_metadata(investigation["tool_activity"]):
-            with st.expander("Simulation results", key="evidence_simulation", on_change="rerun") as panel:
-                if panel.open:
-                    render_simulation_metadata(investigation["tool_activity"])
-        with st.expander("Retrieved evidence and tool activity", key="evidence_tools", on_change="rerun") as panel:
+    profile_column, incidents_column, kri_column = st.columns(3, gap="small")
+    with profile_column:
+        with st.expander("System details", key="evidence_profile", on_change="rerun") as panel:
             if panel.open:
-                _tool_activity(investigation["tool_activity"])
-    with st.expander("Review notes and evidence export", key="evidence_review", on_change="rerun") as panel:
-        if panel.open:
-            _review(workpaper)
-    with st.expander("Advanced checks and review questions", key="evidence_advanced", on_change="rerun") as panel:
-        if panel.open:
-            _rcsa(workpaper)
-            _diagnostics(workpaper["diagnostics"])
-            _draft_summary(client, workpaper)
+                profile = workpaper["profile"]
+                st.write(profile["system"]["description"])
+                st.caption(f"Inventory criticality: {profile['system']['criticality']}. "
+                           "This is a recorded classification, not a simulation result.")
+                st.write(f"Primary process: {profile['primary_process']['name']}")
+                st.json(profile, expanded=False)
+    with incidents_column:
+        with st.expander("Incidents", key="evidence_incidents", on_change="rerun") as panel:
+            if panel.open:
+                months = st.slider("Incident history (months)", 3, 60, 12, key="evidence_incident_months")
+                incidents = workpaper["incidents"] if months == 12 else call_api(
+                    client.incidents, workpaper["system_id"], months,
+                )
+                if incidents is None:
+                    return
+                st.caption(
+                    f"Window: after {incidents['window_start_exclusive']} through "
+                    f"{incidents['window_end_inclusive']}."
+                )
+                st.dataframe([
+                    {"ID": i["incident_id"], "Date": i["date"], "Category": label_for(i["category"]),
+                     "Description": i["description"], "Loss (synthetic units)": i["financial_loss"],
+                     "Recorded severity": i["severity"]}
+                    for i in incidents["incidents"]
+                ], hide_index=True, alt="Recent synthetic incidents")
+    with kri_column:
+        with st.expander("KRI history", key="evidence_kris", on_change="rerun") as panel:
+            if panel.open:
+                _monitoring(workpaper["monitoring"], client, workpaper["system_id"])
+
+    controls_column, vendors_column, activity_column = st.columns(3, gap="small")
+    with controls_column:
+        with st.expander("Controls", key="evidence_controls", on_change="rerun") as panel:
+            if panel.open:
+                st.caption("A review status is not evidence that a control works or has failed.")
+                st.dataframe([
+                    {"ID": c["control_id"], "Control": c["name"], "Review status": c["review_status"],
+                     "Last review": c["last_review_date"]}
+                    for c in workpaper["controls"]["controls"]
+                ], hide_index=True, alt="Controls and their recorded review dates")
+                st.json(workpaper["controls"], expanded=False)
+    with vendors_column:
+        with st.expander("Vendors and connected systems", key="evidence_dependencies", on_change="rerun") as panel:
+            if panel.open:
+                _dependencies(workpaper["dependencies"])
+    with activity_column:
+        if investigation:
+            if extract_simulation_metadata(investigation["tool_activity"]):
+                with st.expander("Simulation results", key="evidence_simulation", on_change="rerun") as panel:
+                    if panel.open:
+                        render_simulation_metadata(investigation["tool_activity"])
+            with st.expander("Retrieved evidence and tool activity", key="evidence_tools", on_change="rerun") as panel:
+                if panel.open:
+                    _tool_activity(investigation["tool_activity"])
+
+    review_column, advanced_column = st.columns(2, gap="small")
+    with review_column:
+        with st.expander("Review notes and evidence export", key="evidence_review", on_change="rerun") as panel:
+            if panel.open:
+                _review(workpaper)
+    with advanced_column:
+        with st.expander("Advanced checks and review questions", key="evidence_advanced", on_change="rerun") as panel:
+            if panel.open:
+                _rcsa(workpaper)
+                _diagnostics(workpaper["diagnostics"])
+                _draft_summary(client, workpaper)
 
 
 def _draft_summary(client: ApiClient, workpaper: dict[str, Any]) -> None:
@@ -313,9 +331,8 @@ def _dependencies(result: dict[str, Any]) -> None:
     if result["indirect_vendors"]:
         st.dataframe([{"Vendor": v["vendor"]["name"], "Through system": v["via_system_id"], "Hops": v["hops"]}
                       for v in result["indirect_vendors"]], hide_index=True, alt="Indirect vendors")
-    if st.checkbox("Show dependency map", key="evidence_dependency_map"):
-        st.plotly_chart(dependency_figure(result["system_id"], result), theme=None,
-                        alt="Recorded system dependencies, not causal relationships")
+    st.plotly_chart(dependency_figure(result["system_id"], result), theme=None,
+                    alt="Recorded system dependencies, not causal relationships")
     st.caption("A shared dependency is a structural connection to investigate, not evidence of causation.")
 
 
