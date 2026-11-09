@@ -1,11 +1,17 @@
 """Practical next steps for an approved, analyst-reviewed real-data pilot."""
 
+from pathlib import Path
+
 import streamlit as st
+
+
+AGENTIC_PERSPECTIVES = Path(__file__).resolve().parents[4] / "assets" / "agentic_perspectives.png"
 
 
 def render_way_forward() -> None:
     st.title("Way Forward")
     st.write("From a synthetic demonstration to a useful tool tested on one real Operational Risk task.")
+    st.image(str(AGENTIC_PERSPECTIVES), width="stretch")
 
     st.subheader("1. Agree one real task with risk experts")
     st.write(
