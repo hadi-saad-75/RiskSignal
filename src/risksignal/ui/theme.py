@@ -710,6 +710,73 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 .st-key-rs_investigation_prompt [data-testid="stExpander"] details { border: 0 !important; }
 .st-key-rs_investigation_result { margin: 1rem 0 1.25rem; }
 
+/* ---------- introduction */
+.st-key-rs_intro_hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.75rem, 3.5vw, 3rem) clamp(1.5rem, 3.5vw, 3rem);
+  margin-bottom: 1.75rem;
+  border: 1px solid var(--rs-divider);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 96% 0%, rgb(40 100 160 / 8%) 0%, transparent 40%),
+    linear-gradient(135deg, #FFFFFF 0%, var(--rs-surface) 100%);
+  box-shadow: var(--rs-shadow);
+}
+.st-key-rs_intro_hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--rs-accent) 0%, var(--rs-accent-2) 100%);
+}
+.st-key-rs_intro_hero [data-testid="stMarkdownContainer"] p {
+  font-size: var(--rs-h1);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--rs-accent);
+  margin-bottom: 0.5rem;
+}
+.st-key-rs_intro_hero [data-testid="stCaptionContainer"] p {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.25rem) !important;
+  color: var(--rs-text-2) !important;
+}
+[class*="st-key-rs_intro_card_"] {
+  height: 100%;
+  border: 1px solid var(--rs-divider) !important;
+  border-top: 3px solid var(--rs-accent-2) !important;
+  border-radius: var(--rs-radius) !important;
+  background: #FFFFFF;
+  box-shadow: var(--rs-shadow);
+  padding: 0.5rem 0.5rem 0.75rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+[class*="st-key-rs_intro_card_"]:hover {
+  border-color: var(--rs-strong) !important;
+  border-top-color: var(--rs-accent) !important;
+  box-shadow: 0 2px 4px rgb(23 43 69 / 5%), 0 12px 28px rgb(23 43 69 / 8%);
+  transform: translateY(-2px);
+}
+.rs-step {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--rs-muted);
+}
+[class*="st-key-rs_intro_card_"] [data-testid="stIconMaterial"] {
+  font-size: 1.5rem !important;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgb(40 100 160 / 10%);
+  color: var(--rs-accent-2);
+}
+[class*="st-key-rs_intro_card_"] { min-height: 16rem; }
+[class*="st-key-rs_intro_card_"] h3 { padding-top: 0.5rem; padding-bottom: 0.25rem; }
+
 /* ---------- responsive */
 @media (min-width: 641px) and (max-width: 900px) {
   [data-testid="stMainBlockContainer"] { padding-top: 4rem; }

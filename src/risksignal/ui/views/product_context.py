@@ -18,19 +18,23 @@ PAGE_SIZE = 100
 
 
 def render_introduction() -> None:
-    st.markdown("**RiskSignal, operational risk connected.**")
-    st.caption("Evidence-led investigation for operational risk analysts.")
-    with st.container():
-        need, goal, idea = st.columns(3)
-        with need:
-            st.subheader("The need")
-            st.write("Find relevant records, connections and missing evidence when a signal looks unusual.")
-        with goal:
-            st.subheader("The goal")
-            st.write("Connect evidence and help analysts decide what to investigate next.")
-        with idea:
-            st.subheader("The idea")
-            st.write("Use an LLM interface with approved tools. Python retrieves records and calculates numbers.")
+    with st.container(key="rs_intro_hero"):
+        st.markdown("**RiskSignal, operational risk connected.**")
+        st.caption("Evidence-led investigation for operational risk analysts.")
+    need, goal, idea = st.columns(3, gap="large")
+    for column, key, step, icon, title, body in (
+        (need, "need", "01", "radar", "The need",
+         "Find relevant records, connections and missing evidence when a signal looks unusual."),
+        (goal, "goal", "02", "flag", "The goal",
+         "Connect evidence and help analysts decide what to investigate next."),
+        (idea, "idea", "03", "hub", "The idea",
+         "Use an LLM interface with approved tools. Python retrieves records and calculates numbers."),
+    ):
+        with column, st.container(border=True, key=f"rs_intro_card_{key}"):
+            st.markdown(f'<span class="rs-step">{step}</span>', unsafe_allow_html=True)
+            st.markdown(f":material/{icon}:")
+            st.subheader(title)
+            st.write(body)
 
 
 def render_database(client: ApiClient) -> None:
