@@ -50,7 +50,7 @@ _CSS = """
   --rs-positive: __POSITIVE__;
   --rs-sans: __SANS__;
   --rs-pad: clamp(1.25rem, 3vw, 3rem);
-  --rs-section: clamp(2rem, 4vw, 3.5rem);
+  --rs-section: clamp(1rem, 2vw, 1.75rem);
   --rs-h1: clamp(2rem, 1.5rem + 1.8vw, 3rem);
   --rs-h2: clamp(1.5rem, 1.25rem + 0.8vw, 1.875rem);
   --rs-h3: clamp(1.125rem, 1rem + 0.35vw, 1.375rem);
@@ -67,8 +67,8 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
   text-rendering: optimizeLegibility;
 }
 [data-testid="stMainBlockContainer"] {
-  max-width: 1180px;
-  padding: 5rem var(--rs-pad) 2rem;
+  max-width: 1880px;
+  padding: 4.5rem var(--rs-pad) 1rem;
 }
 [data-testid="stDecoration"] { display: none; }
 ::selection { background: var(--rs-text); color: var(--rs-bg); }
@@ -788,6 +788,29 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   }
 }
 
+/* ---------- compact, full-width dashboard: little page scrolling, panels scroll inside their cards */
+[data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] { gap: 0.7rem; }
+[data-testid="stMainBlockContainer"] [data-testid="stHorizontalBlock"] { gap: 0.9rem !important; }
+h1, [data-testid="stHeading"] h1 { padding-bottom: 0 !important; }
+.st-key-rs_intro_hero, .st-key-rs_wf_hero { padding: 1rem 1.75rem; margin-bottom: 0.5rem; }
+[class*="st-key-rs_intro_card_"], .st-key-rs_intro_current, [class*="st-key-rs_step_"] { max-width: none; }
+[class*="st-key-rs_intro_card_"] { min-height: 15rem; }
+.st-key-rs_scenario [data-testid="stExpanderDetails"],
+.st-key-rs_investigator [data-testid="stExpanderDetails"] {
+  max-height: 58vh;
+  overflow-y: auto;
+  padding: 0 0.25rem 1rem 0 !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rs-strong) transparent;
+}
+.st-key-rs_investigator [data-testid="stExpander"] summary,
+.st-key-rs_scenario [data-testid="stExpander"] summary { padding: 0.8rem 0 !important; }
+.st-key-rs_investigator [data-testid="stMetric"] { padding: 0.6rem 0.9rem; }
+.st-key-rs_investigator [data-testid="stHeading"] h3 { margin-top: 0.4rem; }
+[data-testid="stPlotlyChart"] { max-width: 100%; }
+@media (min-width: 1100px) {
+  html { font-size: 17px; }
+}
 /* ---------- responsive */
 @media (max-width: 640px) {
   [data-testid="stHeader"]::before { font-size: 1.5rem; padding-right: 1rem; }

@@ -30,7 +30,7 @@ def render_introduction() -> None:
             "These are useful tools, but connecting the evidence for one investigation still requires analyst judgement."
         )
         st.caption("A simple overview of common approaches, not a claim that every institution works this way.")
-    need, goal = st.columns(2, gap="large")
+    need, goal, idea = st.columns(3, gap="medium")
     with need, st.container(border=True, key="rs_intro_card_need"):
         st.markdown(":material/search:")
         st.subheader("The need")
@@ -41,7 +41,7 @@ def render_introduction() -> None:
         st.subheader("The goal")
         st.write("Connect relevant evidence and help analysts decide what to investigate next. "
                  "The analyst remains responsible for conclusions and action.")
-    with st.container(border=True, key="rs_intro_card_idea"):
+    with idea, st.container(border=True, key="rs_intro_card_idea"):
         st.markdown(":material/lightbulb:")
         st.subheader("The idea")
         st.write("Use an LLM as the investigation interface: it can select approved read-only tools and organise "

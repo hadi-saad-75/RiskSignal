@@ -105,7 +105,9 @@ def render_workbench_support(
     investigation: dict[str, Any] | None = None,
 ) -> None:
     st.caption(f"Evidence as of {workpaper['as_of_date']}. Use Refresh evidence to reload this session's snapshot.")
-    profile_column, incidents_column, kri_column = st.columns(3, gap="small")
+    stack_a, stack_b = st.columns(2, gap="small")
+    profile_column = kri_column = vendors_column = advanced_column = stack_a
+    incidents_column = controls_column = activity_column = review_column = stack_b
     with profile_column:
         with st.expander("System details", key="evidence_profile", on_change="rerun") as panel:
             if panel.open:
@@ -139,7 +141,6 @@ def render_workbench_support(
             if panel.open:
                 _monitoring(workpaper["monitoring"], client, workpaper["system_id"])
 
-    controls_column, vendors_column, activity_column = st.columns(3, gap="small")
     with controls_column:
         with st.expander("Controls", key="evidence_controls", on_change="rerun") as panel:
             if panel.open:
@@ -164,7 +165,6 @@ def render_workbench_support(
                 if panel.open:
                     _tool_activity(investigation["tool_activity"])
 
-    review_column, advanced_column = st.columns(2, gap="small")
     with review_column:
         with st.expander("Review notes and evidence export", key="evidence_review", on_change="rerun") as panel:
             if panel.open:

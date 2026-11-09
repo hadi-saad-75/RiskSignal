@@ -56,6 +56,16 @@ def render_investigation(client: ApiClient) -> None:
         st.session_state.pop(REQUEST_KEY, None)
     st.session_state[RESPONSE_SYSTEM_KEY] = system_id
 
+    left, right = st.columns([5, 7], gap="medium")
+    with left:
+        _investigation_controls(client, system_id, workpaper)
+    with right:
+        st.subheader("Supporting Evidence", anchor="supporting-evidence")
+        response = st.session_state.get(RESPONSE_KEY)
+        render_workbench_support(client, workpaper, response if response else None)
+
+
+def _investigation_controls(client: ApiClient, system_id: str, workpaper: dict[str, Any]) -> None:
     render_monitoring_snapshot(workpaper)
     with st.expander("Ask a specific question or include a stress scenario"):
         question = st.text_area(
@@ -86,9 +96,6 @@ def render_investigation(client: ApiClient) -> None:
     else:
         st.caption("The agent will connect the selected system's signals with incidents, controls, dependencies "
                    "and relevant quantitative evidence.")
-
-    st.subheader("Supporting Evidence", anchor="supporting-evidence")
-    render_workbench_support(client, workpaper, response if response else None)
 
 
 def _show(response: dict[str, Any], user_question: str) -> None:
