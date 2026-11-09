@@ -588,13 +588,13 @@ def test_intro_remains_readable_without_the_backend() -> None:
     assert not at.get("page_link")
 
 
-def test_way_forward_covers_requested_topics(api: ApiClient) -> None:
+def test_way_forward_covers_slide_topics_and_labels_unbuilt_work(api: ApiClient) -> None:
     at = run_view(api, "way_forward", "render_way_forward")
     assert not at.exception and at.title[0].value == "Way Forward"
     content = texts(at.markdown) + texts(at.subheader)
     for phrase in (
         "Agree one real task", "approved real bank data", "regulations and internal rules",
-        "Fit and test a real-data loss model", "Create a live LLM",
+        "Fit and test a real-data loss model", "Test the live LLM", "What success would look like",
         "kept out of fitting", "source correctness", "review time", "independent review",
     ):
         assert phrase in content
@@ -602,8 +602,6 @@ def test_way_forward_covers_requested_topics(api: ApiClient) -> None:
     assert "Basel standardised" not in content
     assert "Conversational preview" not in content
     assert "Offline mock provider" not in texts(at.info)
-    assert "Disclaimer and credits" in content
-    assert "Credits: Hadi Saad." in texts(at.caption)
     assert not at.chat_input
     assert not at.button
 
@@ -649,15 +647,17 @@ def test_app_defines_the_pages() -> None:
     assert 'title="Overview"' not in source
 
 
-def test_introduction_explains_need_goal_and_idea_without_api() -> None:
+def test_introduction_explains_approach_need_goal_and_idea_without_api() -> None:
     at = AppTest.from_string(
         "from risksignal.ui.views.product_context import render_introduction\nrender_introduction()"
     ).run()
     assert not at.exception
-    assert not at.expander
-    assert [heading.value for heading in at.subheader] == ["The need", "The goal", "The idea"]
-    assert "RiskSignal, operational risk connected." in texts(at.markdown)
+    assert at.title[0].value == "Introduction" and not at.expander
+    assert [heading.value for heading in at.subheader] == ["Current approach", "The need", "The goal", "The idea"]
+    assert "LLM" in texts(at.markdown)
+    assert "offline mock follows a script" in texts(at.caption)
     assert "help analysts decide what to investigate next" in texts(at.markdown)
+    assert "three" not in texts(at.markdown)
 
 
 def test_database_is_scrollable_with_table_selection_and_pages(

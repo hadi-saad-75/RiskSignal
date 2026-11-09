@@ -1,25 +1,27 @@
 """Practical next steps for an approved, analyst-reviewed real-data pilot."""
 
-from pathlib import Path
-
 import streamlit as st
-
-
-AGENTIC_PERSPECTIVES = Path(__file__).resolve().parents[4] / "assets" / "agentic_perspectives.png"
 
 
 def render_way_forward() -> None:
     st.title("Way Forward")
     st.write("From a synthetic demonstration to a useful tool tested on one real Operational Risk task.")
-    st.image(str(AGENTIC_PERSPECTIVES), width="stretch")
+    st.caption("Proposed work, not capabilities or results achieved today.")
 
     st.subheader("1. Agree one real task with risk experts")
     st.write(
+        "Work with Operational Risk analysts, system owners and model-validation specialists. "
         "Choose a narrow question, such as reviewing recurring payment-system incidents and preparing "
-        "evidence-backed follow-up questions."
+        "evidence-backed follow-up questions. Agree what a correct and useful answer looks like."
     )
 
     st.subheader("2. Obtain approved real bank data")
+    st.write(
+        "With a bank partner's permission, use incident history, losses, KRIs, control-test results and "
+        "system/vendor dependencies. Check missing records, dates, shared IDs, loss definitions, currencies "
+        "and recoveries. Start with the minimum data needed, anonymised where appropriate."
+    )
+    st.caption("Data access is not assumed. Confidential records must not be uploaded to an unapproved LLM service.")
 
     st.subheader("3. Review regulations and internal rules")
     st.write(
@@ -27,10 +29,8 @@ def render_way_forward() -> None:
         "to its jurisdiction and use case. Agree privacy, confidentiality, data retention, access rights, "
         "third-party/LLM approval, model governance and operational-resilience controls before connecting data."
     )
-    st.caption(
-        "This prototype is not a compliance assessment or a regulatory capital engine. "
-        "Applicable requirements must be confirmed by the institution's specialists."
-    )
+    st.caption("This prototype is not a compliance assessment or a regulatory capital engine. "
+               "Applicable requirements must be confirmed by the institution's specialists.")
 
     st.subheader("4. Fit and test a real-data loss model")
     st.write(
@@ -43,8 +43,10 @@ def render_way_forward() -> None:
         "Compare against simple baselines, check calibration and uncertainty, and obtain independent review. "
         "The target is a probabilistic annual-loss range, not the exact date or cost of the next incident."
     )
+    st.caption("Do not claim predictive validity unless the out-of-sample evidence supports it. "
+               "KRIs and dependencies do not automatically change today's loss model.")
 
-    st.subheader("5. Create a live LLM")
+    st.subheader("5. Test the live LLM on the agreed analyst task")
     st.write(
         "Use an approved live LLM with read-only tools. On reviewed cases, compare its draft with the current "
         "analyst workflow. Measure source correctness, important evidence missed, unsupported statements, "
@@ -55,10 +57,11 @@ def render_way_forward() -> None:
         "Start with a small supervised pilot and expand only if it improves the task without reducing quality."
     )
 
-    st.subheader("Disclaimer and credits")
-    st.caption(
-        "Synthetic Atlas Bank data. The offline provider follows a script, not live LLM reasoning. "
-        "This prototype is not a compliance assessment or a regulatory capital engine. "
-        "Live LLM quality and real-data predictive performance have not been evaluated."
+    st.subheader("What success would look like")
+    st.write(
+        "A reviewed investigation draft on a real task, with traceable sources, useful next questions and "
+        "measured quality and time results. Separately, an independently assessed loss model with honest "
+        "out-of-sample results, whether those results support prediction or show that more work is needed."
     )
-    st.caption("Credits: Hadi Saad.")
+    st.info("Today: synthetic data and a scripted offline demonstration. Live LLM quality, real-bank prediction "
+            "performance and regulatory suitability remain unverified.")
