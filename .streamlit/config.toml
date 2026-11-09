@@ -1,14 +1,14 @@
 # RiskSignal neutral fintech theme. Detailed component styling is in src/risksignal/ui/theme.py.
 
 [theme]
-base = "light"
-primaryColor = "#183153"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F5F7FA"
-textColor = "#172B45"
-linkColor = "#2864A0"
+base = "dark"
+primaryColor = "#4C9AFF"
+backgroundColor = "#0B1220"
+secondaryBackgroundColor = "#111A2E"
+textColor = "#E6EDF7"
+linkColor = "#7DB8FF"
 linkUnderline = false
-borderColor = "#DFE5EC"
+borderColor = "#23304A"
 showWidgetBorder = true
 showSidebarBorder = true
 baseRadius = "small"
@@ -18,21 +18,21 @@ font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;70
 headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
 headingFontWeights = [600, 600, 600, 600, 600, 600]
 metricValueFontWeight = 600
-dataframeBorderColor = "#DFE5EC"
-dataframeHeaderBackgroundColor = "#FFFFFF"
-dataframeHeaderTextColor = "#475569"
-chartCategoricalColors = ["#183153", "#2864A0", "#65758B", "#52647A", "#CBD5E1"]
-redColor = "#B42318"
-greenColor = "#067647"
-yellowColor = "#A16207"
-blueColor = "#2563EB"
-orangeColor = "#C2410C"
-violetColor = "#6D28D9"
-grayColor = "#64748B"
+dataframeborderColor = "#23304A"
+dataframeHeaderBackgroundColor = "#111A2E"
+dataframeHeaderTextColor = "#A8B6CB"
+chartCategoricalColors = ["#4C9AFF", "#7DB8FF", "#8393AB", "#A8B6CB", "#34456A"]
+redColor = "#F97066"
+greenColor = "#32D583"
+yellowColor = "#FDB022"
+blueColor = "#4C9AFF"
+orangeColor = "#FB923C"
+violetColor = "#A78BFA"
+grayColor = "#8393AB"
 
 [theme.sidebar]
-backgroundColor = "#F5F7FA"
-secondaryBackgroundColor = "#FFFFFF"
+backgroundColor = "#0E1729"
+secondaryBackgroundColor = "#0B1220"
 
 [client]
 toolbarMode = "minimal"

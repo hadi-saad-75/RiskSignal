@@ -20,7 +20,7 @@ NODE_COLORS = {"focus": TEXT, "vendor": ACCENT, "process": TEXT_MUTED, "related"
 EDGE_COLORS = {"vendor": ACCENT_SECONDARY, "process": DIVIDER}
 BASELINE_COLOR = ACCENT
 STRESS_COLOR = ACCENT_SECONDARY
-_FILLS = {BASELINE_COLOR: "rgba(24, 49, 83, 0.05)", STRESS_COLOR: "rgba(40, 100, 160, 0.10)"}
+_FILLS = {BASELINE_COLOR: "rgba(76, 154, 255, 0.10)", STRESS_COLOR: "rgba(125, 184, 255, 0.18)"}
 KRI_UNITS = {
     "failed_deployment_rate": "% of deployments",
     "system_downtime_minutes": "Minutes",

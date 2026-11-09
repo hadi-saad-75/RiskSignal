@@ -13,18 +13,18 @@ import streamlit as st
 
 # ----------------------------------------------------------------------------- tokens
 
-BACKGROUND = "#FFFFFF"
-SURFACE = "#F5F7FA"
-TEXT = "#172B45"
-TEXT_SECONDARY = "#52647A"
-TEXT_MUTED = "#65758B"
-DIVIDER = "#DFE5EC"
-BORDER_STRONG = "#CBD5E1"
-ACCENT = "#183153"
-ACCENT_SECONDARY = "#2864A0"
+BACKGROUND = "#0B1220"
+SURFACE = "#111A2E"
+TEXT = "#E6EDF7"
+TEXT_SECONDARY = "#A8B6CB"
+TEXT_MUTED = "#8393AB"
+DIVIDER = "#23304A"
+BORDER_STRONG = "#34456A"
+ACCENT = "#4C9AFF"
+ACCENT_SECONDARY = "#7DB8FF"
 # Semantic colours, deliberately desaturated; used only where a status must be distinguished.
-NEGATIVE = "#B42318"
-POSITIVE = "#067647"
+NEGATIVE = "#F97066"
+POSITIVE = "#32D583"
 
 SANS = '"Inter", "Segoe UI", Arial, sans-serif'
 FONT_IMPORT = (
@@ -138,7 +138,7 @@ html, body, .stApp, [data-testid="stAppViewContainer"] {
 [data-testid="stTopNavLink"] { transition: background-color 160ms ease; }
 [data-testid="stTopNavLink"][aria-current="page"] {
   border-radius: 0.5rem 0.5rem 0 0;
-  background: rgb(40 100 160 / 7%) !important;
+  background: rgb(76 154 255 / 12%) !important;
 }
 
 /* ---------- headings */
@@ -396,11 +396,11 @@ button[data-testid^="stBaseButton"]:hover { background: var(--rs-surface) !impor
 button[data-testid="stBaseButton-primary"] {
   background: var(--rs-accent) !important;
   border-color: var(--rs-accent) !important;
-  color: #FFFFFF !important;
+  color: #06101F !important;
 }
-button[data-testid="stBaseButton-primary"] p { color: #FFFFFF !important; }
-button[data-testid="stBaseButton-primary"]:hover { background: var(--rs-accent-2) !important; color: #FFFFFF !important; }
-button[data-testid="stBaseButton-primary"]:hover p { color: #FFFFFF !important; }
+button[data-testid="stBaseButton-primary"] p { color: #06101F !important; }
+button[data-testid="stBaseButton-primary"]:hover { background: var(--rs-accent-2) !important; color: #06101F !important; }
+button[data-testid="stBaseButton-primary"]:hover p { color: #06101F !important; }
 button[data-testid^="stBaseButton"]:focus-visible { outline: 2px solid var(--rs-accent); outline-offset: 3px; }
 [data-testid="stHeader"] button[data-testid^="stBaseButton"],
 [data-testid="stSidebar"] button[data-testid^="stBaseButton-header"],
@@ -638,9 +638,9 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   border: 1px solid var(--rs-divider);
   border-radius: 1rem;
   background:
-    radial-gradient(circle at 98% 0%, rgb(40 100 160 / 9%) 0%, transparent 42%),
-    linear-gradient(135deg, #FFFFFF 0%, var(--rs-surface) 100%);
-  box-shadow: 0 1px 2px rgb(23 43 69 / 4%), 0 8px 24px rgb(23 43 69 / 4%);
+    radial-gradient(circle at 98% 0%, rgb(76 154 255 / 14%) 0%, transparent 42%),
+    linear-gradient(135deg, #111A2E 0%, #0E1729 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px rgb(0 0 0 / 30%);
 }
 .st-key-rs_intro_hero::before, .st-key-rs_wf_hero::before {
   content: "";
@@ -656,16 +656,17 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 [class*="st-key-rs_step_"], .st-key-rs_wf_success {
   border: 1px solid var(--rs-divider) !important;
   border-radius: 0.875rem !important;
-  background: #FFFFFF;
-  box-shadow: 0 1px 2px rgb(23 43 69 / 4%), 0 8px 24px rgb(23 43 69 / 3%);
+  background: linear-gradient(160deg, #131E36 0%, #0F182B 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 25%);
   padding: 0.5rem 0.75rem 0.75rem;
   margin-bottom: 0.5rem;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  animation: rs-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .st-key-rs_intro_current:hover, [class*="st-key-rs_intro_card_"]:hover,
 [class*="st-key-rs_step_"]:hover, .st-key-rs_wf_success:hover {
   border-color: var(--rs-strong) !important;
-  box-shadow: 0 2px 4px rgb(23 43 69 / 5%), 0 12px 28px rgb(23 43 69 / 7%);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 35%), 0 16px 36px rgb(0 0 0 / 35%); transform: translateY(-2px);
 }
 [class*="st-key-rs_intro_card_"] { border-top: 3px solid var(--rs-accent-2) !important; }
 .st-key-rs_intro_current { border-left: 4px solid var(--rs-accent) !important; }
@@ -683,7 +684,7 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.625rem;
-  background: rgb(40 100 160 / 10%);
+  background: rgb(76 154 255 / 16%);
   color: var(--rs-accent-2);
   font-size: 1.4rem !important;
 }
@@ -694,8 +695,71 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 [class*="st-key-rs_step_"] [data-testid="stMarkdownContainer"] p,
 .st-key-rs_wf_success [data-testid="stMarkdownContainer"] p { max-width: 58rem; }
 .st-key-rs_note { margin-top: 0.75rem; max-width: 62rem; }
+
+/* ---------- motion: gentle entrance, staggered cards, hover lift */
+@keyframes rs-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rs-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rs-glow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.st-key-rs_intro_hero, .st-key-rs_wf_hero {
+  animation: rs-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.st-key-rs_intro_hero h1, .st-key-rs_wf_hero h1 {
+  background: linear-gradient(90deg, #E6EDF7 0%, #7DB8FF 50%, #E6EDF7 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rs-glow 12s ease-in-out infinite;
+}
+.st-key-rs_intro_current { animation-delay: 120ms; }
+.st-key-rs_intro_card_need { animation-delay: 220ms; }
+.st-key-rs_intro_card_goal { animation-delay: 320ms; }
+.st-key-rs_intro_card_idea { animation-delay: 420ms; }
+[class*="st-key-rs_step_"]:nth-of-type(2) { animation-delay: 100ms; }
+[class*="st-key-rs_intro_card_"]:hover, .st-key-rs_intro_current:hover, [class*="st-key-rs_step_"]:hover { transform: translateY(-2px); }
+
+/* scenario page and evidence grid as dashboard tiles */
+.st-key-rs_scenario [data-testid="stMetric"], .st-key-rs_investigator [data-testid="stMetric"] {
+  background: linear-gradient(160deg, #131E36 0%, #0F182B 100%);
+  border: 1px solid var(--rs-divider);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  animation: rs-rise 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.st-key-rs_scenario [data-testid="stMetric"]:hover, .st-key-rs_investigator [data-testid="stMetric"]:hover {
+  border-color: var(--rs-accent);
+  transform: translateY(-2px);
+}
+.st-key-rs_scenario [data-testid="stExpander"] details,
+.st-key-rs_investigator [data-testid="stExpander"] details,
+[class*="st-key-rs_evidence"] [data-testid="stExpander"] details {
+  border: 1px solid var(--rs-divider) !important;
+  border-radius: 0.75rem !important;
+  background: linear-gradient(160deg, #131E36 0%, #0F182B 100%) !important;
+  padding: 0 1rem;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  animation: rs-fade 500ms ease both;
+}
+.st-key-rs_scenario [data-testid="stExpander"] details:hover,
+.st-key-rs_investigator [data-testid="stExpander"] details:hover {
+  border-color: var(--rs-accent) !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%), 0 0 0 1px rgb(76 154 255 / 25%);
+}
+.st-key-rs_scenario [data-testid="stLayoutWrapper"]:has(> [data-testid="stExpander"]) + [data-testid="stLayoutWrapper"]:has(> [data-testid="stExpander"]),
+.st-key-rs_investigator [data-testid="stLayoutWrapper"]:has(> [data-testid="stExpander"]) + [data-testid="stLayoutWrapper"]:has(> [data-testid="stExpander"]) { margin-top: 0; }
+.st-key-rs_scenario [data-testid="stExpander"] details[open] > div,
+.st-key-rs_investigator [data-testid="stExpander"] details[open] > div { animation: rs-fade 400ms ease both; }
+[data-testid="stMainBlockContainer"] { animation: rs-fade 450ms ease both; }
 @media (prefers-reduced-motion: reduce) {
-  [class*="st-key-rs_intro_"], [class*="st-key-rs_step_"], .st-key-rs_wf_success { transition: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .st-key-rs_intro_hero h1, .st-key-rs_wf_hero h1 { -webkit-text-fill-color: var(--rs-text); background: none; }
 }
 
 /* ---------- investigation workspace */
@@ -707,15 +771,15 @@ textarea { line-height: 1.5 !important; background: var(--rs-bg) !important; }
 .st-key-rs_investigator [data-testid="stTextAreaRootElement"]:focus-within,
 .st-key-rs_investigator [data-baseweb="textarea"]:focus-within {
   border-color: var(--rs-accent) !important;
-  box-shadow: 0 0 0 3px rgb(40 100 160 / 12%) !important;
+  box-shadow: 0 0 0 3px rgb(76 154 255 / 25%) !important;
 }
 .st-key-rs_investigator .st-key-agent_investigate button[data-testid="stBaseButton-primary"] {
-  box-shadow: 0 2px 6px rgb(24 49 83 / 14%) !important;
+  box-shadow: 0 2px 6px rgb(76 154 255 / 25%) !important;
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 .st-key-rs_investigator .st-key-agent_investigate button[data-testid="stBaseButton-primary"]:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgb(24 49 83 / 20%) !important;
+  box-shadow: 0 4px 10px rgb(76 154 255 / 40%) !important;
 }
 @media (prefers-reduced-motion: reduce) {
   [data-testid="stTopNavLink"],
@@ -766,8 +830,8 @@ PLOTLY_LAYOUT: dict = {
     "font": {"family": CHART_SANS, "size": 13, "color": TEXT_SECONDARY},
     "title": {"font": {"family": CHART_SANS, "size": 20, "color": TEXT}, "x": 0, "xanchor": "left",
               "xref": "paper", "y": 0.97, "yanchor": "top"},
-    "paper_bgcolor": BACKGROUND,
-    "plot_bgcolor": BACKGROUND,
+    "paper_bgcolor": "rgba(0,0,0,0)",
+    "plot_bgcolor": "rgba(0,0,0,0)",
     "colorway": [BORDER_STRONG, ACCENT, TEXT_MUTED, ACCENT_SECONDARY, TEXT_SECONDARY],
     "xaxis": {"showgrid": False, "zeroline": False, "showline": True, "linecolor": BORDER_STRONG, "linewidth": 1,
               "ticks": "outside", "tickcolor": BORDER_STRONG, "ticklen": 4, "automargin": True,

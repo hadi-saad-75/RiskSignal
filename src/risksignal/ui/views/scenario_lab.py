@@ -33,6 +33,11 @@ SEVERITY_SOURCES = {"system": "this system's own losses", "category": "bank-wide
 
 
 def render_scenario_lab() -> None:
+    with st.container(key="rs_scenario"):
+        _render_scenario_lab()
+
+
+def _render_scenario_lab() -> None:
     st.title("Scenario Analysis")
     st.write("Compare possible annual losses under baseline and stress assumptions.")
     simulation_notice()
