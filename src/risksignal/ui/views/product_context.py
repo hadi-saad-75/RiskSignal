@@ -18,9 +18,11 @@ PAGE_SIZE = 100
 
 
 def render_introduction() -> None:
-    st.title("Introduction")
-    st.caption("RiskSignal: evidence-led Operational Risk investigation.")
-    with st.container():
+    with st.container(key="rs_intro_hero"):
+        st.title("Introduction")
+        st.caption("RiskSignal: evidence-led Operational Risk investigation.")
+    with st.container(border=True, key="rs_intro_current"):
+        st.markdown(":material/dataset:")
         st.subheader("Current approach")
         st.write(
             "Analysts can review incident records, control registers, indicator reports and dependency maps. "
@@ -28,17 +30,25 @@ def render_introduction() -> None:
             "These are useful tools, but connecting the evidence for one investigation still requires analyst judgement."
         )
         st.caption("A simple overview of common approaches, not a claim that every institution works this way.")
+    need, goal = st.columns(2, gap="large")
+    with need, st.container(border=True, key="rs_intro_card_need"):
+        st.markdown(":material/search:")
         st.subheader("The need")
         st.write("When a signal looks unusual, the analyst needs to find the relevant records, understand their "
                  "connections and decide what evidence is missing.")
+    with goal, st.container(border=True, key="rs_intro_card_goal"):
+        st.markdown(":material/flag:")
         st.subheader("The goal")
         st.write("Connect relevant evidence and help analysts decide what to investigate next. "
                  "The analyst remains responsible for conclusions and action.")
+    with st.container(border=True, key="rs_intro_card_idea"):
+        st.markdown(":material/lightbulb:")
         st.subheader("The idea")
         st.write("Use an LLM as the investigation interface: it can select approved read-only tools and organise "
                  "their evidence into findings and follow-up questions. Python retrieves records and calculates "
                  "numbers. Monte Carlo supports the optional question: what annual losses could result under "
                  "stated assumptions?")
+    with st.container(key="rs_note"):
         st.caption("Today: synthetic Atlas Bank records. The offline mock follows a script, not live LLM reasoning. "
                    "Live LLM quality and real-data predictive performance have not been evaluated.")
 

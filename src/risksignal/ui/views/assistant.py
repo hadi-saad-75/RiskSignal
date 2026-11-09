@@ -46,7 +46,8 @@ def render_assistant() -> None:
         else:
             st.caption("Live LLM provider active. Tool calls retrieve evidence only. They do not modify records.")
 
-    render_investigation(client)
+    with st.container(key="rs_investigator"):
+        render_investigation(client)
 
 
 # --------------------------------------------------------------------------- chat (in development)
